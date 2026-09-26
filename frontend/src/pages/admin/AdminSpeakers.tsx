@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Speaker } from '../../types';
+import { ImageCropModal } from '../../components/ui/ImageCropModal';
 
 /* ─── Helpers ─── */
 
@@ -45,6 +46,8 @@ const SpeakerModal: React.FC<{
   const [form, setForm] = useState<Partial<Speaker>>(speaker ?? emptySpeaker());
   const [expertiseInput, setExpertiseInput] = useState('');
   const [previewUrl, setPreviewUrl] = useState<string>(speaker?.photo_url ?? '');
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null); // pre-crop
+  const [showCrop, setShowCrop] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -53,16 +56,30 @@ const SpeakerModal: React.FC<{
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Reset so the same file can be re-selected
+    e.target.value = '';
     setUploading(true);
     try {
       const base64 = await fileToBase64(file);
-      setPreviewUrl(base64);
-      set('photo_url', base64); // store in speaker object directly
+      setRawImageSrc(base64);
+      setShowCrop(true);
     } catch (err) {
-      console.error('Image conversion failed:', err);
+      console.error('Image read failed:', err);
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCropComplete = (croppedBase64: string) => {
+    setPreviewUrl(croppedBase64);
+    set('photo_url', croppedBase64);
+    setShowCrop(false);
+    setRawImageSrc(null);
+  };
+
+  const handleCropCancel = () => {
+    setShowCrop(false);
+    setRawImageSrc(null);
   };
 
   const addExpertise = () => {
@@ -84,7 +101,18 @@ const SpeakerModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+    <>
+      {/* Crop modal renders above the speaker modal */}
+      {showCrop && rawImageSrc && (
+        <ImageCropModal
+          imageSrc={rawImageSrc}
+          onComplete={handleCropComplete}
+          onCancel={handleCropCancel}
+          aspectRatio={1}
+        />
+      )}
+
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
       <div
         className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
@@ -267,6 +295,7 @@ const SpeakerModal: React.FC<{
         </div>
       </div>
     </div>
+    </>
   );
 };
 

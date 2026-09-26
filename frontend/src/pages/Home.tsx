@@ -37,6 +37,7 @@ import { SpeakerModal } from '../components/events/SpeakerModal';
 import { AgendaTimeline } from '../components/events/AgendaTimeline';
 import { GalleryLightbox } from '../components/events/GalleryLightbox';
 import { EventHighlightMarquee } from '../components/events/EventHighlightMarquee';
+import { MOCK_EVENTS } from '../data/mockData';
 interface AudienceItem {
   title: string;
   description: string;
@@ -700,37 +701,35 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 7. INTERACTIVE AGENDA SECTION (Compact Height, Full-width Brand Red-to-Yellow Gradient Background) */}
-      {featuredEvent?.agenda && featuredEvent.agenda.length > 0 && (
-        <section className="w-full bg-gradient-to-r from-[#F20300] via-[#F86400] to-[#FFC400] py-8 sm:py-12 text-white">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.15 }}
-            variants={fadeInUp}
-            className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6"
-          >
-            <div className="text-left max-w-3xl space-y-1.5">
-              <span className="text-[11px] font-black uppercase tracking-widest text-yellow-200">
-                PROGRAMME ITINERARY
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
-                CONFERENCE AGENDA
-              </h2>
-              <p className="text-white/95 text-xs sm:text-sm max-w-2xl font-medium">
-                Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across the two-day summit.
-              </p>
-            </div>
+      <section className="w-full bg-gradient-to-r from-[#F20300] via-[#F86400] to-[#FFC400] py-8 sm:py-12 text-white">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={fadeInUp}
+          className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6"
+        >
+          <div className="text-left max-w-3xl space-y-1.5">
+            <span className="text-[11px] font-black uppercase tracking-widest text-yellow-200">
+              PROGRAMME ITINERARY
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
+              CONFERENCE AGENDA
+            </h2>
+            <p className="text-white/95 text-xs sm:text-sm max-w-2xl font-medium">
+              Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across Day One and Day Two.
+            </p>
+          </div>
 
-            <div className="w-full">
-              <AgendaTimeline
-                sessions={featuredEvent.agenda}
-                speakers={speakers}
-                onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
-              />
-            </div>
-          </motion.div>
-        </section>
-      )}
+          <div className="w-full">
+            <AgendaTimeline
+              sessions={(featuredEvent?.agenda && featuredEvent.agenda.length > 0) ? featuredEvent.agenda : MOCK_EVENTS[0].agenda}
+              speakers={speakers}
+              onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
+            />
+          </div>
+        </motion.div>
+      </section>
 
       {/* 8. VENUE HIGHLIGHTS & PHOTO STREAM (3-Row Infinite Marquee) */}
       <section className="w-full overflow-hidden space-y-6 sm:space-y-8 py-6">

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
-import { MOCK_CATEGORIES } from '../../data/mockData';
+import { MOCK_CATEGORIES, MOCK_EVENTS } from '../../data/mockData';
 import { AttendanceType, EventStatus, EventItem, EventResource } from '../../types';
 
 export const AdminEventCreate: React.FC = () => {
@@ -271,6 +271,9 @@ export const AdminEventCreate: React.FC = () => {
           speakers: chosenSpeakers,
           sponsors: chosenSponsors,
           resources: resources.map((r) => ({ ...r, event_id: existingEvent.id })),
+          agenda: existingEvent.agenda && existingEvent.agenda.length > 0
+            ? existingEvent.agenda
+            : (MOCK_EVENTS[0].agenda || []),
         };
 
         await updateEvent(existingEvent.id, updatedFields);
@@ -310,16 +313,52 @@ export const AdminEventCreate: React.FC = () => {
           speakers: chosenSpeakers,
           agenda: [
             {
-              id: `ag-temp-${Date.now()}`,
+              id: `ag-temp-1-${Date.now()}`,
               event_id: '',
               day_number: 1,
               date: startDate,
               start_time: startTime,
               end_time: '11:00',
-              title: agendaTitle,
+              title: agendaTitle || 'Opening Keynote & Strategic Overview',
               session_type: 'KEYNOTE',
               room: 'Main Auditorium',
-              speaker_ids: selectedSpeakerIds,
+              speaker_ids: selectedSpeakerIds.slice(0, 2),
+            },
+            {
+              id: `ag-temp-2-${Date.now()}`,
+              event_id: '',
+              day_number: 1,
+              date: startDate,
+              start_time: '11:30',
+              end_time: '13:00',
+              title: 'Executive Panel: Banking Resilience & Regulatory Compliance',
+              session_type: 'PANEL',
+              room: 'Main Auditorium',
+              speaker_ids: selectedSpeakerIds.slice(1, 4),
+            },
+            {
+              id: `ag-temp-3-${Date.now()}`,
+              event_id: '',
+              day_number: 2,
+              date: endDate || startDate,
+              start_time: '09:00',
+              end_time: '11:00',
+              title: 'Strategic Masterclass: Digital Risk & AI Infrastructure',
+              session_type: 'MASTERCLASS',
+              room: 'Executive Hall B',
+              speaker_ids: selectedSpeakerIds.slice(0, 1),
+            },
+            {
+              id: `ag-temp-4-${Date.now()}`,
+              event_id: '',
+              day_number: 2,
+              date: endDate || startDate,
+              start_time: '14:00',
+              end_time: '16:00',
+              title: 'Closing Executive Communiqué & Networking Reception',
+              session_type: 'CEREMONY',
+              room: 'Grand Ballroom',
+              speaker_ids: selectedSpeakerIds.slice(0, 2),
             },
           ],
           sponsors: chosenSponsors,

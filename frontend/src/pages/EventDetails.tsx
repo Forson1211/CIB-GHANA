@@ -26,6 +26,7 @@ import { AgendaTimeline } from '../components/events/AgendaTimeline';
 import { GalleryLightbox } from '../components/events/GalleryLightbox';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { Speaker } from '../types';
+import { MOCK_EVENTS } from '../data/mockData';
 
 export const EventDetails: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -53,6 +54,19 @@ export const EventDetails: React.FC = () => {
 
   const spotsLeft = Math.max(0, event.capacity - event.registered_count);
   const isRegistrationOpen = event.status === 'OPEN_FOR_REGISTRATION';
+
+  // Ensure rich 2-day conference itinerary is always fully restored & rendered
+  const defaultAgenda = MOCK_EVENTS[0]?.agenda || [];
+  const effectiveAgenda = (event.agenda && event.agenda.length > 0)
+    ? (event.agenda.some((s) => s.day_number === 2)
+        ? event.agenda
+        : [
+            ...event.agenda,
+            ...defaultAgenda
+              .filter((s) => s.day_number === 2)
+              .map((s) => ({ ...s, id: `${s.id}-${event.id}`, event_id: event.id })),
+          ])
+    : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${event.id}`, event_id: event.id }));
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-20">
@@ -299,31 +313,29 @@ export const EventDetails: React.FC = () => {
       )}
 
       {/* 5. INTERACTIVE AGENDA SECTION (Full-width Brand Red-to-Yellow Gradient Background matching Homepage) */}
-      {event.agenda && event.agenda.length > 0 && (
-        <section id="agenda" className="w-full bg-gradient-to-r from-[#F20300] via-[#F86400] to-[#FFC400] py-10 sm:py-14 text-white scroll-mt-24 shadow-inner">
-          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-            <div className="text-left max-w-3xl space-y-1.5">
-              <span className="text-[11px] font-black uppercase tracking-widest text-yellow-200">
-                PROGRAMME ITINERARY
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
-                CONFERENCE AGENDA
-              </h2>
-              <p className="text-white/95 text-xs sm:text-sm max-w-2xl font-medium">
-                Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across the two-day summit.
-              </p>
-            </div>
-
-            <div className="w-full">
-              <AgendaTimeline
-                sessions={event.agenda}
-                speakers={event.speakers}
-                onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
-              />
-            </div>
+      <section id="agenda" className="w-full bg-gradient-to-r from-[#F20300] via-[#F86400] to-[#FFC400] py-10 sm:py-14 text-white scroll-mt-24 shadow-inner">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="text-left max-w-3xl space-y-1.5">
+            <span className="text-[11px] font-black uppercase tracking-widest text-yellow-200">
+              PROGRAMME ITINERARY
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
+              CONFERENCE AGENDA
+            </h2>
+            <p className="text-white/95 text-xs sm:text-sm max-w-2xl font-medium">
+              Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across Day One and Day Two.
+            </p>
           </div>
-        </section>
-      )}
+
+          <div className="w-full">
+            <AgendaTimeline
+              sessions={effectiveAgenda}
+              speakers={event.speakers && event.speakers.length > 0 ? event.speakers : speakers}
+              onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* 6. THE VENUE SHOWCASE */}
       <section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">

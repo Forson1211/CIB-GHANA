@@ -26,8 +26,9 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     );
   }
 
-  // Get distinct days
-  const days = Array.from(new Set(sessions.map((s) => s.day_number))).sort((a, b) => a - b);
+  // Distinct days sorted (guaranteed at least [1, 2] for multi-day events)
+  const sessionDays = Array.from(new Set(sessions.map((s) => s.day_number))).sort((a, b) => a - b);
+  const days = sessionDays.length >= 2 ? sessionDays : [1, 2];
 
   // Filtered sessions
   const filteredSessions = sessions.filter((s) => {
@@ -40,9 +41,11 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     return speakers.filter((spk) => speakerIds.includes(spk.id));
   };
 
-  const dayDateLabels: Record<number, string> = {
-    1: 'Mon, 9th Nov 2026',
-    2: 'Tue, 10th Nov 2026',
+  const dayLabels: Record<number, { title: string; date: string }> = {
+    1: { title: 'DAY ONE', date: 'Mon, 9th Nov 2026' },
+    2: { title: 'DAY TWO', date: 'Tue, 10th Nov 2026' },
+    3: { title: 'DAY THREE', date: 'Wed, 11th Nov 2026' },
+    4: { title: 'DAY FOUR', date: 'Thu, 12th Nov 2026' },
   };
 
   const sessionTypeConfig: Record<string, { bg: string; text: string; border: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -58,24 +61,25 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
     <div className="space-y-5">
       {/* Sleek Centered Controls matching reference card aesthetic on Green Background */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-1">
-        {/* Day Selector Tabs (Clean rounded card pills) */}
-        <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-xl border border-white/20 shadow-inner">
+        {/* Day Selector Tabs (DAY ONE & DAY TWO tabs with high-contrast active state) */}
+        <div className="inline-flex p-1.5 bg-black/25 backdrop-blur-md rounded-xl border border-white/25 shadow-inner">
           {days.map((dayNum) => {
             const isActive = activeDay === dayNum;
+            const labelInfo = dayLabels[dayNum] || { title: `DAY ${dayNum}`, date: `Day ${dayNum}` };
             return (
               <button
                 key={dayNum}
                 onClick={() => setActiveDay(dayNum)}
-                className={`px-4 sm:px-5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                className={`px-4 sm:px-6 py-2.5 rounded-lg text-xs font-black transition-all flex items-center gap-2.5 ${
                   isActive
-                    ? 'bg-white text-[#F20300] shadow-md font-black'
-                    : 'text-white/85 hover:text-white hover:bg-white/10'
+                    ? 'bg-white text-[#F20300] shadow-lg scale-[1.02]'
+                    : 'text-white/90 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Calendar className="w-3.5 h-3.5 shrink-0" />
-                <span>DAY {dayNum.toString().padStart(2, '0')}</span>
-                <span className={`text-[10px] font-medium hidden sm:inline ${isActive ? 'text-red-900' : 'text-red-100/70'}`}>
-                  • {dayDateLabels[dayNum] || `Day ${dayNum}`}
+                <Calendar className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F20300]' : 'text-yellow-300'}`} />
+                <span className="tracking-wide text-xs sm:text-sm font-black">{labelInfo.title}</span>
+                <span className={`text-[11px] font-medium hidden sm:inline ${isActive ? 'text-slate-600' : 'text-white/80'}`}>
+                  • {labelInfo.date}
                 </span>
               </button>
             );
@@ -112,9 +116,9 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
 
       {/* Grid of Sessions (Arranged beautifully like the 2nd image cards) */}
       {filteredSessions.length === 0 ? (
-        <div className="text-center py-10 px-4 bg-white border border-slate-100 rounded-xl shadow-sm">
-          <p className="text-slate-500 text-xs sm:text-sm">
-            No sessions scheduled under this filter for Day {activeDay}.
+        <div className="text-center py-10 px-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-md border border-white/40">
+          <p className="text-slate-700 text-xs sm:text-sm font-medium">
+            No sessions scheduled under this filter for {dayLabels[activeDay]?.title || `Day ${activeDay}`}.
           </p>
         </div>
       ) : (

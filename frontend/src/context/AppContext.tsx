@@ -80,7 +80,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [events, setEvents] = useState<EventItem[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_EVENTS);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((evt) => {
+            const hasBothDays = evt.agenda && evt.agenda.length > 0 && evt.agenda.some((s: any) => s.day_number === 2);
+            if (!hasBothDays) {
+              const defaultAgenda = MOCK_EVENTS.find((m) => m.id === evt.id)?.agenda || MOCK_EVENTS[0].agenda;
+              return {
+                ...evt,
+                agenda: (evt.agenda && evt.agenda.length > 0)
+                  ? [...evt.agenda, ...defaultAgenda.filter((s) => s.day_number === 2).map((s) => ({ ...s, id: `${s.id}-${evt.id}`, event_id: evt.id }))]
+                  : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${evt.id}`, event_id: evt.id })),
+              };
+            }
+            return evt;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
     return MOCK_EVENTS;
   });
@@ -262,11 +281,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const localOnly = prev.filter((e) => !backendIds.has(e.id));
           const merged = res.data.map((be) => {
             const local = prev.find((pe) => pe.id === be.id);
-            if (!local) return be;
-            const { resources: _locRes, speakers: _locSpk, ...restLocal } = local;
+            const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
+            if (!local) {
+              return {
+                ...be,
+                agenda: (be.agenda && be.agenda.length > 0)
+                  ? be.agenda
+                  : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })),
+                speakers: (be.speakers && be.speakers.length > 0) ? be.speakers : (MOCK_EVENTS.find((m) => m.id === be.id)?.speakers || MOCK_SPEAKERS),
+                resources: (be.resources && be.resources.length > 0) ? be.resources : (MOCK_EVENTS.find((m) => m.id === be.id)?.resources || []),
+              };
+            }
+            const { resources: _locRes, speakers: _locSpk, agenda: _locAgenda, ...restLocal } = local;
+            const finalAgenda = (_locAgenda && _locAgenda.length > 0 && _locAgenda.some((s) => s.day_number === 2))
+              ? _locAgenda
+              : ((be.agenda && be.agenda.length > 0 && be.agenda.some((s) => s.day_number === 2))
+                  ? be.agenda
+                  : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
             return {
               ...be,
               ...restLocal,
+              agenda: finalAgenda,
               resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
               speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
             };
@@ -292,11 +327,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const localOnly = prev.filter((e) => !sbIds.has(e.id));
             const merged = (data as EventItem[]).map((be) => {
               const local = prev.find((pe) => pe.id === be.id);
-              if (!local) return be;
-              const { resources: _locRes, speakers: _locSpk, ...restLocal } = local;
+              const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
+              if (!local) {
+                return {
+                  ...be,
+                  agenda: (be.agenda && be.agenda.length > 0)
+                    ? be.agenda
+                    : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })),
+                  speakers: (be.speakers && be.speakers.length > 0) ? be.speakers : (MOCK_EVENTS.find((m) => m.id === be.id)?.speakers || MOCK_SPEAKERS),
+                  resources: (be.resources && be.resources.length > 0) ? be.resources : (MOCK_EVENTS.find((m) => m.id === be.id)?.resources || []),
+                };
+              }
+              const { resources: _locRes, speakers: _locSpk, agenda: _locAgenda, ...restLocal } = local;
+              const finalAgenda = (_locAgenda && _locAgenda.length > 0 && _locAgenda.some((s) => s.day_number === 2))
+                ? _locAgenda
+                : ((be.agenda && be.agenda.length > 0 && be.agenda.some((s) => s.day_number === 2))
+                    ? be.agenda
+                    : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
               return {
                 ...be,
                 ...restLocal,
+                agenda: finalAgenda,
                 resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
                 speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
               };

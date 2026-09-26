@@ -566,7 +566,60 @@ Gain hands-on competencies in machine learning credit scoring, early-warning NPL
     is_featured: false,
     themes: ['Predictive Default Modeling', 'Alternative Data Scoring', 'IFRS 9 Expected Credit Loss', 'Portfolio Stress Testing'],
     speakers: [MOCK_SPEAKERS[1], MOCK_SPEAKERS[5]],
-    agenda: [],
+    agenda: [
+      {
+        id: 'ag-201',
+        event_id: 'evt-2',
+        day_number: 1,
+        date: '2026-09-24',
+        start_time: '09:00',
+        end_time: '10:30',
+        title: 'Masterclass Kickoff: Big Data Architecture & Alternative Credit Scoring',
+        description: 'Orientation on machine learning data pipelines, credit bureaus, and unconventional underwriting metrics.',
+        session_type: 'MASTERCLASS',
+        room: 'Executive Learning Lab 1',
+        speaker_ids: ['spk-2']
+      },
+      {
+        id: 'ag-202',
+        event_id: 'evt-2',
+        day_number: 1,
+        date: '2026-09-24',
+        start_time: '11:00',
+        end_time: '13:00',
+        title: 'Hands-On Lab: Predictive NPL Modeling & Logistic Regression',
+        description: 'Building statistical default prediction pipelines with Python and real Ghanaian loan portfolio data.',
+        session_type: 'WORKSHOP',
+        room: 'Executive Learning Lab 1',
+        speaker_ids: ['spk-6']
+      },
+      {
+        id: 'ag-203',
+        event_id: 'evt-2',
+        day_number: 2,
+        date: '2026-09-25',
+        start_time: '09:30',
+        end_time: '12:00',
+        title: 'IFRS 9 Expected Credit Loss (ECL) Calculation & Stress Testing',
+        description: 'Macroeconomic scenario design, forward-looking staging, and regulatory risk provision simulations.',
+        session_type: 'KEYNOTE',
+        room: 'Executive Learning Lab 1',
+        speaker_ids: ['spk-6']
+      },
+      {
+        id: 'ag-204',
+        event_id: 'evt-2',
+        day_number: 2,
+        date: '2026-09-25',
+        start_time: '14:00',
+        end_time: '15:30',
+        title: 'Executive Capstone Review & CPD Certification Handover',
+        description: 'Participant presentations, model evaluation benchmarking, and award of certified CPD certificates.',
+        session_type: 'CEREMONY',
+        room: 'Executive Learning Lab 1',
+        speaker_ids: ['spk-2', 'spk-6']
+      }
+    ],
     sponsors: [MOCK_SPONSORS[2], MOCK_SPONSORS[5]],
     registration_types: [
       {
@@ -628,7 +681,60 @@ The five-day festival incorporates high-impact financial literacy campaigns in t
     is_featured: false,
     themes: ['Community Financial Inclusion', 'ESG Standards in Ghanaian Banks', 'Inter-bank Collaboration', 'Financial Literacy'],
     speakers: [MOCK_SPEAKERS[0], MOCK_SPEAKERS[1], MOCK_SPEAKERS[2]],
-    agenda: [],
+    agenda: [
+      {
+        id: 'ag-301',
+        event_id: 'evt-3',
+        day_number: 1,
+        date: '2026-10-14',
+        start_time: '08:30',
+        end_time: '10:30',
+        title: 'Opening Ceremony: Financial Inclusion & Youth Empowerment Walk',
+        description: 'Official flag-off of Banking Week with nationwide walk and public financial education clinics.',
+        session_type: 'CEREMONY',
+        room: 'Independence Square & CIB Forecourt',
+        speaker_ids: ['spk-2']
+      },
+      {
+        id: 'ag-302',
+        event_id: 'evt-3',
+        day_number: 1,
+        date: '2026-10-14',
+        start_time: '11:00',
+        end_time: '13:00',
+        title: 'National Financial Literacy Summit & University Challenge',
+        description: 'Inter-university banking debate and public symposium on saving and ethical personal finance.',
+        session_type: 'PANEL',
+        room: 'Main Auditorium',
+        speaker_ids: ['spk-3']
+      },
+      {
+        id: 'ag-303',
+        event_id: 'evt-3',
+        day_number: 2,
+        date: '2026-10-15',
+        start_time: '09:00',
+        end_time: '12:00',
+        title: 'Executive ESG & Green Finance Symposium',
+        description: 'Sustainable finance frameworks, carbon credit trading, and ethical social investment in Ghana.',
+        session_type: 'KEYNOTE',
+        room: 'Ballroom',
+        speaker_ids: ['spk-1', 'spk-2']
+      },
+      {
+        id: 'ag-304',
+        event_id: 'evt-3',
+        day_number: 2,
+        date: '2026-10-15',
+        start_time: '18:30',
+        end_time: '22:00',
+        title: 'Annual Bankers Black-Tie Gala Dinner & Industry Honours',
+        description: 'Prestigious evening networking, live orchestra, and recognition of banking excellence.',
+        session_type: 'NETWORKING',
+        room: 'Grand Ballroom',
+        speaker_ids: ['spk-1', 'spk-2', 'spk-3']
+      }
+    ],
     sponsors: MOCK_SPONSORS,
     registration_types: [
       {
@@ -688,7 +794,60 @@ The five-day festival incorporates high-impact financial literacy campaigns in t
     is_featured: false,
     themes: ['Open Banking APIs', 'Core Banking Modernization', 'Cloud Data Sovereignty', 'Instant Payment Interoperability'],
     speakers: [MOCK_SPEAKERS[2], MOCK_SPEAKERS[3]],
-    agenda: [],
+    agenda: [
+      {
+        id: 'ag-401',
+        event_id: 'evt-4',
+        day_number: 1,
+        date: '2026-12-03',
+        start_time: '09:00',
+        end_time: '10:45',
+        title: 'Opening Plenary: Next-Gen Core Banking & Cloud Adoption Frameworks',
+        description: 'Accelerating digital banking transformation while preserving stringent regulatory data sovereignty.',
+        session_type: 'KEYNOTE',
+        room: 'Omanye Suite',
+        speaker_ids: ['spk-3']
+      },
+      {
+        id: 'ag-402',
+        event_id: 'evt-4',
+        day_number: 1,
+        date: '2026-12-03',
+        start_time: '11:15',
+        end_time: '13:00',
+        title: 'Executive Panel: Open APIs & Fintech Interoperability in Ghana',
+        description: 'Unpacking bank-fintech partnerships, instant settlement gateways, and GhIPSS ecosystem integration.',
+        session_type: 'PANEL',
+        room: 'Omanye Suite',
+        speaker_ids: ['spk-3', 'spk-4']
+      },
+      {
+        id: 'ag-403',
+        event_id: 'evt-4',
+        day_number: 2,
+        date: '2026-12-04',
+        start_time: '09:30',
+        end_time: '11:30',
+        title: 'Masterclass: AI Agents in Retail Banking & Real-Time Fraud Mitigation',
+        description: 'Deploying conversational intelligence and anomaly detection algorithms in transaction processing.',
+        session_type: 'MASTERCLASS',
+        room: 'Executive Boardroom',
+        speaker_ids: ['spk-6']
+      },
+      {
+        id: 'ag-404',
+        event_id: 'evt-4',
+        day_number: 2,
+        date: '2026-12-04',
+        start_time: '14:00',
+        end_time: '16:30',
+        title: 'Fintech Pitch Arena & Regulatory Sandbox Awards Ceremony',
+        description: 'Live pitch presentations by leading Ghanaian innovators and announcement of innovation grants.',
+        session_type: 'CEREMONY',
+        room: 'Omanye Suite',
+        speaker_ids: ['spk-3', 'spk-4']
+      }
+    ],
     sponsors: [MOCK_SPONSORS[1], MOCK_SPONSORS[5]],
     registration_types: [
       {
@@ -736,7 +895,60 @@ The five-day festival incorporates high-impact financial literacy campaigns in t
     is_past: true,
     themes: ['Basel III Accord', 'Liquidity Coverage Ratio', 'Capital Adequacy Ratio', 'Macroeconomic Stress Scenarios'],
     speakers: [MOCK_SPEAKERS[1], MOCK_SPEAKERS[5]],
-    agenda: [],
+    agenda: [
+      {
+        id: 'ag-501',
+        event_id: 'evt-5',
+        day_number: 1,
+        date: '2026-08-12',
+        start_time: '09:00',
+        end_time: '11:00',
+        title: 'Basel III Capital Accord: Regulatory Framework & Risk Weights',
+        description: 'Detailed analysis of Tier 1 and Tier 2 capital requirements and capital conservation buffers.',
+        session_type: 'KEYNOTE',
+        room: 'Executive Hall',
+        speaker_ids: ['spk-2']
+      },
+      {
+        id: 'ag-502',
+        event_id: 'evt-5',
+        day_number: 1,
+        date: '2026-08-12',
+        start_time: '11:30',
+        end_time: '15:30',
+        title: 'Macroeconomic Scenario Simulation & Stressed CAR Modeling',
+        description: 'Interactive modeling workshop utilizing BoG scenario parameters and treasury asset portfolios.',
+        session_type: 'WORKSHOP',
+        room: 'Computer Lab B',
+        speaker_ids: ['spk-6']
+      },
+      {
+        id: 'ag-503',
+        event_id: 'evt-5',
+        day_number: 2,
+        date: '2026-08-13',
+        start_time: '09:00',
+        end_time: '12:00',
+        title: 'Liquidity Coverage Ratio (LCR) & Net Stable Funding Ratio (NSFR)',
+        description: 'Quantitative liquidity risk management and high-quality liquid asset (HQLA) optimization.',
+        session_type: 'MASTERCLASS',
+        room: 'Executive Hall',
+        speaker_ids: ['spk-6']
+      },
+      {
+        id: 'ag-504',
+        event_id: 'evt-5',
+        day_number: 2,
+        date: '2026-08-13',
+        start_time: '13:30',
+        end_time: '16:00',
+        title: 'ICAAP Synthesis & Regulatory Compliance Sign-Off',
+        description: 'Formulating internal capital adequacy assessment reports and audit trail compliance.',
+        session_type: 'CEREMONY',
+        room: 'Executive Hall',
+        speaker_ids: ['spk-2', 'spk-6']
+      }
+    ],
     sponsors: [MOCK_SPONSORS[0]],
     registration_types: [],
     resources: [

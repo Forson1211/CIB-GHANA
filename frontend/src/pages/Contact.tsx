@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Send, CheckCircle2, ExternalLink } from 'lucide-react';
 
 export const Contact: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapVisible, setMapVisible] = useState(false);
+  const mapSectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setMapVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    if (mapSectionRef.current) observer.observe(mapSectionRef.current);
+    return () => observer.disconnect();
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -369,20 +386,65 @@ export const Contact: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* 3. WIDE GOOGLE MAP SECTION MATCHING REFERENCE */}
-      <section className="relative w-full h-[420px] sm:h-[480px] bg-slate-200 border-t border-slate-200 overflow-hidden">
-        {/* Interactive Google Map embed of CIB Ghana in East Legon */}
-        <iframe
-          title="CIB Ghana Secretariat Location"
-          src="https://maps.google.com/maps?q=Chartered+Institute+of+Bankers+Ghana+Trinity+Avenue+East+Legon+Accra&t=&z=15&ie=UTF8&iwloc=&output=embed"
-          width="100%"
-          height="100%"
-          style={{ border: 0 }}
-          allowFullScreen={false}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className="w-full h-full filter saturate-[1.1] contrast-[1.02]"
-        />
+      {/* 3. WIDE GOOGLE MAP SECTION */}
+      <section
+        ref={mapSectionRef}
+        className="relative w-full h-[420px] sm:h-[480px] border-t border-slate-200 overflow-hidden bg-slate-100"
+      >
+        {/* Loading skeleton - shows until iframe is loaded */}
+        {!mapLoaded && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100 animate-pulse">
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                <div className="w-12 h-12 rounded-full bg-[#008129]/20 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-[#008129]" />
+                </div>
+                {/* Breathing ring on skeleton pin */}
+                <span className="absolute inset-0 rounded-full border-2 border-[#008129]/40 animate-ping" />
+              </div>
+              <p className="text-sm font-semibold text-slate-500">Loading map…</p>
+            </div>
+          </div>
+        )}
+
+        {/* Only render iframe when section is in viewport (instant load) */}
+        {mapVisible && (
+          <iframe
+            title="CIB Ghana Secretariat Location"
+            src="https://maps.google.com/maps?q=Chartered+Institute+of+Bankers+Ghana+Trinity+Avenue+East+Legon+Accra&t=&z=15&ie=UTF8&iwloc=&output=embed"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            allowFullScreen={false}
+            loading="eager"
+            referrerPolicy="no-referrer-when-downgrade"
+            onLoad={() => setMapLoaded(true)}
+            className={`w-full h-full filter saturate-[1.1] contrast-[1.02] transition-opacity duration-500 ${
+              mapLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        )}
+
+        {/* Breathing glow beacon overlaid on the pin location */}
+        {mapLoaded && (
+          <div
+            className="absolute pointer-events-none"
+            style={{ top: '47%', left: '50.2%', transform: 'translate(-50%, -100%)' }}
+          >
+            {/* Outer slow pulse */}
+            <span
+              className="absolute inset-0 w-12 h-12 rounded-full bg-[#008129]/30 animate-ping"
+              style={{ animationDuration: '2s', left: '-50%', top: '-50%' }}
+            />
+            {/* Middle pulse */}
+            <span
+              className="absolute w-7 h-7 rounded-full bg-[#008129]/40 animate-ping"
+              style={{ animationDuration: '1.4s', left: '-10px', top: '-10px' }}
+            />
+            {/* Core dot */}
+            <span className="relative block w-5 h-5 rounded-full bg-[#008129] shadow-[0_0_0_3px_rgba(0,129,41,0.35)] border-2 border-white" />
+          </div>
+        )}
       </section>
     </div>
   );

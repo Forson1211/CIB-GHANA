@@ -42,7 +42,32 @@ export const ChatbotWidget: React.FC = () => {
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 640;
+    }
+    return false;
+  });
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastUserMsgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && isOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isMobile, isOpen]);
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -58,13 +83,35 @@ export const ChatbotWidget: React.FC = () => {
     },
   ]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToUserTurn = (smooth = true) => {
+    const doScroll = () => {
+      if (chatContainerRef.current && lastUserMsgRef.current) {
+        const container = chatContainerRef.current;
+        const userElem = lastUserMsgRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const elemRect = userElem.getBoundingClientRect();
+        const relativeTop = elemRect.top - containerRect.top;
+
+        container.scrollTo({
+          top: container.scrollTop + relativeTop - 10,
+          behavior: smooth ? 'smooth' : 'auto',
+        });
+      } else if (chatContainerRef.current && messages.length <= 1) {
+        chatContainerRef.current.scrollTo({ top: 0, behavior: 'auto' });
+      }
+    };
+
+    // Immediate and multi-frame passes to handle keyboard expansion and AI response insertion
+    requestAnimationFrame(() => {
+      doScroll();
+      setTimeout(doScroll, 50);
+      setTimeout(doScroll, 160);
+    });
   };
 
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      scrollToUserTurn();
       setHasUnread(false);
     }
   }, [isOpen, messages, isTyping]);
@@ -144,6 +191,7 @@ export const ChatbotWidget: React.FC = () => {
     setMessages(nextMessages);
     setInputText('');
     setIsTyping(true);
+    scrollToUserTurn(true);
 
     try {
       // Build conversation history for multi-turn AI context (like ChatGPT and Gemini)
@@ -542,10 +590,10 @@ export const ChatbotWidget: React.FC = () => {
   return (
     <>
       {/* Floating Chat Launcher Button (Positioned below WhatsApp icon) */}
-      <div className="fixed bottom-5 sm:bottom-6 right-4 sm:right-6 md:right-8 z-50 group">
+      <div className={`fixed bottom-5 sm:bottom-6 right-4 sm:right-6 md:right-8 z-50 group ${isOpen && isMobile ? 'hidden' : 'block'}`}>
         {/* Tooltip on hover */}
         <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out whitespace-nowrap bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 shadow-md hidden sm:block">
-          CIB AI Assistant
+          CIB Chatbot
           {/* Little right arrow pointer */}
           <div className="absolute top-1/2 -translate-y-1/2 left-full w-0 h-0 border-y-4 border-y-transparent border-l-4 border-l-slate-900" />
         </div>
@@ -554,9 +602,9 @@ export const ChatbotWidget: React.FC = () => {
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(!isOpen)}
-          aria-label={isOpen ? 'Close CIB Assistant' : 'Open CIB Events Secretariat Assistant'}
+          aria-label={isOpen ? 'Close CIB Chatbot' : 'Open CIB Chatbot'}
           className="relative w-14 h-14 flex items-center justify-center transition-all focus:outline-none bg-transparent border-0 p-0 shadow-none hover:shadow-none"
-          title="CIB Events Secretariat AI Assistant"
+          title="CIB Chatbot"
         >
           {isOpen ? (
             <div className="w-14 h-14 rounded-full bg-[#008129] text-white flex items-center justify-center shadow-xl">
@@ -568,36 +616,40 @@ export const ChatbotWidget: React.FC = () => {
         </motion.button>
       </div>
 
-      {/* Interactive Chatbot Modal Window (Sharp rectangular 'no round edges' design) */}
+      {/* Interactive Chatbot Modal Window (Full screen & swipe from left on mobile, sharp floating card on desktop) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.94 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="fixed bottom-[88px] sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[430px] h-[600px] max-h-[84vh] bg-white rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.28)] border border-slate-200/90 flex flex-col overflow-hidden"
+            initial={isMobile ? { x: '-100%' } : { opacity: 0, y: 24, scale: 0.94 }}
+            animate={isMobile ? { x: 0 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={isMobile ? { x: '-100%' } : { opacity: 0, y: 20, scale: 0.94 }}
+            transition={
+              isMobile
+                ? { type: 'spring', damping: 28, stiffness: 280 }
+                : { duration: 0.22, ease: 'easeOut' }
+            }
+            className={
+              isMobile
+                ? "fixed inset-0 z-50 w-full h-[100dvh] bg-white rounded-none flex flex-col overflow-hidden shadow-2xl"
+                : "fixed bottom-24 right-4 sm:right-6 z-50 w-[430px] h-[600px] max-h-[84vh] bg-white rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.28)] border border-slate-200/90 flex flex-col overflow-hidden"
+            }
           >
             {/* Header: CIB Ghana Brand Green */}
-            <div className="relative bg-[#008129] text-white px-5 pt-4 pb-4 overflow-hidden select-none shrink-0">
+            <div className="relative bg-[#008129] text-white px-4 sm:px-5 pt-3.5 sm:pt-4 pb-3.5 sm:pb-4 overflow-hidden select-none shrink-0 pt-[max(0.875rem,env(safe-area-inset-top))]">
               {/* Soft filled watermarks */}
               <div className="absolute -top-10 -right-6 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
               <div className="absolute -top-5 -right-1 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
 
-              <div className="relative z-10 flex items-start justify-between">
-                <div className="flex items-center gap-3">
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 sm:gap-3">
                   <img
                     src="/cib-logo-white.png"
                     alt="CIB Ghana"
-                    className="h-10 sm:h-11 w-auto max-w-[130px] object-contain shrink-0"
+                    className="h-9 sm:h-10 w-auto max-w-[120px] object-contain shrink-0"
                   />
                   <div>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-amber-300 tracking-wider uppercase">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      CIB AI VISITOR CONCIERGE • REAL-TIME
-                    </span>
-                    <h2 className="text-xl sm:text-[23px] font-black text-white font-display tracking-tight leading-tight">
-                      How can I guide you?
+                    <h2 className="text-lg sm:text-xl font-black text-white font-display tracking-tight leading-tight">
+                      CIB Chatbot
                     </h2>
                   </div>
                 </div>
@@ -607,7 +659,7 @@ export const ChatbotWidget: React.FC = () => {
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close chat"
-                  className="w-8 h-8 rounded-full border-0 bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5"
+                  className="w-8 h-8 rounded-full border-0 bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
                 >
                   <X className="w-4 h-4 stroke-[2]" />
                 </button>
@@ -639,12 +691,15 @@ export const ChatbotWidget: React.FC = () => {
 
             {/* Chat Body Container */}
             <div className="flex-1 m-3 sm:m-4 rounded-xl bg-slate-50/80 flex flex-col overflow-hidden border border-slate-100">
-              <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
+              <div ref={chatContainerRef} className="relative flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs scroll-smooth">
+                {(() => {
+                  const lastUserIndex = messages.map((m) => m.sender).lastIndexOf('user');
+                  return messages.map((msg, idx) => (
+                    <div
+                      key={msg.id}
+                      ref={idx === lastUserIndex ? lastUserMsgRef : undefined}
+                      className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
                     {msg.sender === 'bot' && (
                       <LivingChatbotAvatar size={30} interactive={false} className="shrink-0 mt-0.5" />
                     )}
@@ -729,7 +784,8 @@ export const ChatbotWidget: React.FC = () => {
                       )}
                     </div>
                   </div>
-                ))}
+                ));
+              })()}
 
                 {/* Bot typing indicator (Speech Bubble) */}
                 {isTyping && (
@@ -742,13 +798,11 @@ export const ChatbotWidget: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                <div ref={messagesEndRef} />
               </div>
             </div>
 
             {/* Bottom Bar: Clear, Modern Rounded Input Box & Send Button */}
-            <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0 bg-white shrink-0">
+            <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-1 bg-white shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -772,6 +826,7 @@ export const ChatbotWidget: React.FC = () => {
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
+                  onFocus={() => scrollToUserTurn(true)}
                   placeholder="Ask CIB a question..."
                   className="flex-1 rounded-full bg-slate-100 focus:bg-white px-4 py-2.5 text-xs sm:text-[13px] text-slate-800 placeholder:text-slate-400 border border-slate-200/80 focus:border-[#008129]/40 outline-none transition-all focus:ring-2 focus:ring-[#008129]/15"
                 />

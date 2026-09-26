@@ -425,24 +425,22 @@ export const Contact: React.FC = () => {
           />
         )}
 
-        {/* Breathing glow beacon overlaid on the pin location */}
+        {/* Breathing red glow rings around the existing Google Maps pin */}
         {mapLoaded && (
           <div
             className="absolute pointer-events-none"
-            style={{ top: '47%', left: '50.2%', transform: 'translate(-50%, -100%)' }}
+            style={{ top: '47%', left: '50.2%', transform: 'translate(-50%, -50%)' }}
           >
-            {/* Outer slow pulse */}
+            {/* Outer slow ring */}
             <span
-              className="absolute inset-0 w-12 h-12 rounded-full bg-[#008129]/30 animate-ping"
-              style={{ animationDuration: '2s', left: '-50%', top: '-50%' }}
+              className="absolute rounded-full bg-[#F20300]/25 animate-ping"
+              style={{ width: 52, height: 52, top: -26, left: -26, animationDuration: '2s' }}
             />
-            {/* Middle pulse */}
+            {/* Middle ring */}
             <span
-              className="absolute w-7 h-7 rounded-full bg-[#008129]/40 animate-ping"
-              style={{ animationDuration: '1.4s', left: '-10px', top: '-10px' }}
+              className="absolute rounded-full bg-[#F20300]/35 animate-ping"
+              style={{ width: 32, height: 32, top: -16, left: -16, animationDuration: '1.4s' }}
             />
-            {/* Core dot */}
-            <span className="relative block w-5 h-5 rounded-full bg-[#008129] shadow-[0_0_0_3px_rgba(0,129,41,0.35)] border-2 border-white" />
           </div>
         )}
       </section>

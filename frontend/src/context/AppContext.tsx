@@ -33,6 +33,9 @@ interface AppContextType {
   isAdminAuthenticated: boolean;
   adminLogin: (password: string) => Promise<boolean>;
   adminLogout: () => void;
+  addSpeaker: (speaker: Partial<Speaker>) => void;
+  updateSpeaker: (id: string, updates: Partial<Speaker>) => void;
+  deleteSpeaker: (id: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -43,6 +46,7 @@ const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v1';
 
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
@@ -85,7 +89,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return MOCK_REGISTRATIONS.map(normalizeRegistration);
   });
 
-  const [speakers] = useState<Speaker[]>(MOCK_SPEAKERS);
+  const [speakers, setSpeakers] = useState<Speaker[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) { console.error(e); }
+    }
+    return MOCK_SPEAKERS;
+  });
   const [sponsors] = useState<Sponsor[]>(MOCK_SPONSORS);
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
@@ -162,6 +175,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(currentUser));
   }, [currentUser]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(speakers));
+  }, [speakers]);
+
+  const addSpeaker = (speaker: Partial<Speaker>) => {
+    const newSpeaker: Speaker = {
+      id: speaker.id ?? `sp-${Date.now()}`,
+      name: speaker.name ?? '',
+      slug: speaker.slug ?? (speaker.name ?? '').toLowerCase().replace(/\s+/g, '-'),
+      position: speaker.position ?? '',
+      organization: speaker.organization ?? '',
+      country: speaker.country ?? 'Ghana',
+      photo_url: speaker.photo_url ?? '',
+      biography: speaker.biography ?? '',
+      expertise: speaker.expertise ?? [],
+      is_keynote: speaker.is_keynote ?? false,
+      linkedin_url: speaker.linkedin_url,
+      twitter_url: speaker.twitter_url,
+      website_url: speaker.website_url,
+    };
+    setSpeakers((prev) => [...prev, newSpeaker]);
+  };
+
+  const updateSpeaker = (id: string, updates: Partial<Speaker>) => {
+    setSpeakers((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+    );
+  };
+
+  const deleteSpeaker = (id: string) => {
+    setSpeakers((prev) => prev.filter((s) => s.id !== id));
+  };
 
   const refreshEvents = async () => {
     try {
@@ -506,6 +552,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAdminAuthenticated,
         adminLogin,
         adminLogout,
+        addSpeaker,
+        updateSpeaker,
+        deleteSpeaker,
       }}
     >
       {children}

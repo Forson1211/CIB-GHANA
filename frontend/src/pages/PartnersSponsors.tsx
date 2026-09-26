@@ -7,6 +7,7 @@ import {
   ArrowRight,
   PhoneCall
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 
 interface EntityItem {
   id: string;
@@ -106,7 +107,7 @@ const CORPORATE_SPONSORS: EntityItem[] = [
 ];
 
 // Helper to render crisp, authentic vector brand logos for Ghanaian financial institutions
-const renderBrandLogo = (id: string, name: string) => {
+export const renderBrandLogo = (id: string, name: string) => {
   switch (id) {
     case 'bog':
     case 'bog_sp':
@@ -365,7 +366,12 @@ export const PartnersSponsors: React.FC = () => {
     navigate(tab === 'PARTNERS' ? '/partners' : '/sponsors');
   };
 
-  const listToRender = activeTab === 'PARTNERS' ? INSTITUTIONAL_PARTNERS : CORPORATE_SPONSORS;
+  const { sponsors } = useApp();
+
+  const listToRender =
+    activeTab === 'PARTNERS'
+      ? sponsors.filter((s) => s.type === 'PARTNER')
+      : sponsors.filter((s) => s.type === 'SPONSOR');
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -492,7 +498,7 @@ export const PartnersSponsors: React.FC = () => {
             {listToRender.map((item) => (
               <a
                 key={item.id}
-                href={item.website}
+                href={item.website_url || (item as any).website || '#'}
                 target="_blank"
                 rel="noreferrer"
                 className="bg-white px-6 py-8 sm:px-8 sm:py-10 rounded-none border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#1B7E3E] transition-all duration-200 flex items-center justify-center text-center group h-36 sm:h-44 relative cursor-pointer"
@@ -506,7 +512,15 @@ export const PartnersSponsors: React.FC = () => {
 
                 {/* Big prominent logo display */}
                 <div className="w-full h-full flex items-center justify-center p-2 transition-transform duration-200 group-hover:scale-105">
-                  {renderBrandLogo(item.id, item.name)}
+                  {item.logo_url && item.logo_url.trim() ? (
+                    <img
+                      src={item.logo_url}
+                      alt={item.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  ) : (
+                    renderBrandLogo(item.id, item.name)
+                  )}
                 </div>
               </a>
             ))}

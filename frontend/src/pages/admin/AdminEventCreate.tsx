@@ -802,7 +802,7 @@ export const AdminEventCreate: React.FC = () => {
                       }`}
                     >
                       <p className="text-xs font-bold text-cib-charcoal-900 truncate">{sp.name}</p>
-                      <span className="text-[10px] text-cib-gold-600 font-bold uppercase">{sp.tier}</span>
+                      <span className="text-[10px] text-cib-green-700 font-bold uppercase">{sp.type || 'SPONSOR'}</span>
                     </div>
                   );
                 })}

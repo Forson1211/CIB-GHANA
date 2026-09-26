@@ -15,7 +15,8 @@ export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCESSFUL' | 'FAILED' |
 
 export type CheckInStatus = 'REGISTERED' | 'CHECKED_IN' | 'CANCELLED';
 
-export type SponsorTier = 'PLATINUM' | 'GOLD' | 'SILVER' | 'PARTNER' | 'ACADEMIC';
+export type SponsorType = 'SPONSOR' | 'PARTNER';
+export type SponsorTier = 'SPONSOR' | 'PARTNER' | 'PLATINUM' | 'GOLD' | 'SILVER' | 'ACADEMIC';
 
 export interface UserProfile {
   id: string;
@@ -66,10 +67,12 @@ export interface AgendaSession {
 export interface Sponsor {
   id: string;
   name: string;
-  logo_url: string;
+  logo_url?: string;
   website_url?: string;
-  tier: SponsorTier;
+  type: SponsorType;
+  categoryOrRole?: string;
   description?: string;
+  tier?: SponsorTier;
 }
 
 export interface RegistrationType {

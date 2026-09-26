@@ -36,6 +36,9 @@ interface AppContextType {
   addSpeaker: (speaker: Partial<Speaker>) => void;
   updateSpeaker: (id: string, updates: Partial<Speaker>) => void;
   deleteSpeaker: (id: string) => void;
+  addSponsor: (sponsor: Partial<Sponsor>) => void;
+  updateSponsor: (id: string, updates: Partial<Sponsor>) => void;
+  deleteSponsor: (id: string) => void;
   addResourceToEvent: (eventId: string, resource: Omit<EventResource, 'id'>) => void;
   updateEventResource: (eventId: string, resourceId: string, updates: Partial<EventResource>) => void;
   deleteEventResource: (eventId: string, resourceId: string) => void;
@@ -50,6 +53,7 @@ const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v1';
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v2';
 
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
@@ -102,7 +106,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return MOCK_SPEAKERS;
   });
-  const [sponsors] = useState<Sponsor[]>(MOCK_SPONSORS);
+  const [sponsors, setSponsors] = useState<Sponsor[]>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch (e) { console.error(e); }
+    }
+    return MOCK_SPONSORS;
+  });
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_USER);
@@ -183,6 +196,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(speakers));
   }, [speakers]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY_SPONSORS, JSON.stringify(sponsors));
+  }, [sponsors]);
+
   const addSpeaker = (speaker: Partial<Speaker>) => {
     const newSpeaker: Speaker = {
       id: speaker.id ?? `sp-${Date.now()}`,
@@ -210,6 +227,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteSpeaker = (id: string) => {
     setSpeakers((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  const addSponsor = (sponsor: Partial<Sponsor>) => {
+    const newSponsor: Sponsor = {
+      id: sponsor.id || `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: sponsor.name || 'New Entity',
+      logo_url: sponsor.logo_url || '',
+      website_url: sponsor.website_url || '',
+      type: sponsor.type === 'PARTNER' ? 'PARTNER' : 'SPONSOR',
+      tier: sponsor.type === 'PARTNER' ? 'PARTNER' : 'SPONSOR',
+      categoryOrRole: sponsor.categoryOrRole || (sponsor.type === 'PARTNER' ? 'Strategic Partner' : 'Corporate Sponsor'),
+      description: sponsor.description || '',
+    };
+    setSponsors((prev) => [newSponsor, ...prev]);
+  };
+
+  const updateSponsor = (id: string, updates: Partial<Sponsor>) => {
+    setSponsors((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates, tier: (updates.type || s.type) } : s))
+    );
+  };
+
+  const deleteSponsor = (id: string) => {
+    setSponsors((prev) => prev.filter((s) => s.id !== id));
   };
 
   const refreshEvents = async () => {
@@ -631,6 +672,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addSpeaker,
         updateSpeaker,
         deleteSpeaker,
+        addSponsor,
+        updateSponsor,
+        deleteSponsor,
         addResourceToEvent,
         updateEventResource,
         deleteEventResource,

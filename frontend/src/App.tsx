@@ -37,6 +37,7 @@ import { AdminGuard } from './components/auth/AdminGuard';
 
 import { ScrollProgressBar } from './components/ui/ScrollProgressBar';
 import { WhatsAppWidget } from './components/chat/WhatsAppWidget';
+import { ChatbotWidget } from './components/chat/ChatbotWidget';
 
 // Ensures desktop screens maintain the 100% scale regardless of Windows DPI (125%, 150%, 175%)
 function DpiScaleManager() {
@@ -119,7 +120,12 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
       {!isAdminRoute && <Navbar />}
       <main className="flex-1">{children}</main>
       {!isAdminRoute && <Footer />}
-      {!isAdminRoute && <WhatsAppWidget />}
+      {!isAdminRoute && (
+        <>
+          <WhatsAppWidget />
+          <ChatbotWidget />
+        </>
+      )}
     </div>
   );
 }

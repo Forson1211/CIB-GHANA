@@ -239,13 +239,13 @@ export const EventDetails: React.FC = () => {
 
       {/* 3. WHY ATTEND (Requirement #16) */}
       {event.why_attend && event.why_attend.length > 0 && (
-        <section className="bg-slate-50 py-16 border-y border-slate-200/80">
+        <section className="bg-[#C8102E] py-16 text-white overflow-hidden shadow-inner">
           <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
             <div className="text-center max-w-2xl mx-auto space-y-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-cib-green-700">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#FFE500]">
                 BENEFITS
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-cib-charcoal-900 font-display">
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
                 WHY YOU SHOULD ATTEND
               </h2>
             </div>

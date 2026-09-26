@@ -434,8 +434,13 @@ export const Footer: React.FC = () => {
                   <a href="tel:0302541309" className="hover:text-white transition-colors block">
                     0302 541 309
                   </a>
-                  <a href="tel:0302541308" className="hover:text-white transition-colors block">
-                    0302 541 308
+                  <a
+                    href="https://wa.me/233506339248?text=Hello%20CIB%20Ghana%2C%20I%20would%20like%20to%20inquire%20about%20your%20upcoming%20events."
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-white transition-colors block text-[#FFE500] font-semibold"
+                  >
+                    WhatsApp: 050 633 9248
                   </a>
                 </div>
               </div>

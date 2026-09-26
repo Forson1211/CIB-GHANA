@@ -481,21 +481,22 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 5. WHY ATTEND SECTION (Requirement #11) */}
-      <section className="bg-slate-50 py-20 border-y border-slate-200/80 overflow-hidden">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="bg-[#C8102E] py-16 sm:py-20 text-white overflow-hidden relative shadow-inner">
+        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeInUp}
-            className="text-left max-w-3xl space-y-2"
+            className="text-left max-w-3xl space-y-2.5"
           >
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 font-display uppercase tracking-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display uppercase tracking-tight">
               Why Attend?
             </h2>
-            <p className="text-slate-600 text-sm sm:text-base max-w-2xl">
+            <p className="text-white/90 text-sm sm:text-base max-w-2xl font-medium">
               Gain practical industry knowledge, meet banking leaders, and advance your career.
             </p>
+            <div className="w-16 h-1 bg-[#F5A623] rounded-none mt-2" />
           </motion.div>
 
           <motion.div
@@ -511,32 +512,28 @@ export const Home: React.FC = () => {
                 subtitle: 'Network & Partnerships',
                 icon: Users,
                 color: 'text-[#008129]',
-                bg: 'bg-emerald-50',
-                border: 'hover:border-[#008129]/40',
+                border: 'hover:border-[#F20300]/30',
               },
               {
                 title: 'LEARN',
                 subtitle: 'Knowledge & Masterclasses',
                 icon: BookOpen,
                 color: 'text-amber-600',
-                bg: 'bg-amber-50',
-                border: 'hover:border-amber-500/40',
+                border: 'hover:border-[#F20300]/30',
               },
               {
                 title: 'LEAD',
                 subtitle: 'Policy & Governance',
                 icon: Shield,
                 color: 'text-[#F20300]',
-                bg: 'bg-rose-50',
-                border: 'hover:border-[#F20300]/40',
+                border: 'hover:border-[#F20300]/30',
               },
               {
                 title: 'GROW',
                 subtitle: 'CPD & Career Mastery',
                 icon: TrendingUp,
                 color: 'text-emerald-700',
-                bg: 'bg-emerald-50',
-                border: 'hover:border-emerald-600/40',
+                border: 'hover:border-[#F20300]/30',
               },
             ].map((block, idx) => {
               const Icon = block.icon;
@@ -545,13 +542,14 @@ export const Home: React.FC = () => {
                   key={idx}
                   variants={cardVariant}
                   whileHover={{ y: -8, scale: 1.02, transition: { duration: 0.25 } }}
-                  className={`bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-card hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center justify-center space-y-5 group cursor-pointer ${block.border}`}
+                  className={`bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/80 shadow-card hover:shadow-xl transition-all duration-300 flex flex-col items-center text-center justify-center space-y-4 group cursor-pointer ${block.border}`}
                 >
-                  <div className={`w-20 h-20 rounded-2xl ${block.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-xs`}>
-                    <Icon className={`w-10 h-10 ${block.color} stroke-[2.2]`} />
+                  {/* Clean Icon without background shape - nicely enlarged */}
+                  <div className="flex items-center justify-center py-2 group-hover:scale-110 transition-transform duration-300">
+                    <Icon className={`w-14 h-14 sm:w-16 sm:h-16 ${block.color} stroke-[2.2]`} />
                   </div>
                   <div className="space-y-1.5">
-                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-display tracking-tight group-hover:text-[#008129] transition-colors">
+                    <h3 className="text-2xl sm:text-3xl font-black text-slate-900 font-display tracking-tight group-hover:text-[#F20300] transition-colors">
                       {block.title}
                     </h3>
                     <p className="text-xs sm:text-sm font-semibold text-slate-500 tracking-wide">

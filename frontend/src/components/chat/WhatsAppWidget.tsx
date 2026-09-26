@@ -2,7 +2,7 @@ import React from 'react';
 
 // Easily configure the WhatsApp number when provided by the user
 // Format: international without +, e.g., '233240000000' for Ghana (+233 24 000 0000)
-export const WHATSAPP_PHONE_NUMBER = '233302541309'; 
+export const WHATSAPP_PHONE_NUMBER = '233506339248'; 
 export const WHATSAPP_DEFAULT_MESSAGE = 'Hello CIB Ghana, I would like to inquire about your upcoming events and registration.';
 
 export const WhatsAppWidget: React.FC = () => {
@@ -11,7 +11,7 @@ export const WhatsAppWidget: React.FC = () => {
   )}`;
 
   return (
-    <div className="fixed bottom-6 sm:bottom-8 right-3.5 sm:right-10 md:right-12 z-50 group">
+    <div className="fixed bottom-[84px] sm:bottom-[88px] right-4 sm:right-6 md:right-8 z-50 group">
       {/* Tooltip on hover */}
       <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out whitespace-nowrap bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 shadow-md hidden sm:block">
         Chat with us on WhatsApp
@@ -25,7 +25,7 @@ export const WhatsAppWidget: React.FC = () => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
-        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none"
+        className="w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none"
       >
         <svg
           viewBox="0 0 16 16"

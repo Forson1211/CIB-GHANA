@@ -448,8 +448,8 @@ export const Register: React.FC = () => {
       </div>
 
       {/* Centered Main White Form Card (Solid White, No Round Edges) */}
-      <div id="registration-container" className="max-w-4xl mx-auto px-4 sm:px-6 relative z-10 scroll-mt-24">
-        <div className="bg-white rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.35)] border border-slate-200 p-6 sm:p-10 space-y-8">
+      <div id="registration-container" className="max-w-4xl mx-auto px-3 sm:px-6 relative z-10 scroll-mt-24">
+        <div className="bg-white rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.35)] border border-slate-200 p-4 sm:p-8 md:p-10 space-y-6 sm:space-y-8">
           {/* Header Title Section inside the White Card */}
           <div className="space-y-2 text-center border-b border-slate-100 pb-6">
             <h1 className="text-2xl sm:text-3xl font-black text-cib-charcoal-900 font-display">
@@ -462,7 +462,7 @@ export const Register: React.FC = () => {
 
           {/* 5-Step Progress Indicator with Connecting Line Navigation */}
           {currentStep < 5 && (
-            <div className="bg-slate-50/80 p-5 border border-slate-200 relative">
+            <div className="bg-slate-50/80 p-3 sm:p-5 border border-slate-200 relative">
               <div className="relative flex items-center justify-between">
                 {/* Connecting Line Behind Circles */}
                 <div className="absolute top-[18px] left-[10%] right-[10%] -translate-y-1/2 h-[2px] bg-slate-200 z-0">
@@ -546,7 +546,7 @@ export const Register: React.FC = () => {
                     <div
                       key={item.id}
                       onClick={() => setMembershipCategory(item.id)}
-                      className={`p-6 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${
+                      className={`p-4 sm:p-6 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${
                         isSelected
                           ? 'bg-[#1B7E3E] text-white shadow-sm'
                           : 'bg-[#F1F3F5] text-slate-900 hover:bg-[#E8EAED]'
@@ -594,14 +594,14 @@ export const Register: React.FC = () => {
                   type="button"
                   disabled={!membershipCategory || !privacyAgreed}
                   onClick={() => setCurrentStep(2)}
-                  className={`inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-none font-bold text-sm sm:text-base transition-all shadow-md ${
+                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${
                     membershipCategory && privacyAgreed
                       ? 'bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  <span>Continue to Your Details</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span className="whitespace-nowrap">Continue<span className="hidden sm:inline"> to Your Details</span></span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
                 </button>
               </div>
             </div>
@@ -817,26 +817,26 @@ export const Register: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(1)}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-none text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-none text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Back</span>
                 </button>
                 <button
                   type="submit"
                   disabled={!isStep2Valid}
-                  className={`inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-none font-bold text-sm sm:text-base transition-all shadow-md ${
+                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${
                     isStep2Valid
                       ? 'bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }`}
                 >
-                  <span>Continue to Preferences</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span className="whitespace-nowrap">Continue<span className="hidden sm:inline"> to Preferences</span></span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
                 </button>
               </div>
             </form>
@@ -889,21 +889,21 @@ export const Register: React.FC = () => {
                 })}
               </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCurrentStep(2)}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-none text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-none text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors shrink-0"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>Back</span>
                 </button>
                 <button
                   type="submit"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-none font-bold text-sm sm:text-base transition-all shadow-md bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer"
                 >
-                  <span>Continue to Payment</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <span className="whitespace-nowrap">Continue<span className="hidden sm:inline"> to Payment</span></span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
                 </button>
               </div>
             </form>
@@ -1025,19 +1025,19 @@ export const Register: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsPaystackOpen(true)}
-                  className="w-full py-4 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-black text-sm sm:text-base flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
                 >
                   <span>Proceed to Payment</span>
-                  <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                 </button>
 
                 <div className="flex justify-center">
                   <button
                     type="button"
                     onClick={() => setCurrentStep(3)}
-                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1"
+                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1 py-1"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>Back to Attendance</span>
                   </button>
                 </div>
@@ -1117,15 +1117,15 @@ export const Register: React.FC = () => {
               </div>
 
               {/* Ticket Action Buttons */}
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() =>
                     navigate(`/events/${event.slug}/ticket/${completedRegistration.registration_number}`)
                   }
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm sm:text-base transition-all shadow-md bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-6 sm:py-3 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer whitespace-nowrap"
                 >
-                  <TicketIcon className="w-4 h-4" />
+                  <TicketIcon className="w-4 h-4 shrink-0" />
                   <span>View Digital Ticket Pass</span>
                 </button>
 
@@ -1133,16 +1133,16 @@ export const Register: React.FC = () => {
                   href={`/api/emails/preview/${completedRegistration.registration_number}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100 font-bold text-xs sm:text-sm transition-colors"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-none border border-blue-200 text-blue-700 bg-blue-50/60 hover:bg-blue-100 font-bold text-xs sm:text-sm transition-colors whitespace-nowrap"
                   title="Open the exact HTML email dispatched to your inbox"
                 >
-                  <Mail className="w-4 h-4" />
+                  <Mail className="w-3.5 h-3.5 shrink-0" />
                   <span>Preview Dispatched Email</span>
                 </a>
 
                 <Link
                   to="/dashboard"
-                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-200 hover:border-slate-300 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-none border border-slate-200 hover:border-slate-300 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap"
                 >
                   Go to Delegate Portal
                 </Link>

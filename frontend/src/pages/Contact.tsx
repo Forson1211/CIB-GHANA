@@ -141,19 +141,24 @@ export const Contact: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Call Us */}
+                  {/* Call & WhatsApp Us */}
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-[#1B7E3E] text-white flex items-center justify-center shrink-0 shadow-sm">
                       <Phone className="w-5 h-5 text-white stroke-[2.2]" />
                     </div>
                     <div className="space-y-0.5 pt-0.5">
-                      <h3 className="text-base font-bold text-slate-900 leading-tight">Call Us</h3>
+                      <h3 className="text-base font-bold text-slate-900 leading-tight">Call & WhatsApp</h3>
                       <p className="text-xs sm:text-sm text-slate-600 font-medium">
                         Phone : +233 (0) 302 541 308
                       </p>
-                      <p className="text-xs text-slate-500">
-                        Helpline : +233 (0) 55 227 7888
-                      </p>
+                      <a
+                        href="https://wa.me/233506339248?text=Hello%20CIB%20Ghana%2C%20I%20would%20like%20to%20inquire%20about%20your%20upcoming%20events."
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs sm:text-sm text-[#1B7E3E] hover:underline font-semibold block transition-colors"
+                      >
+                        WhatsApp : +233 (0) 50 633 9248
+                      </a>
                     </div>
                   </div>
                 </div>

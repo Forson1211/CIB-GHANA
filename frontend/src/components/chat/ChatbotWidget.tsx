@@ -17,6 +17,8 @@ import {
   MapPin,
   Users
 } from 'lucide-react';
+import chatbotIcon from '../../assets/chatbot-icon-gold.png';
+import { LivingChatbotAvatar } from './LivingChatbotAvatar';
 
 interface ChatMessage {
   id: string;
@@ -24,14 +26,15 @@ interface ChatMessage {
   text: string;
   time: string;
   actionLinks?: Array<{ label: string; url: string; isExternal?: boolean }>;
+  provider?: string;
 }
 
 const INITIAL_SUGGESTIONS = [
-  { id: 'register', label: '🎟️ How do I register?', query: 'How do I register for the conference?' },
-  { id: 'cpd', label: '🎓 CPD Hours awarded?', query: 'What CPD hours are awarded?' },
-  { id: 'venue', label: '📍 Dates & Venue?', query: 'Where and when is the event held?' },
-  { id: 'fees', label: '💳 Ticket Pricing & MoMo?', query: 'What are the ticket prices and payment methods?' },
-  { id: 'sponsor', label: '🤝 Sponsorship info?', query: 'How can my organization sponsor or exhibit?' },
+  { id: 'about', label: 'What is the Banking Conference?', query: 'Tell me about the 30th National Banking and Ethics Conference.' },
+  { id: 'register', label: 'How do I register & pay?', query: 'How do I register for the conference and pay with MoMo or Card?' },
+  { id: 'packages', label: 'Which package should I explore?', query: 'What delegate and accommodation packages are available?' },
+  { id: 'cpd', label: 'How many CPD hours are awarded?', query: 'How many CPD hours do delegates earn?' },
+  { id: 'venue', label: 'Where is the venue & dates?', query: 'Where and when is the event taking place?' },
 ];
 
 export const ChatbotWidget: React.FC = () => {
@@ -50,13 +53,7 @@ export const ChatbotWidget: React.FC = () => {
     {
       id: 'welcome-1',
       sender: 'bot',
-      text: "Hello! 👋 Welcome to CIB Ghana Events Secretariat. I'm your digital concierge.",
-      time: getCurrentTime(),
-    },
-    {
-      id: 'welcome-2',
-      sender: 'bot',
-      text: "How can I assist you today? You can ask about our upcoming 30th National Banking Conference, registration tickets, CPD accreditation, or sponsorship.",
+      text: "Welcome to CIB Ghana. I can help you find upcoming programmes, understand delegate packages, or discover how to register, reserve accommodation, and earn CPD accreditation.",
       time: getCurrentTime(),
     },
   ]);
@@ -72,7 +69,67 @@ export const ChatbotWidget: React.FC = () => {
     }
   }, [isOpen, messages, isTyping]);
 
-  const handleSendMessage = (textToSend?: string) => {
+  const getContextualActionLinks = (userQuery: string, botReply: string) => {
+    const combined = (userQuery + ' ' + botReply).toLowerCase();
+    const links: Array<{ label: string; url: string; isExternal?: boolean }> = [];
+
+    if (
+      combined.includes('register') ||
+      combined.includes('package') ||
+      combined.includes('single') ||
+      combined.includes('double') ||
+      combined.includes('early bird') ||
+      combined.includes('paystack') ||
+      combined.includes('ghs')
+    ) {
+      links.push({
+        label: 'Register for 30th Conference →',
+        url: '/events/30th-national-banking-ethics-conference-2026/register',
+      });
+    }
+
+    if (
+      combined.includes('whatsapp') ||
+      combined.includes('contact') ||
+      combined.includes('phone') ||
+      combined.includes('call') ||
+      combined.includes('secretariat') ||
+      combined.includes('0506339248')
+    ) {
+      links.push({
+        label: 'Chat on WhatsApp (+233506339248) →',
+        url: 'https://wa.me/233506339248?text=Hello%20CIB%20Ghana%2C%20I%20would%20like%20to%20inquire%20about%20the%20conference.',
+        isExternal: true,
+      });
+    }
+
+    if (
+      combined.includes('cpd') ||
+      combined.includes('portal') ||
+      combined.includes('ticket') ||
+      combined.includes('pass')
+    ) {
+      links.push({
+        label: 'Access Delegate Portal →',
+        url: '/dashboard',
+      });
+    }
+
+    if (
+      combined.includes('speaker') ||
+      combined.includes('addison') ||
+      combined.includes('faculty')
+    ) {
+      links.push({
+        label: 'Explore Speakers & Faculty →',
+        url: '/speakers',
+      });
+    }
+
+    return links.length > 0 ? links : undefined;
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend || inputText).trim();
     if (!text) return;
 
@@ -83,86 +140,317 @@ export const ChatbotWidget: React.FC = () => {
       time: getCurrentTime(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const nextMessages = [...messages, userMessage];
+    setMessages(nextMessages);
     setInputText('');
     setIsTyping(true);
 
-    // Generate intelligent AI response after short realistic delay
-    setTimeout(() => {
-      const botResponse = generateBotResponse(text);
-      setMessages((prev) => [...prev, botResponse]);
-      setIsTyping(false);
-    }, 600);
+    try {
+      // Build conversation history for multi-turn AI context (like ChatGPT and Gemini)
+      const formattedHistory = nextMessages
+        .slice(-10)
+        .map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text,
+        }));
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          messages: formattedHistory,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.reply) {
+          const actionLinks = getContextualActionLinks(text, data.reply);
+          const botMessage: ChatMessage = {
+            id: `bot-${Date.now()}`,
+            sender: 'bot',
+            text: data.reply,
+            time: getCurrentTime(),
+            actionLinks,
+            provider: data.provider,
+          };
+          setMessages((prev) => [...prev, botMessage]);
+          setIsTyping(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[AI Assistant] Remote endpoint error, engaging instant neural fallback:', err);
+    }
+
+    // Instant local fallback if offline or backend unavailable
+    const botResponse = generateBotResponse(text);
+    setMessages((prev) => [...prev, botResponse]);
+    setIsTyping(false);
   };
 
   const generateBotResponse = (query: string): ChatMessage => {
     const q = query.toLowerCase();
 
-    // 1. Registration & Tickets
+    // 1. Conference Overview & Theme
     if (
-      q.includes('register') ||
-      q.includes('ticket') ||
-      q.includes('fee') ||
-      q.includes('cost') ||
-      q.includes('price') ||
-      q.includes('pay') ||
-      q.includes('momo') ||
-      q.includes('buy')
+      q.includes('about') ||
+      q.includes('conference') ||
+      q.includes('theme') ||
+      q.includes('event') ||
+      q.includes('overview') ||
+      q.includes('banking and ethics') ||
+      q.includes('30th') ||
+      q.includes('what is the banking conference')
     ) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "Registration for the **30th National Banking & Ethics Conference** is active! \n\n• **Standard Delegate**: GH₵ 2,500\n• **CIB Chartered Member**: GH₵ 1,800\n• **VIP Executive**: GH₵ 3,500\n\nPayments are processed instantly via **Paystack** (supports MTN Mobile Money, Telecel Cash, AT Money, and Visa/Mastercard debit cards).",
+        text: "The **30th National Banking & Ethics Conference 2026** is Ghana's premier gathering of commercial bank CEOs, central bank regulators, board chairs, and financial executives hosted by the Chartered Institute of Bankers, Ghana.\n\n• **Theme**: *'Banking on the Future — Trust, Technology and Transformation'*\n• **Key Pillars**: Ethical Corporate Governance, AI-Driven Fraud Prevention, Climate Finance & ESG, and AfCFTA Cross-Border Trade Rails.\n• **Accreditation**: Awards **16 CIB CPD Credits** recognized sector-wide under Act 991.",
         time: getCurrentTime(),
         actionLinks: [
-          { label: 'Register Online Now →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
-          { label: 'View All Programmes', url: '/events' },
+          { label: 'Register for 30th Conference →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+          { label: 'Explore Speakers & Faculty', url: '/speakers' },
         ],
       };
     }
 
-    // 2. CPD Hours & Accreditation
+    // 2. Dates & Schedule
     if (
-      q.includes('cpd') ||
-      q.includes('hour') ||
-      q.includes('point') ||
-      q.includes('credit') ||
-      q.includes('accred') ||
-      q.includes('certificate')
+      q.includes('date') ||
+      q.includes('when') ||
+      q.includes('day') ||
+      q.includes('time') ||
+      q.includes('calendar') ||
+      q.includes('november') ||
+      q.includes('deadline')
     ) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "The 30th National Banking & Ethics Conference awards **16 Accredited CPD Hours** under the Chartered Institute of Bankers, Ghana Act 991.\n\nAttendance is tracked electronically via your digital QR ticket, and certified digital CPD certificates are issued directly to your delegate dashboard upon conference conclusion.",
+        text: "📅 **Conference Schedule & Key Dates**:\n\n• **Dates**: **8th – 10th November, 2026** (3-Day Executive Programme)\n• **Early Bird Deadline**: **20th October, 2026** (Book early to secure discounted luxury chalet accommodation)\n• **Registration Close**: 5th November, 2026\n• **Daily Hours**: 08:00 AM – 17:30 GMT (followed by networking dinners)",
         time: getCurrentTime(),
         actionLinks: [
-          { label: 'Secretariat Contact', url: '/contact' },
+          { label: 'Register Before Early Bird Deadline →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
         ],
       };
     }
 
-    // 3. Venue & Dates
+    // 3. Venue & Location (Aqua Safari Resort, Ada)
     if (
       q.includes('venue') ||
       q.includes('where') ||
       q.includes('location') ||
       q.includes('hotel') ||
-      q.includes('date') ||
-      q.includes('when') ||
-      q.includes('kempinski')
+      q.includes('ada') ||
+      q.includes('resort') ||
+      q.includes('aqua safari') ||
+      q.includes('place')
     ) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "📅 **Dates**: 9th – 10th November, 2026\n📍 **Venue**: Kempinski Hotel Gold Coast City, Accra, Ghana\n\nBoth **in-person** executive seating and **interactive virtual hybrid** passes are available for international and regional participants.",
+        text: "📍 **Venue & Location**:\n\n• **Venue**: **Aqua Safari Resort, Ada, Greater Accra, Ghana**\n• **Setting**: Ghana's top riverfront luxury resort situated along the serene Volta River estuary.\n• **Amenities Included**: Air-conditioned conference halls, high-speed WiFi, waterfront dining, pontoon boat cruises, and luxury chalets.\n• **Accessibility**: Shuttle services and private executive parking available for all registered delegates.",
         time: getCurrentTime(),
         actionLinks: [
-          { label: 'Register for Kempinski Seat →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+          { label: 'Book Aqua Safari Package →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
         ],
       };
     }
 
-    // 4. Sponsorship & Partnership
+    // 4. Packages, Pricing & Accommodation
+    if (
+      q.includes('package') ||
+      q.includes('price') ||
+      q.includes('cost') ||
+      q.includes('fee') ||
+      q.includes('accommodation') ||
+      q.includes('room') ||
+      q.includes('single') ||
+      q.includes('double') ||
+      q.includes('occupancy') ||
+      q.includes('rate')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🎟️ **Accommodation & Event Packages (Aqua Safari, Ada)**:\n\n• **Single Occupancy Package**: **GHS 5,600**\n  Includes 2 nights private luxury chalet accommodation, full conference access, Masterclass fee, 2 nights banquet dinners, and resort leisure activities.\n\n• **Double Occupancy Package**: **GHS 4,000**\n  Includes shared 2 nights accommodation, conference access, Masterclass fee, 2 nights dinner, and resort activities.\n\n• **Standard Conference Pass**: **GHS 1,200**\n\n*Early Bird rates expire 20th October 2026.*",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Select Your Package & Register →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 5. How to Register & Step-by-Step
+    if (
+      q.includes('register') ||
+      q.includes('registration') ||
+      q.includes('how do i register') ||
+      q.includes('sign up') ||
+      q.includes('enroll')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "📝 **How to Register in 4 Easy Steps**:\n\n1. **Select Membership**: Choose ACIB, FCIB, Student, or Non-Member.\n2. **Enter Delegate Details**: Name, corporate email, phone, organization, and designation.\n3. **Choose Attendance Mode**: Select In-Person at Aqua Safari or Virtual Livestream.\n4. **Pick Package & Masterclass**: Select Single (GHS 5,600) or Double (GHS 4,000) occupancy and your preferred training track.\n5. **Instant Checkout**: Pay securely with MTN MoMo, Telecel Cash, AT Money, or Visa/Mastercard via Paystack.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Start Registration Online Now →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 6. Payment Methods & MoMo
+    if (
+      q.includes('pay') ||
+      q.includes('momo') ||
+      q.includes('mobile money') ||
+      q.includes('mtn') ||
+      q.includes('telecel') ||
+      q.includes('card') ||
+      q.includes('visa') ||
+      q.includes('mastercard') ||
+      q.includes('paystack')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "💳 **Payment Options & Security**:\n\nAll payments are processed securely through **Paystack** with 256-bit encryption:\n\n• **Mobile Money**: MTN Mobile Money, Telecel Cash, and AT Money.\n• **Bank Cards**: Visa, Mastercard debit/credit cards.\n\nUpon payment clearance, your official **Digital QR Pass** and tax invoice are generated and dispatched immediately to your email.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Proceed to Payment & Registration →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 7. Masterclasses & Training Tracks
+    if (
+      q.includes('masterclass') ||
+      q.includes('training') ||
+      q.includes('class') ||
+      q.includes('track') ||
+      q.includes('workshop')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🧠 **Executive Masterclass Tracks (Included in Package)**:\n\n1. **Deploying AI to Combat Modern Fraud in International Trade Finance**\n   Machine learning detection, invoice spoofing, and predictive risk rails.\n\n2. **Cybersecurity and Fraud Detection**\n   Defending core banking infrastructure against ransomware and synthetic identity attacks.\n\n3. **Virtual Assets and Impact**\n   Central bank digital currencies (eCedi), tokenized deposits, and digital asset regulation.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Select Your Masterclass Track →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 8. CPD Credits & Accreditation (Act 991)
+    if (
+      q.includes('cpd') ||
+      q.includes('credit') ||
+      q.includes('hour') ||
+      q.includes('point') ||
+      q.includes('certificate') ||
+      q.includes('accreditation')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🎓 **16 Accredited CIB CPD Hours**:\n\n• Under the **Chartered Institute of Bankers Ghana Act, 2019 (Act 991)**, all licensed banking practitioners are required to maintain continuous professional competence.\n• Attending the 30th Conference awards **16 certified CPD hours**.\n• Attendance is verified via your digital QR ticket, and official certificates are downloadable directly from the Delegate Portal upon conference conclusion.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Access Delegate Portal →', url: '/dashboard' },
+          { label: 'Register for 16 CPD Credits', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 9. Speakers & Faculty
+    if (
+      q.includes('speaker') ||
+      q.includes('faculty') ||
+      q.includes('who') ||
+      q.includes('governor') ||
+      q.includes('addison') ||
+      q.includes('dzato') ||
+      q.includes('mansa') ||
+      q.includes('panel')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🎙️ **Featured Conference Speakers & Keynotes**:\n\n• **Dr. Ernest Addison** &mdash; Governor, Bank of Ghana\n• **Robert Dzato (FCIB)** &mdash; CEO, Chartered Institute of Bankers, Ghana\n• **Mansa Nettey** &mdash; CEO, Standard Chartered Bank Ghana\n• **Hakim Ouzzani** &mdash; Managing Director, Societe Generale Ghana\n• **Abena Osei-Poku** &mdash; Managing Director, Ecobank Ghana\n• **John Kofi Adomakoh** &mdash; Managing Director, GCB Bank PLC\n• **Elsie Addo Awadzi** &mdash; Financial Regulatory Advisor\n• **Samuel Sackey** &mdash; CISO, Stanbic Bank Ghana",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'View All Keynote Speakers & Bios →', url: '/speakers' },
+        ],
+      };
+    }
+
+    // 10. About CIB Ghana (Chartered Institute of Bankers)
+    if (
+      q.includes('cib') ||
+      q.includes('institute') ||
+      q.includes('what is cib') ||
+      q.includes('act 991') ||
+      q.includes('mandate') ||
+      q.includes('motto') ||
+      q.includes('chartered')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🏛️ **About the Chartered Institute of Bankers, Ghana (CIB Ghana)**:\n\n• **Legal Mandate**: Established by an Act of Parliament &mdash; **Chartered Institute of Bankers Ghana Act, 2019 (Act 991)**.\n• **Role**: The statutory regulatory and certification body for banking professionals in Ghana, upholding international ethical benchmarks and financial competence.\n• **Motto**: *'Honesty and Integrity'*\n• **Leadership**: Governed by the CIB Governing Council and led by CEO **Robert Dzato (FCIB)**.\n• **Secretariat**: Trinity Avenue, Okponglo - East Legon, Accra.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Contact CIB Secretariat →', url: '/contact' },
+          { label: 'Explore Annual Programmes', url: '/events' },
+        ],
+      };
+    }
+
+    // 11. Membership Categories (ACIB, FCIB, Student)
+    if (
+      q.includes('member') ||
+      q.includes('acib') ||
+      q.includes('fcib') ||
+      q.includes('student') ||
+      q.includes('non-member') ||
+      q.includes('join')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "👥 **CIB Ghana Membership Categories**:\n\n• **ACIB (Associate Chartered Banker)**: Fully chartered banking practitioners who have completed certified professional examinations.\n• **FCIB (Fellow)**: Distinguished senior banking executives honored for exceptional leadership.\n• **Student Member**: Individuals enrolled in the professional banking curriculum.\n• **Non-Member**: Corporate executives, fintech professionals, and public sector stakeholders welcome to participate in all conferences.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Register with Your Member Category →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 12. Attendance Mode (In-Person vs Virtual)
+    if (
+      q.includes('virtual') ||
+      q.includes('online') ||
+      q.includes('stream') ||
+      q.includes('livestream') ||
+      q.includes('hybrid') ||
+      q.includes('physical') ||
+      q.includes('in-person')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🌐 **Hybrid Conference Format**:\n\n• **In-Person Pass**: Join onsite at Aqua Safari Resort in Ada for luxury chalet lodging, executive networking banquets, and tactile masterclasses.\n• **Virtual Livestream Pass**: Stream live in ultra-high-definition with interactive Q&A polls, downloadable conference presentation slide decks, and digital CPD accreditation.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Choose Your Attendance Mode →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 13. Sponsorship & Corporate Exhibition
     if (
       q.includes('sponsor') ||
       q.includes('partner') ||
@@ -173,81 +461,68 @@ export const ChatbotWidget: React.FC = () => {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "CIB Ghana provides high-impact sponsorship tiers for financial institutions, fintechs, and technology partners:\n\n• **Platinum Key Partner**: Exclusive keynote session & prime exhibition foyer.\n• **Gold Partner**: Executive CEO lounge branding & 10 delegate passes.\n• **Silver & Exhibition Booth**: Dedicated promotional stand.\n\nOur secretariat can tailor custom packages to meet institutional goals.",
+        text: "🤝 **Sponsorship & Exhibition Opportunities**:\n\nPartner with CIB Ghana to showcase financial technology and services to 650+ banking executives:\n\n• **Platinum Key Partner**: Exclusive keynote session, brand spotlight, and VIP lounge host.\n• **Gold Partner**: 10 delegate passes & executive exhibition foyer booth.\n• **Silver & Partner**: Dedicated digital branding & delegate pack inclusion.\n\n*Key Partners include Bank of Ghana, StanChart, Ecobank, GCB Bank, and GhIPSS.*",
         time: getCurrentTime(),
         actionLinks: [
-          { label: 'Sponsor / Exhibit Inquiry →', url: '/contact' },
+          { label: 'Sponsorship Inquiries (Contact Form) →', url: '/contact' },
         ],
       };
     }
 
-    // 5. Speakers & Faculty
-    if (
-      q.includes('speaker') ||
-      q.includes('faculty') ||
-      q.includes('who') ||
-      q.includes('governor') ||
-      q.includes('panel')
-    ) {
-      return {
-        id: `bot-${Date.now()}`,
-        sender: 'bot',
-        text: "The conference faculty features top leadership from the **Bank of Ghana**, Managing Directors of leading commercial banks, international ESG strategists, and fintech executives.\n\nYou can explore all confirmed keynote speakers, panel chairs, and bios on our Speakers page.",
-        time: getCurrentTime(),
-        actionLinks: [
-          { label: 'View Conference Faculty & Speakers →', url: '/speakers' },
-        ],
-      };
-    }
-
-    // 6. Agenda & Itinerary
-    if (
-      q.includes('agenda') ||
-      q.includes('schedule') ||
-      q.includes('time') ||
-      q.includes('program') ||
-      q.includes('topic')
-    ) {
-      return {
-        id: `bot-${Date.now()}`,
-        sender: 'bot',
-        text: "The 2-day conference covers:\n\n• **Day 1**: Governor's Regulatory Address, Ethical Leadership, and ESG Capital Allocation.\n• **Day 2**: AI-Driven Banking Risk, Digital Currency & Instant Payments, and Annual Banking Ethics Awards.",
-        time: getCurrentTime(),
-        actionLinks: [
-          { label: 'View Full Agenda on Home Page', url: '/#agenda' },
-        ],
-      };
-    }
-
-    // 7. Contact & Secretariat Staff
+    // 14. Contact, WhatsApp & Secretariat Address
     if (
       q.includes('contact') ||
       q.includes('call') ||
       q.includes('phone') ||
       q.includes('email') ||
-      q.includes('human') ||
+      q.includes('whatsapp') ||
       q.includes('secretariat') ||
-      q.includes('agent')
+      q.includes('human') ||
+      q.includes('help') ||
+      q.includes('support')
     ) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "You can reach the **CIB Ghana Events Secretariat** directly:\n\n📞 **Phone**: 0302 541 309 / 0302 541 308\n📧 **Email**: info@cibgh.org\n🏢 **Address**: Okponglo-East Legon, Trinity Avenue, Accra\n🕒 **Hours**: Mon – Fri: 8:00 AM – 5:00 PM GMT",
+        text: "📞 **CIB Ghana Secretariat Contact Channels**:\n\n• 📱 **WhatsApp Support**: **+233 (0) 50 633 9248** (Instant response)\n• 📞 **Telephone**: **+233 (0) 302 541 308**\n• 📧 **Event Secretariat**: `events@cibgh.org`\n• 📧 **General Inquiries**: `info@cibgh.org`\n• 🏢 **Head Office**: CIB Ghana Secretariat, Trinity Avenue, Okponglo - East Legon, Accra, Ghana\n• 🕒 **Hours**: Monday to Friday: 8:00 AM – 5:00 PM GMT",
         time: getCurrentTime(),
         actionLinks: [
-          { label: 'Open Contact Form →', url: '/contact' },
+          { label: 'Chat on WhatsApp Now (+233506339248) →', url: 'https://wa.me/233506339248?text=Hello%20CIB%20Ghana%2C%20I%20would%20like%20to%20inquire%20about%20your%20upcoming%20events.', isExternal: true },
+          { label: 'Open Contact Form', url: '/contact' },
         ],
       };
     }
 
-    // Default Fallback Response
+    // 15. Digital Ticket Pass & Delegate Portal
+    if (
+      q.includes('ticket') ||
+      q.includes('pass') ||
+      q.includes('qr') ||
+      q.includes('portal') ||
+      q.includes('dashboard') ||
+      q.includes('login')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "🎟️ **Digital Ticket Pass & Delegate Dashboard**:\n\n• Once registered, an official digital QR pass is issued with your accredited registration ID.\n• Show your QR pass on your smartphone at the Aqua Safari check-in desk for accreditation badge printing.\n• Access the **Delegate Portal** at any time to view schedules, download session papers, and retrieve CPD certificates.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Access Delegate Portal →', url: '/dashboard' },
+          { label: 'Register for Digital Ticket', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // Default Comprehensive Fallback Response
     return {
       id: `bot-${Date.now()}`,
       sender: 'bot',
-      text: "Thank you for asking! I can help you register for conferences, review CPD credits, explore the event schedule, or connect with our secretariat team. What would you like to know more about?",
+      text: "Thank you for reaching out to the CIB Ghana Assistant! I can help you with:\n\n• **Conference Info**: 8–10 Nov 2026 at Aqua Safari Resort, Ada.\n• **Packages & Pricing**: Single (GHS 5,600) & Double (GHS 4,000) occupancy.\n• **Accreditation**: 16 CIB CPD Credits under Act 991.\n• **Registration & Payments**: Instant checkout with MoMo or Bank Card via Paystack.\n• **Secretariat Support**: WhatsApp at **0506339248** or phone **0302 541 308**.\n\nWhat would you like to explore next?",
       time: getCurrentTime(),
       actionLinks: [
-        { label: 'Register for 30th Conference', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        { label: 'Register for 30th Conference →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        { label: 'WhatsApp Support (0506339248)', url: 'https://wa.me/233506339248?text=Hello%20CIB%20Ghana%2C%20I%20would%20like%20to%20inquire%20about%20the%20conference.', isExternal: true },
         { label: 'Contact Secretariat', url: '/contact' },
       ],
     };
@@ -256,9 +531,9 @@ export const ChatbotWidget: React.FC = () => {
   const handleResetChat = () => {
     setMessages([
       {
-        id: 'welcome-reset',
+        id: `welcome-${Date.now()}`,
         sender: 'bot',
-        text: "Chat refreshed. How can the CIB Ghana Events Secretariat assist you?",
+        text: "Welcome to CIB Ghana. I can help you find upcoming programmes, understand delegate packages, or discover how to register, reserve accommodation, and earn CPD accreditation.",
         time: getCurrentTime(),
       },
     ]);
@@ -266,166 +541,214 @@ export const ChatbotWidget: React.FC = () => {
 
   return (
     <>
-      {/* Floating Chat Launcher Button (Fixed bottom right) */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Floating Chat Launcher Button (Positioned below WhatsApp icon) */}
+      <div className="fixed bottom-5 sm:bottom-6 right-4 sm:right-6 md:right-8 z-50 group">
+        {/* Tooltip on hover */}
+        <div className="absolute right-full mr-3 top-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200 ease-out whitespace-nowrap bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 shadow-md hidden sm:block">
+          CIB AI Assistant
+          {/* Little right arrow pointer */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-full w-0 h-0 border-y-4 border-y-transparent border-l-4 border-l-slate-900" />
+        </div>
+
         <motion.button
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(!isOpen)}
           aria-label={isOpen ? 'Close CIB Assistant' : 'Open CIB Events Secretariat Assistant'}
-          className="relative w-14 h-14 rounded-full bg-[#008129] hover:bg-[#006b22] text-white shadow-2xl flex items-center justify-center border-2 border-white/20 transition-all focus:outline-none"
-          title="CIB Events Secretariat AI Concierge"
+          className="relative w-14 h-14 flex items-center justify-center transition-all focus:outline-none bg-transparent border-0 p-0 shadow-none hover:shadow-none"
+          title="CIB Events Secretariat AI Assistant"
         >
           {isOpen ? (
-            <X className="w-6 h-6 stroke-[2.5]" />
+            <div className="w-14 h-14 rounded-full bg-[#008129] text-white flex items-center justify-center shadow-xl">
+              <X className="w-6 h-6 stroke-[2.5]" />
+            </div>
           ) : (
-            <>
-              <MessageSquare className="w-6 h-6 fill-white" />
-              {hasUnread && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-[#FFE500] border-2 border-[#008129]" />
-                </span>
-              )}
-            </>
+            <LivingChatbotAvatar size={56} className="w-14 h-14" />
           )}
         </motion.button>
       </div>
 
-      {/* Interactive Chatbot Modal Window */}
+      {/* Interactive Chatbot Modal Window (Sharp rectangular 'no round edges' design) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.92 }}
+            initial={{ opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.94 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
-            className="fixed bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] h-[580px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/90 flex flex-col overflow-hidden"
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="fixed bottom-[88px] sm:bottom-24 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[430px] h-[600px] max-h-[84vh] bg-white rounded-none shadow-[0_20px_60px_rgba(0,0,0,0.28)] border border-slate-200/90 flex flex-col overflow-hidden"
           >
-            {/* Header: CIB Ghana Branding */}
-            <div className="bg-gradient-to-r from-[#032616] via-[#04331e] to-[#008129] text-white px-5 py-4 flex items-center justify-between shadow-md">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shadow-inner">
-                    <Bot className="w-5 h-5 text-amber-300" />
-                  </div>
-                  <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#032616]" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black font-display tracking-tight text-white flex items-center gap-1.5">
-                    <span>CIB Concierge</span>
-                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-400/90 text-slate-900 uppercase">
-                      AI Live
+            {/* Header: CIB Ghana Brand Green */}
+            <div className="relative bg-[#008129] text-white px-5 pt-4 pb-4 overflow-hidden select-none shrink-0">
+              {/* Soft filled watermarks */}
+              <div className="absolute -top-10 -right-6 w-44 h-44 rounded-full bg-white/10 pointer-events-none" />
+              <div className="absolute -top-5 -right-1 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
+
+              <div className="relative z-10 flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/cib-logo-white.png"
+                    alt="CIB Ghana"
+                    className="h-10 sm:h-11 w-auto max-w-[130px] object-contain shrink-0"
+                  />
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-amber-300 tracking-wider uppercase">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      CIB AI VISITOR CONCIERGE • REAL-TIME
                     </span>
-                  </h3>
-                  <p className="text-[11px] text-emerald-200 font-medium">
-                    Events Secretariat &bull; Online
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={handleResetChat}
-                  title="Reset conversation"
-                  className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <RotateCcw className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  title="Minimize chat"
-                  className="p-1.5 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <ChevronDown className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Sub-header Banner */}
-            <div className="bg-emerald-50/80 px-4 py-2 border-b border-emerald-100 flex items-center justify-between text-[11px] text-emerald-900">
-              <span className="font-semibold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#008129]" />
-                30th National Banking Conference Assistant
-              </span>
-              <span className="font-mono text-emerald-700 text-[10px]">Nov 9–10, 2026</span>
-            </div>
-
-            {/* Messages Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/60 text-xs">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed shadow-sm ${
-                      msg.sender === 'user'
-                        ? 'bg-[#008129] text-white rounded-br-none'
-                        : 'bg-white text-slate-800 border border-slate-200/80 rounded-bl-none'
-                    }`}
-                  >
-                    <p className="whitespace-pre-line text-[12.5px]">
-                      {msg.text.split(/(\*\*.*?\*\*)/g).map((part, idx) => {
-                        if (part.startsWith('**') && part.endsWith('**')) {
-                          return (
-                            <strong key={idx} className="font-extrabold text-slate-900">
-                              {part.slice(2, -2)}
-                            </strong>
-                          );
-                        }
-                        return part;
-                      })}
-                    </p>
-
-                    {/* Interactive Action Links inside bot message */}
-                    {msg.actionLinks && msg.actionLinks.length > 0 && (
-                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
-                        {msg.actionLinks.map((link, idx) => (
-                          <Link
-                            key={idx}
-                            to={link.url}
-                            onClick={() => setIsOpen(false)}
-                            className="inline-flex items-center justify-between gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-[#008129] font-bold text-[11.5px] transition-colors border border-emerald-200/60"
-                          >
-                            <span>{link.label}</span>
-                            <ExternalLink className="w-3 h-3 shrink-0" />
-                          </Link>
-                        ))}
-                      </div>
-                    )}
+                    <h2 className="text-xl sm:text-[23px] font-black text-white font-display tracking-tight leading-tight">
+                      How can I guide you?
+                    </h2>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 px-1">{msg.time}</span>
                 </div>
-              ))}
 
-              {/* Bot typing indicator */}
-              {isTyping && (
-                <div className="flex items-center gap-1.5 bg-white border border-slate-200 px-3.5 py-2.5 rounded-2xl rounded-bl-none w-fit shadow-xs">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#008129] animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#008129] animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#008129] animate-bounce" />
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick Suggestion Chips */}
-            <div className="px-3 py-2 bg-white border-t border-slate-100 overflow-x-auto flex gap-1.5 scrollbar-none shrink-0">
-              {INITIAL_SUGGESTIONS.map((item) => (
+                {/* Circular Close Button */}
                 <button
-                  key={item.id}
-                  onClick={() => handleSendMessage(item.query)}
-                  className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-emerald-50 hover:text-[#008129] text-[11px] font-semibold text-slate-600 whitespace-nowrap transition-colors border border-slate-200/70 shrink-0"
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
+                  className="w-8 h-8 rounded-full border-0 bg-white/15 hover:bg-white/25 text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 mt-0.5"
                 >
-                  {item.label}
+                  <X className="w-4 h-4 stroke-[2]" />
                 </button>
-              ))}
+              </div>
             </div>
 
-            {/* Chat Input Bar */}
-            <div className="p-3 bg-white border-t border-slate-200 shrink-0">
+            {/* Sub-header: Assistant Intro & Quick Question Chips */}
+            <div className="px-4 pt-3 pb-2.5 bg-white shrink-0 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                <LivingChatbotAvatar size={24} interactive={false} className="shrink-0" />
+                <span className="text-[11.5px] sm:text-xs text-slate-600 font-medium">
+                  Chat in real-time or pick a quick topic below.
+                </span>
+              </div>
+
+              {/* Horizontal Scrollable Question Chips (Rounded Pill Chips) */}
+              <div className="overflow-x-auto flex gap-2 pb-1 scrollbar-none">
+                {INITIAL_SUGGESTIONS.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSendMessage(item.query)}
+                    className="rounded-full border-0 bg-[#E8F5E9] hover:bg-[#D4EDDA] text-xs font-semibold text-[#006020] px-3.5 py-1.5 whitespace-nowrap transition-colors shrink-0 cursor-pointer shadow-2xs"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Chat Body Container */}
+            <div className="flex-1 m-3 sm:m-4 rounded-xl bg-slate-50/80 flex flex-col overflow-hidden border border-slate-100">
+              <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 text-xs">
+                {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {msg.sender === 'bot' && (
+                      <LivingChatbotAvatar size={30} interactive={false} className="shrink-0 mt-0.5" />
+                    )}
+
+                    <div
+                      className={`max-w-[84%] p-3.5 leading-relaxed text-[12.5px] sm:text-[13px] ${
+                        msg.sender === 'user'
+                          ? 'rounded-2xl rounded-tr-xs bg-[#008129] text-white shadow-xs'
+                          : 'rounded-2xl rounded-tl-xs bg-white text-slate-800 shadow-xs border border-slate-100'
+                      }`}
+                    >
+                      {msg.sender === 'user' ? (
+                        <p className="whitespace-pre-line">{msg.text}</p>
+                      ) : (
+                        <div>
+                          {msg.text.split('\n').map((line, lIdx) => {
+                            const trimmed = line.trim();
+                            const isBullet = trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ');
+                            const content = isBullet ? trimmed.replace(/^([•\-*]|\d+\.)\s*/, '') : line;
+
+                            const segments = content.split(/(\*\*.*?\*\*)/g).map((part, pIdx) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return (
+                                  <strong key={pIdx} className="font-extrabold text-inherit">
+                                    {part.slice(2, -2)}
+                                  </strong>
+                                );
+                              }
+                              return part;
+                            });
+
+                            if (isBullet) {
+                              return (
+                                <div key={lIdx} className="flex items-start gap-1.5 my-0.5">
+                                  <span className="text-[#008129] font-bold shrink-0 mt-0.5">•</span>
+                                  <div className="flex-1">{segments}</div>
+                                </div>
+                              );
+                            }
+
+                            if (trimmed === '') {
+                              return <div key={lIdx} className="h-1.5" />;
+                            }
+
+                            return (
+                              <p key={lIdx} className="my-0.5 leading-relaxed">
+                                {segments}
+                              </p>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Interactive Action Links inside bot message */}
+                      {msg.actionLinks && msg.actionLinks.length > 0 && (
+                        <div className="mt-2.5 pt-2 border-t border-slate-100 flex flex-col gap-1.5">
+                          {msg.actionLinks.map((link, idx) =>
+                            link.isExternal || link.url.startsWith('http') ? (
+                              <a
+                                key={idx}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-between gap-1.5 px-3.5 py-2 rounded-xl bg-[#E8F5E9] hover:bg-[#D4EDDA] text-[#008129] font-bold text-[11.5px] transition-colors border border-[#008129]/15 shadow-2xs"
+                              >
+                                <span>{link.label}</span>
+                                <ExternalLink className="w-3 h-3 shrink-0" />
+                              </a>
+                            ) : (
+                              <Link
+                                key={idx}
+                                to={link.url}
+                                onClick={() => setIsOpen(false)}
+                                className="inline-flex items-center justify-between gap-1.5 px-3.5 py-2 rounded-xl bg-[#E8F5E9] hover:bg-[#D4EDDA] text-[#008129] font-bold text-[11.5px] transition-colors border border-[#008129]/15 shadow-2xs"
+                              >
+                                <span>{link.label}</span>
+                                <ExternalLink className="w-3 h-3 shrink-0" />
+                              </Link>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Bot typing indicator (Speech Bubble) */}
+                {isTyping && (
+                  <div className="flex items-start gap-2.5">
+                    <LivingChatbotAvatar size={30} isTyping={true} interactive={false} className="shrink-0 mt-0.5" />
+                    <div className="rounded-2xl rounded-tl-xs bg-white px-3.5 py-2.5 flex items-center gap-1.5 shadow-xs border border-slate-100">
+                      <span className="w-2 h-2 rounded-full bg-[#008129] animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-2 h-2 rounded-full bg-[#008129] animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-2 h-2 rounded-full bg-[#008129] animate-bounce" />
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Bottom Bar: Clear, Modern Rounded Input Box & Send Button */}
+            <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-0 bg-white shrink-0">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -433,20 +756,34 @@ export const ChatbotWidget: React.FC = () => {
                 }}
                 className="flex items-center gap-2"
               >
+                {/* Clear button */}
+                <button
+                  type="button"
+                  onClick={handleResetChat}
+                  title="Clear conversation"
+                  className="flex items-center gap-1 text-[11.5px] font-bold text-slate-500 hover:text-slate-800 transition-colors shrink-0 px-1 py-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Clear</span>
+                </button>
+
+                {/* Modern Pill Input Field */}
                 <input
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Ask a question about the conference..."
-                  className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs focus:border-[#008129] focus:outline-none bg-slate-50 focus:bg-white transition-colors"
+                  placeholder="Ask CIB a question..."
+                  className="flex-1 rounded-full bg-slate-100 focus:bg-white px-4 py-2.5 text-xs sm:text-[13px] text-slate-800 placeholder:text-slate-400 border border-slate-200/80 focus:border-[#008129]/40 outline-none transition-all focus:ring-2 focus:ring-[#008129]/15"
                 />
+
+                {/* Circular Green Send Button */}
                 <button
                   type="submit"
                   disabled={!inputText.trim()}
-                  className="p-2.5 rounded-xl bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm shrink-0"
+                  className="w-9 h-9 rounded-full bg-[#008129] hover:bg-[#006820] text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:pointer-events-none shrink-0 cursor-pointer shadow-xs active:scale-95"
                   title="Send message"
                 >
-                  <Send className="w-4 h-4 stroke-[2.5]" />
+                  <Send className="w-4 h-4 stroke-[2.2]" />
                 </button>
               </form>
             </div>

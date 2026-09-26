@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { EventItem, Registration, UserProfile, Speaker, Sponsor } from '../types';
+import { EventItem, Registration, UserProfile, Speaker, Sponsor, EventResource } from '../types';
 import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSORS } from '../data/mockData';
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
@@ -36,6 +36,9 @@ interface AppContextType {
   addSpeaker: (speaker: Partial<Speaker>) => void;
   updateSpeaker: (id: string, updates: Partial<Speaker>) => void;
   deleteSpeaker: (id: string) => void;
+  addResourceToEvent: (eventId: string, resource: Omit<EventResource, 'id'>) => void;
+  updateEventResource: (eventId: string, resourceId: string, updates: Partial<EventResource>) => void;
+  deleteEventResource: (eventId: string, resourceId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -213,7 +216,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const res = await ApiClient.getEvents();
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        setEvents(res.data);
+        setEvents((prev) => {
+          const backendIds = new Set(res.data.map((e) => e.id));
+          const localOnly = prev.filter((e) => !backendIds.has(e.id));
+          const merged = res.data.map((be) => {
+            const local = prev.find((pe) => pe.id === be.id);
+            if (!local) return be;
+            const { resources: _locRes, speakers: _locSpk, ...restLocal } = local;
+            return {
+              ...be,
+              ...restLocal,
+              resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
+              speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
+            };
+          });
+          return [...merged, ...localOnly];
+        });
         return;
       }
     } catch (err) {
@@ -228,7 +246,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .select('*, registration_types(*)')
           .order('start_date', { ascending: true });
         if (!error && Array.isArray(data) && data.length > 0) {
-          setEvents(data as EventItem[]);
+          setEvents((prev) => {
+            const sbIds = new Set(data.map((e: any) => e.id));
+            const localOnly = prev.filter((e) => !sbIds.has(e.id));
+            const merged = (data as EventItem[]).map((be) => {
+              const local = prev.find((pe) => pe.id === be.id);
+              if (!local) return be;
+              const { resources: _locRes, speakers: _locSpk, ...restLocal } = local;
+              return {
+                ...be,
+                ...restLocal,
+                resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
+                speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
+              };
+            });
+            return [...merged, ...localOnly];
+          });
         }
       } catch (sbErr) {
         console.warn('Direct Supabase fetch failed:', sbErr);
@@ -522,6 +555,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateEvent(id, { is_featured: !ev.is_featured });
   };
 
+  const addResourceToEvent = (eventId: string, resource: Omit<EventResource, 'id'>) => {
+    const newResource: EventResource = {
+      ...resource,
+      id: `res-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      event_id: eventId,
+    };
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === eventId) {
+          const existing = e.resources || [];
+          return { ...e, resources: [newResource, ...existing], updated_at: new Date().toISOString() };
+        }
+        return e;
+      })
+    );
+  };
+
+  const updateEventResource = (eventId: string, resourceId: string, updates: Partial<EventResource>) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === eventId) {
+          const updatedRes = (e.resources || []).map((r) =>
+            r.id === resourceId ? { ...r, ...updates } : r
+          );
+          return { ...e, resources: updatedRes, updated_at: new Date().toISOString() };
+        }
+        return e;
+      })
+    );
+  };
+
+  const deleteEventResource = (eventId: string, resourceId: string) => {
+    setEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === eventId) {
+          const filtered = (e.resources || []).filter((r) => r.id !== resourceId);
+          return { ...e, resources: filtered, updated_at: new Date().toISOString() };
+        }
+        return e;
+      })
+    );
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -555,6 +631,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addSpeaker,
         updateSpeaker,
         deleteSpeaker,
+        addResourceToEvent,
+        updateEventResource,
+        deleteEventResource,
       }}
     >
       {children}

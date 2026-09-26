@@ -488,6 +488,7 @@ export class DataService {
       speakers: input.speakers || [],
       agenda: input.agenda || [],
       sponsors: input.sponsors || [],
+      resources: input.resources || [],
     };
 
     eventsStore.set(newEvent.id, newEvent);

@@ -50,6 +50,28 @@ export const Resources: React.FC = () => {
     }))
   );
 
+  const handleDownload = (res: typeof allResources[0]) => {
+    if (res.file_url && res.file_url !== '#' && !res.file_url.startsWith('javascript:')) {
+      const a = document.createElement('a');
+      a.href = res.file_url;
+      a.download = `${res.title.replace(/[^a-z0-9]/gi, '_')}.${(res.file_type || 'PDF').toLowerCase()}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const content = `CHARTERED INSTITUTE OF BANKERS (CIB) GHANA\nOFFICIAL PUBLICATION & DOCUMENT RELEASE\n\nTitle: ${res.title}\nCategory: ${res.category}\nAssociated Event: ${res.eventTitle}\nFormat: ${res.file_type} (${res.file_size})\nRelease Date: ${res.eventDate || new Date().toISOString().split('T')[0]}\n\nDOCUMENT OVERVIEW:\n${res.description}\n\n---\nChartered Institute of Bankers (CIB) Ghana\nBanking on Trust, Professionalism, and Ethical Excellence.\nAccra, Ghana.`;
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${res.title.replace(/[^a-z0-9]/gi, '_')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
   const filteredResources = allResources.filter((res) => {
     const matchesCat = selectedCategory === 'ALL' || res.category === selectedCategory;
     const q = searchQuery.toLowerCase();
@@ -203,16 +225,14 @@ export const Resources: React.FC = () => {
                     Verified CIB Release
                   </span>
 
-                  <a
-                    href={res.file_url}
-                    download
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cib-green-50 text-cib-green-800 hover:bg-cib-green-100 text-xs font-bold transition-colors"
+                  <button
+                    type="button"
+                    onClick={() => handleDownload(res)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cib-green-50 text-cib-green-800 hover:bg-cib-green-100 text-xs font-bold transition-colors cursor-pointer"
                   >
                     <FileDown className="w-4 h-4" />
                     <span>Download Document</span>
-                  </a>
+                  </button>
                 </div>
               </motion.div>
             ))}

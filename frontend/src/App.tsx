@@ -32,6 +32,7 @@ import { AdminPayments } from './pages/admin/AdminPayments';
 import { AdminCertificates } from './pages/admin/AdminCertificates';
 import { AdminAnalytics } from './pages/admin/AdminAnalytics';
 import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminResources } from './pages/admin/AdminResources';
 import { AdminLogin } from './pages/admin/AdminLogin';
 import { AdminGuard } from './components/auth/AdminGuard';
 
@@ -174,7 +175,7 @@ export function App() {
             <Route path="/admin/payments" element={<AdminGuard><AdminPayments /></AdminGuard>} />
             <Route path="/admin/check-in" element={<AdminGuard><AdminCheckIn /></AdminGuard>} />
             <Route path="/admin/certificates" element={<AdminGuard><AdminCertificates /></AdminGuard>} />
-            <Route path="/admin/resources" element={<AdminGuard><AdminEvents /></AdminGuard>} />
+            <Route path="/admin/resources" element={<AdminGuard><AdminResources /></AdminGuard>} />
             <Route path="/admin/analytics" element={<AdminGuard><AdminAnalytics /></AdminGuard>} />
             <Route path="/admin/settings" element={<AdminGuard><AdminSettings /></AdminGuard>} />
 

@@ -86,6 +86,17 @@ export interface RegistrationType {
   benefits: string[];
 }
 
+export interface EventResource {
+  id: string;
+  event_id: string;
+  title: string;
+  description: string;
+  file_url: string;
+  file_type: 'PDF' | 'PPT' | 'DOC' | 'ZIP';
+  file_size: string;
+  category: 'BROCHURE' | 'PRESENTATION' | 'REPORT' | 'PRESS';
+}
+
 export interface EventItem {
   id: string;
   title: string;
@@ -119,6 +130,7 @@ export interface EventItem {
   agenda: AgendaSession[];
   sponsors: Sponsor[];
   registration_types: RegistrationType[];
+  resources?: EventResource[];
   created_at: string;
   updated_at: string;
 }

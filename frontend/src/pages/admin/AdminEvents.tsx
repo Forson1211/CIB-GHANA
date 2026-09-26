@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   Calendar,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { EventStatusBadge, AttendanceTypeBadge } from '../../components/ui/Badge';
@@ -138,16 +139,29 @@ export const AdminEvents: React.FC = () => {
                             className="w-12 h-12 rounded-xl object-cover shrink-0 border border-slate-200"
                           />
                           <div>
-                            <span className="font-bold text-cib-charcoal-900 block line-clamp-1">
+                            <Link
+                              to={`/admin/events/${evt.id}/edit`}
+                              className="font-bold text-cib-charcoal-900 block line-clamp-1 hover:text-cib-green-700 transition-colors"
+                              title="Click to edit event"
+                            >
                               {evt.title}
-                            </span>
-                            <div className="flex items-center gap-2 mt-1">
+                            </Link>
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                               {evt.is_featured && (
                                 <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
                                   <Sparkles className="w-2.5 h-2.5" /> Featured
                                 </span>
                               )}
                               <AttendanceTypeBadge type={evt.event_type} />
+                              {evt.resources && evt.resources.length > 0 && (
+                                <Link
+                                  to={`/admin/events/${evt.id}/edit`}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 hover:bg-blue-100 transition-colors"
+                                  title={`${evt.resources.length} resource document(s) uploaded`}
+                                >
+                                  <FileText className="w-2.5 h-2.5" /> {evt.resources.length} Docs
+                                </Link>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -217,6 +231,15 @@ export const AdminEvents: React.FC = () => {
                             title="View Public Event Page"
                           >
                             <Eye className="w-3.5 h-3.5" />
+                          </Link>
+
+                          {/* Edit Event */}
+                          <Link
+                            to={`/admin/events/${evt.id}/edit`}
+                            className="p-1.5 rounded-lg border border-cib-green-200 text-cib-green-700 hover:bg-cib-green-50 hover:border-cib-green-300 transition-colors"
+                            title="Edit Event & Resources"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
                           </Link>
 
                           {/* Duplicate */}

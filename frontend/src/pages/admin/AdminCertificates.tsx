@@ -43,15 +43,17 @@ export const AdminCertificates: React.FC = () => {
           size="sm"
           leftIcon={<Sparkles className="w-4 h-4" />}
           onClick={() => alert(`Bulk issued ${eligibleAttendees.length} certificates for ${selectedEvent?.title}!`)}
+          className="px-2.5 sm:px-3 text-xs"
         >
-          Bulk Generate ({eligibleAttendees.length})
+          <span className="hidden sm:inline">Bulk Generate</span>
+          <span className="sm:hidden">Bulk</span> ({eligibleAttendees.length})
         </Button>
       }
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
         {/* Event Selector Card */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1 w-full sm:w-auto">
             <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Select Conference or Masterclass
             </label>

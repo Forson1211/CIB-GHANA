@@ -92,8 +92,21 @@ const AudienceFlipCard: React.FC<{ item: AudienceItem }> = ({ item }) => {
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { events, speakers, registeredUserEmail } = useApp();
+  const { events, speakers, refreshSpeakers, registeredUserEmail } = useApp();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
+
+  // Sync live speakers from Supabase on mount
+  useEffect(() => {
+    if (refreshSpeakers) {
+      refreshSpeakers();
+    }
+  }, [refreshSpeakers]);
+
+  // Live speaker count dynamically computed from database
+  const liveSpeakersCount = useMemo(() => {
+    const valid = speakers.filter((s) => !isPurgedMockSpeaker(s));
+    return valid.length > 0 ? valid.length : 15;
+  }, [speakers]);
 
   // Only featured/keynote speakers appear on the homepage slider
   const featuredSpeakers = useMemo(() => {
@@ -356,15 +369,15 @@ export const Home: React.FC = () => {
               </motion.div>
             </div>
 
-            {/* Right Column: Countdown Timer Widget with Glassmorphic Background */}
+            {/* Right Column: Countdown Timer Widget */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:col-span-5 flex justify-start lg:justify-end w-full mt-4 lg:mt-0"
+              className="lg:col-span-5 flex justify-start lg:justify-end w-full mt-6 sm:mt-4 lg:mt-0"
             >
-              <div className="bg-white/10 backdrop-blur-xl p-5 sm:p-7 rounded-none shadow-2xl flex flex-col items-center justify-center space-y-3 w-full max-w-sm sm:max-w-md mx-0 lg:mx-0">
-                <div className="flex items-center gap-2">
+              <div className="bg-transparent sm:bg-white/10 backdrop-blur-none sm:backdrop-blur-xl p-0 sm:p-7 rounded-none shadow-none sm:shadow-2xl flex flex-col items-start sm:items-center justify-start sm:justify-center space-y-3 w-full max-w-sm sm:max-w-md mx-0">
+                <div className="flex items-center gap-2 self-start sm:self-center">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500] animate-ping" />
                   <span className="text-xs font-black uppercase tracking-widest text-[#FFE500]">
                     Official Countdown
@@ -374,6 +387,7 @@ export const Home: React.FC = () => {
                   targetDateStr={featuredEvent.start_date}
                   endDateStr={featuredEvent.end_date}
                   variant="gold"
+                  className="justify-start sm:justify-center"
                 />
               </div>
             </motion.div>
@@ -388,12 +402,12 @@ export const Home: React.FC = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
           variants={staggerContainer}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6"
         >
           {[
             { label: 'EDITION', num: 30, suffix: 'th', icon: Award },
             { label: 'DAYS IN ADA', num: 2, suffix: '', icon: Calendar },
-            { label: 'SPEAKERS & DIGNITARIES', num: 15, suffix: '+', icon: Users },
+            { label: 'SPEAKERS & DIGNITARIES', num: liveSpeakersCount, suffix: '+', icon: Users },
             { label: 'BIG CONVERSATION', num: 1, suffix: '', icon: MessageSquare },
           ].map((stat, idx) => {
             const Icon = stat.icon;
@@ -402,16 +416,18 @@ export const Home: React.FC = () => {
                 key={idx}
                 variants={cardVariant}
                 whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.2 } }}
-                className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-[#008129]/30 transition-all duration-300 flex items-center gap-4 group cursor-default"
+                className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-[#008129]/30 transition-all duration-300 flex items-center gap-2.5 sm:gap-4 group cursor-default min-w-0"
               >
-                <div className="p-3 rounded-xl bg-cib-green-50 text-cib-green-800 group-hover:bg-[#008129] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm">
-                  <Icon className="w-6 h-6" />
+                <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-cib-green-50 text-cib-green-800 group-hover:bg-[#008129] group-hover:text-white group-hover:scale-110 transition-all duration-300 shadow-sm shrink-0">
+                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <div>
-                  <h4 className="text-2xl font-black text-cib-charcoal-900 font-display">
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-xl sm:text-2xl font-black text-cib-charcoal-900 font-display">
                     <AnimatedCounter to={stat.num} suffix={stat.suffix} />
                   </h4>
-                  <p className="text-xs text-slate-500 font-medium">{stat.label}</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-tight leading-tight line-clamp-2">
+                    {stat.label}
+                  </p>
                 </div>
               </motion.div>
             );
@@ -819,7 +835,7 @@ export const Home: React.FC = () => {
               {/* Top Box: Deadline & Countdown Timer */}
               <div className="space-y-3 text-left lg:text-right flex flex-col lg:items-end">
                 <p className="text-xs sm:text-sm text-white/90">
-                  Book before <strong className="text-white font-bold underline decoration-[#FFE500]">20th October 2026</strong> to lock in this rate
+                  Book before <strong className="text-[#FFE500] font-bold">20th October 2026</strong> to lock in this rate
                 </p>
                 <div className="flex justify-start lg:justify-end w-full">
                   <CountdownTimer

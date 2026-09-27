@@ -115,8 +115,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
           return (
             <div key={idx} className="flex flex-col items-center flex-1 max-w-[72px] sm:max-w-[84px]">
-              {/* Circular SVG Ring (No background box) */}
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 flex items-center justify-center">
+              {/* Circular SVG Ring with Plain Glass Disc (Single ring) */}
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 84 84">
                   <defs>
                     <linearGradient id={`circleGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -126,13 +126,13 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
                     </linearGradient>
                   </defs>
 
-                  {/* Subtle Background Circle Track */}
+                  {/* Subtle Background Circle Track with Clear Glass Fill */}
                   <circle
                     cx="42"
                     cy="42"
                     r={radius}
-                    fill="transparent"
-                    stroke="rgba(255, 255, 255, 0.35)"
+                    fill="rgba(255, 255, 255, 0.04)"
+                    stroke="rgba(255, 255, 255, 0.3)"
                     strokeWidth="2"
                   />
 

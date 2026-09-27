@@ -46,13 +46,13 @@ export const SpeakerCard: React.FC<SpeakerCardProps> = ({ speaker, onSelect, cla
       {/* Info Block */}
       <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
         <div className="space-y-0.5">
-          <h4 className="text-sm sm:text-base font-bold text-slate-900 font-display line-clamp-1 group-hover:text-[#008129] transition-colors">
+          <h4 className="text-base sm:text-base font-bold text-slate-900 font-display line-clamp-2 group-hover:text-[#008129] transition-colors">
             {speaker.name}
           </h4>
-          <p className="text-xs font-semibold text-[#008129] line-clamp-1">
+          <p className="text-sm font-bold text-[#008129] line-clamp-2">
             {speaker.position}
           </p>
-          <p className="text-[11px] text-slate-500 line-clamp-1">
+          <p className="text-xs font-semibold text-slate-500 line-clamp-2">
             {speaker.organization}
           </p>
         </div>

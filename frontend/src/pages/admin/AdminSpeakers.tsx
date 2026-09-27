@@ -131,13 +131,13 @@ const SpeakerModal: React.FC<{
         />
       )}
 
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-5 border-b border-slate-100 sticky top-0 bg-white z-10">
           <div>
             <h2 className="text-xl font-black text-slate-900 font-display">
               {speaker?.id && !speaker.id.startsWith('sp-') ? 'Edit Speaker' : 'Add Speaker'}
@@ -412,7 +412,7 @@ export const AdminSpeakers: React.FC = () => {
     >
       <div className="space-y-6">
         {/* Search bar */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="relative w-full sm:w-96">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -423,7 +423,7 @@ export const AdminSpeakers: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
             />
           </div>
-          <span className="text-sm text-slate-500 font-semibold whitespace-nowrap">
+          <span className="text-xs sm:text-sm text-slate-500 font-semibold whitespace-nowrap">
             {filtered.length} Speakers Enrolled
           </span>
         </div>
@@ -501,7 +501,7 @@ export const AdminSpeakers: React.FC = () => {
                       </a>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => setEditTarget(spk)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:border-[#008B2E] hover:text-[#008B2E] transition-all shadow-sm"

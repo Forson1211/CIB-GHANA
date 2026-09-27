@@ -256,23 +256,27 @@ export const AdminDashboard: React.FC = () => {
       title=""
       subtitle=""
       actions={
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLiveSyncing ? 'animate-spin text-[#008B2E]' : ''}`} />}
             onClick={() => refreshAll()}
             disabled={isLiveSyncing}
+            className="px-2.5 sm:px-3 text-xs"
           >
-            {isLiveSyncing ? 'Syncing...' : 'Sync Live Data'}
+            <span className="hidden sm:inline">{isLiveSyncing ? 'Syncing...' : 'Sync Live Data'}</span>
+            <span className="sm:hidden">{isLiveSyncing ? '...' : 'Sync'}</span>
           </Button>
           <Button
             variant="primary"
             size="sm"
             leftIcon={<Plus className="w-4 h-4" />}
             onClick={() => navigate('/admin/events/create')}
+            className="px-2.5 sm:px-3 text-xs"
           >
-            Create New Event
+            <span className="hidden sm:inline">Create New Event</span>
+            <span className="sm:hidden">New Event</span>
           </Button>
         </div>
       }
@@ -283,7 +287,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 font-display tracking-tight">
-              {greeting}, {currentUser.first_name}! 👋
+              {greeting}, Admin
             </h1>
             <p className="text-sm text-slate-500 mt-1">Here's your CIB Ghana live events dashboard at a glance.</p>
           </div>
@@ -325,21 +329,21 @@ export const AdminDashboard: React.FC = () => {
           ].map((card) => (
             <div
               key={card.label}
-              className={`relative overflow-hidden rounded-3xl p-5 sm:p-6 text-white shadow-lg bg-gradient-to-br ${card.grad}`}
+              className={`relative overflow-hidden rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 text-white shadow-lg bg-gradient-to-br ${card.grad}`}
             >
               <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full" />
               <div className="absolute -bottom-5 -left-5 w-14 h-14 bg-white/10 rounded-full" />
               <div className="relative">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest opacity-80">{card.label}</span>
-                  <div className="p-1.5 bg-white/20 rounded-xl">
-                    <card.icon className="w-4 h-4" />
+                  <div className="p-1 sm:p-1.5 bg-white/20 rounded-lg sm:rounded-xl">
+                    <card.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </div>
                 </div>
-                <p className={`font-black font-display ${card.small ? 'text-xl sm:text-2xl' : 'text-4xl sm:text-5xl'}`}>
+                <p className={`font-black font-display ${card.small ? 'text-lg sm:text-2xl' : 'text-2xl sm:text-5xl'}`}>
                   {card.value}
                 </p>
-                <p className="text-[11px] opacity-75 mt-1.5 font-semibold">{card.sub}</p>
+                <p className="text-[10px] sm:text-[11px] opacity-75 mt-1 font-semibold truncate">{card.sub}</p>
               </div>
             </div>
           ))}
@@ -444,12 +448,12 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Donut + Legend side by side */}
-            <div className="flex items-center gap-6">
-              <div className="flex-shrink-0">
+            {/* Donut + Legend side by side on desktop, stacked on mobile */}
+            <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
+              <div className="shrink-0 flex justify-center w-full sm:w-auto">
                 <DonutChart segments={donutSegments} />
               </div>
-              <div className="flex-1 space-y-3">
+              <div className="w-full sm:flex-1 space-y-2.5 sm:space-y-3">
                 {donutSegments.map((seg) => (
                   <div key={seg.label} className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -473,30 +477,81 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* ── Row 3: Quick Actions ── */}
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-          <h3 className="text-lg font-black text-slate-900 font-display mb-5">Quick Actions</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 sm:p-6">
+          <div className="mb-4 sm:mb-5">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 font-display">Quick Actions</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Direct shortcuts to primary management consoles</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {[
-              { to: '/admin/check-in', label: 'Check-In Counter', sub: 'QR scanner & accreditation desk' },
-              { to: '/admin/registrations', label: 'Registrations', sub: 'Delegate ledger & search' },
-              { to: '/admin/payments', label: 'Payments', sub: 'Ledger & reconciliation' },
-              { to: '/admin/certificates', label: 'Certificates', sub: 'Generate & issue passes' },
-              { to: '/admin/speakers', label: 'Speakers', sub: `${speakers.length} confirmed speakers` },
-              { to: '/admin/analytics', label: 'Analytics', sub: 'Reports & insights' },
-            ].map((action, idx) => (
-              <Link
-                key={action.to}
-                to={action.to}
-                className={`flex flex-col items-center justify-center text-center p-8 rounded-2xl border-2 transition-all ${
-                  idx === 0
-                    ? 'border-[#008B2E] bg-[#F0FAF4]'
-                    : 'border-slate-200 bg-white hover:border-[#008B2E] hover:bg-[#F0FAF4]'
-                }`}
-              >
-                <p className="text-base font-black text-slate-900 leading-tight">{action.label}</p>
-                <p className="text-sm text-slate-400 mt-1.5">{action.sub}</p>
-              </Link>
-            ))}
+              {
+                to: '/admin/check-in',
+                label: 'Check-In Counter',
+                sub: 'QR scanner & accreditation desk',
+                icon: QrCode,
+                color: 'text-cib-green-700',
+                bgColor: 'bg-emerald-100/70',
+              },
+              {
+                to: '/admin/registrations',
+                label: 'Registrations',
+                sub: 'Delegate ledger & search',
+                icon: Users,
+                color: 'text-blue-700',
+                bgColor: 'bg-blue-100/70',
+              },
+              {
+                to: '/admin/payments',
+                label: 'Payments',
+                sub: 'Ledger & reconciliation',
+                icon: CreditCard,
+                color: 'text-indigo-700',
+                bgColor: 'bg-indigo-100/70',
+              },
+              {
+                to: '/admin/certificates',
+                label: 'Certificates',
+                sub: 'Generate & issue passes',
+                icon: Award,
+                color: 'text-amber-700',
+                bgColor: 'bg-amber-100/70',
+              },
+              {
+                to: '/admin/speakers',
+                label: 'Speakers',
+                sub: `${speakers.length} confirmed faculty`,
+                icon: Mic,
+                color: 'text-purple-700',
+                bgColor: 'bg-purple-100/70',
+              },
+              {
+                to: '/admin/analytics',
+                label: 'Analytics',
+                sub: 'Reports & insights',
+                icon: BarChart3,
+                color: 'text-rose-700',
+                bgColor: 'bg-rose-100/70',
+              },
+            ].map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="flex flex-col items-center justify-center text-center p-5 sm:p-7 rounded-2xl bg-slate-50/80 hover:bg-slate-100/90 active:scale-[0.98] border-0 outline-none transition-all group cursor-pointer"
+                >
+                  <div className={`w-11 h-11 rounded-xl ${action.bgColor} ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs sm:text-sm md:text-base font-black text-slate-900 leading-tight group-hover:text-cib-green-800 transition-colors">
+                    {action.label}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-slate-500 mt-1 line-clamp-1">
+                    {action.sub}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </div>
 

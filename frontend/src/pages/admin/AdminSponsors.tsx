@@ -150,18 +150,21 @@ export const AdminSponsors: React.FC = () => {
           <Link
             to="/partners"
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span>View Public Page</span>
+            <span className="hidden sm:inline">View Public Page</span>
+            <span className="sm:hidden">Public</span>
           </Link>
           <Button
             variant="primary"
             size="sm"
             leftIcon={<Plus className="w-4 h-4" />}
             onClick={() => handleOpenAddModal()}
+            className="px-2.5 sm:px-3 text-xs"
           >
-            Add Entity
+            <span className="hidden sm:inline">Add Entity</span>
+            <span className="sm:hidden">Add</span>
           </Button>
         </div>
       }
@@ -184,9 +187,9 @@ export const AdminSponsors: React.FC = () => {
         )}
 
         {/* Tab & Search Bar */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Sponsors & Partners Tabs (No Gold, No Platinum, No Silver) */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl w-full sm:w-auto">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+          {/* Sponsors & Partners Tabs */}
+          <div className="flex flex-wrap sm:inline-flex p-1 bg-slate-100 rounded-xl w-full sm:w-auto gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('ALL')}
@@ -356,9 +359,9 @@ export const AdminSponsors: React.FC = () => {
 
       {/* ADD / EDIT MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div
-            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 my-8 animate-in fade-in zoom-in-95"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl border border-slate-200 my-4 sm:my-8 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

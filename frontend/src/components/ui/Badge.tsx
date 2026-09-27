@@ -33,7 +33,7 @@ export const Badge: React.FC<BadgeProps> = ({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full border transition-colors',
+        'inline-flex items-center gap-1.5 rounded-full border transition-colors whitespace-nowrap shrink-0',
         variantStyles[variant],
         sizeStyles[size],
         className
@@ -44,45 +44,45 @@ export const Badge: React.FC<BadgeProps> = ({
   );
 };
 
-export const EventStatusBadge: React.FC<{ status: EventStatus }> = ({ status }) => {
+export const EventStatusBadge: React.FC<{ status: EventStatus; className?: string }> = ({ status, className }) => {
   switch (status) {
     case 'OPEN_FOR_REGISTRATION':
       return (
-        <Badge variant="green">
+        <Badge variant="green" size="sm" className={className}>
           <span className="w-1.5 h-1.5 rounded-full bg-cib-green-600 animate-pulse"></span>
-          Open for Registration
+          Open
         </Badge>
       );
     case 'UPCOMING':
-      return <Badge variant="gold">Upcoming</Badge>;
+      return <Badge variant="gold" size="sm" className={className}>Upcoming</Badge>;
     case 'IN_PROGRESS':
       return (
-        <Badge variant="gold">
+        <Badge variant="gold" size="sm" className={className}>
           <span className="w-1.5 h-1.5 rounded-full bg-cib-gold-500 animate-ping"></span>
           In Progress
         </Badge>
       );
     case 'REGISTRATION_CLOSED':
-      return <Badge variant="red">Registration Closed</Badge>;
+      return <Badge variant="red" size="sm" className={className}>Closed</Badge>;
     case 'COMPLETED':
-      return <Badge variant="neutral">Completed</Badge>;
+      return <Badge variant="neutral" size="sm" className={className}>Completed</Badge>;
     case 'DRAFT':
-      return <Badge variant="outline">Draft</Badge>;
+      return <Badge variant="outline" size="sm" className={cn("text-slate-500 bg-slate-50 border-slate-300", className)}>Draft</Badge>;
     case 'CANCELLED':
-      return <Badge variant="red">Cancelled</Badge>;
+      return <Badge variant="red" size="sm" className={className}>Cancelled</Badge>;
     default:
-      return <Badge variant="neutral">{status}</Badge>;
+      return <Badge variant="neutral" size="sm" className={className}>{status}</Badge>;
   }
 };
 
-export const AttendanceTypeBadge: React.FC<{ type: AttendanceType }> = ({ type }) => {
-  const labels = {
+export const AttendanceTypeBadge: React.FC<{ type: AttendanceType; className?: string }> = ({ type, className }) => {
+  const labels: Record<string, string> = {
     PHYSICAL: 'In-Person',
     VIRTUAL: 'Virtual',
-    HYBRID: 'Hybrid (In-Person & Online)',
+    HYBRID: 'Hybrid',
   };
   return (
-    <Badge variant="outline" size="sm" className="font-medium text-slate-600 bg-white">
+    <Badge variant="outline" size="sm" className={cn("font-medium text-slate-600 bg-white whitespace-nowrap", className)}>
       {labels[type] || type}
     </Badge>
   );

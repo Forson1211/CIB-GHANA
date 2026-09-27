@@ -29,19 +29,21 @@ export const AdminPayments: React.FC = () => {
           size="sm"
           leftIcon={<Download className="w-4 h-4" />}
           onClick={() => alert('Exporting full financial audit report...')}
+          className="px-2.5 sm:px-3 text-xs"
         >
-          Export Financial Audit
+          <span className="hidden sm:inline">Export Financial Audit</span>
+          <span className="sm:hidden">Export</span>
         </Button>
       }
     >
       <div className="space-y-6">
         {/* Metric Card */}
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Total Processed Volume
             </span>
-            <h2 className="text-3xl font-black text-cib-charcoal-900 font-display mt-1">
+            <h2 className="text-2xl sm:text-3xl font-black text-cib-charcoal-900 font-display mt-1">
               {formatGHS(totalRevenue)}
             </h2>
             <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
@@ -57,8 +59,8 @@ export const AdminPayments: React.FC = () => {
         </div>
 
         {/* Transactions Table */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-3.5 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
             <h3 className="text-base font-bold text-cib-charcoal-900 font-display">
               Transaction History
             </h3>

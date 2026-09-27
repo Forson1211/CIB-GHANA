@@ -158,9 +158,9 @@ export const AdminCheckIn: React.FC = () => {
     >
       <div className="w-full space-y-6">
         {/* ─── 1. TOP EXECUTIVE KPI METRICS BAR (Full Width) ─── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {/* Card 1: Total Enrolled */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
             <div>
               <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block mb-1">
                 Total Enrolled
@@ -176,7 +176,7 @@ export const AdminCheckIn: React.FC = () => {
           </div>
 
           {/* Card 2: Accredited / Checked In */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between relative overflow-hidden">
+          <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between relative overflow-hidden">
             <div className="relative z-10">
               <span className="text-[11px] font-black uppercase tracking-wider text-emerald-600 block mb-1">
                 Checked In
@@ -197,7 +197,7 @@ export const AdminCheckIn: React.FC = () => {
           </div>
 
           {/* Card 3: Pending Arrival */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
             <div>
               <span className="text-[11px] font-black uppercase tracking-wider text-amber-600 block mb-1">
                 Pending Arrival
@@ -213,28 +213,28 @@ export const AdminCheckIn: React.FC = () => {
           </div>
 
           {/* Card 4: Chartered Fellows & Members */}
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div className="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-sm flex items-center justify-between">
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#D4AF37] block mb-1">
+              <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-[#D4AF37] block mb-1">
                 Chartered Members
               </span>
-              <p className="text-2xl sm:text-3xl font-black text-slate-900 font-display">
+              <p className="text-xl sm:text-3xl font-black text-slate-900 font-display">
                 {charteredCount}
               </p>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">FCIB & ACIB Luminaries</p>
+              <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5 truncate">FCIB & ACIB</p>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-amber-50/80 flex items-center justify-center text-amber-600">
-              <Award className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50/80 flex items-center justify-center text-amber-600 shrink-0">
+              <Award className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
         </div>
 
         {/* ─── 2. MAIN ENTRANCE DESK WORKSPACE (Two-Column Layout) ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           {/* ─── LEFT COLUMN: Scanner & Accreditation Verification Console (5 cols) ─── */}
-          <div className="lg:col-span-5 space-y-6">
+          <div className="lg:col-span-5 space-y-5 sm:space-y-6">
             {/* Terminal Card */}
-            <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-7 space-y-5">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm p-4 sm:p-7 space-y-4 sm:space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-[#E6F5EC] text-[#008B2E] flex items-center justify-center">
@@ -506,7 +506,7 @@ export const AdminCheckIn: React.FC = () => {
               </div>
 
               {/* Filter Tabs */}
-              <div className="inline-flex p-1 bg-slate-100 rounded-xl">
+              <div className="flex flex-wrap sm:inline-flex p-1 bg-slate-100 rounded-xl gap-1">
                 <button
                   onClick={() => setRosterFilter('ALL')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${

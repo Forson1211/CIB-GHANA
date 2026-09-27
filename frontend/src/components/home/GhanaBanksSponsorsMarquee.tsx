@@ -389,20 +389,13 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
       {/* ── LEFT SHAPES OVERLAY (High Z-Index, Cards Slide Underneath, Edge-to-Edge) ── */}
       {leftShape === 'badge-dark' && (
         <div className="absolute left-0 top-0 bottom-0 z-30 flex items-center pointer-events-none drop-shadow-2xl">
-          {/* Subtle dark under-shadow layer for 3D depth */}
-          <div
-            className="absolute inset-0 bg-black/75"
-            style={{
-              clipPath: 'polygon(0 0, calc(100% - 48px) 0, 100% 100%, 0 100%)',
-              transform: 'translate(6px, 4px)',
-            }}
-          />
           {/* Main Dark Polygon Badge */}
           <div
-            className="relative h-full flex items-center pl-6 sm:pl-10 lg:pl-14 pr-12 sm:pr-16 lg:pr-20 text-white font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest bg-[#181A1B] border-l-4 border-white/10"
+            className="relative h-full flex items-center pl-6 sm:pl-10 lg:pl-14 pr-12 sm:pr-16 lg:pr-20 font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest"
             style={{
               clipPath: 'polygon(0 0, calc(100% - 55px) 0, 100% 100%, 0 100%)',
               width: 'clamp(150px, 20vw, 290px)',
+              background: '#0D3B22',
             }}
           >
             <span className="font-display font-black text-white tracking-widest drop-shadow-lg">
@@ -446,20 +439,13 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
       {/* ── RIGHT SHAPES OVERLAY (High Z-Index, Cards Slide Underneath, Edge-to-Edge) ── */}
       {rightShape === 'badge-dark' && (
         <div className="absolute right-0 top-0 bottom-0 z-30 flex items-center justify-end pointer-events-none drop-shadow-2xl">
-          {/* Subtle dark under-shadow layer for 3D depth */}
-          <div
-            className="absolute inset-0 bg-black/75"
-            style={{
-              clipPath: 'polygon(48px 0, 100% 0, 100% 100%, 0 100%)',
-              transform: 'translate(-6px, 4px)',
-            }}
-          />
           {/* Main Dark Polygon Badge on Right */}
           <div
-            className="relative h-full flex items-center justify-end pr-6 sm:pr-10 lg:pr-14 pl-12 sm:pl-16 lg:pl-20 text-white font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest bg-[#181A1B] border-r-4 border-white/10"
+            className="relative h-full flex items-center justify-end pr-6 sm:pr-10 lg:pr-14 pl-12 sm:pl-16 lg:pl-20 font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest"
             style={{
               clipPath: 'polygon(55px 0, 100% 0, 100% 100%, 0 100%)',
               width: 'clamp(160px, 22vw, 320px)',
+              background: '#0D3B22',
             }}
           >
             <span className="font-display font-black text-white tracking-widest drop-shadow-lg">
@@ -473,7 +459,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         <div className="absolute right-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl">
           {/* Yellow/Gold Angled Triangle Accent matching screenshot */}
           <div
-            className="h-full bg-[#F5A623]"
+            className="h-full bg-[#FFD700]"
             style={{
               clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 0 100%)',
               width: 'clamp(90px, 12vw, 170px)',
@@ -487,7 +473,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
 
 export const GhanaBanksSponsorsMarquee: React.FC = () => {
   return (
-    <section className="w-full bg-[#0E1012] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl">
+    <section className="w-full bg-[#0D3B22] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl">
       {/* Dynamic Keyframes for smooth continuous hardware-accelerated movement to the RIGHT */}
       <style>{`
         @keyframes cibMarqueeRight {
@@ -500,14 +486,8 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
         }
       `}</style>
 
-      {/* Header Aligned in Line with the Start of the Logos */}
-      <div 
-        className="w-full mb-6 sm:mb-8 text-left space-y-1.5 transition-all"
-        style={{
-          paddingLeft: 'clamp(155px, 20.5vw, 300px)',
-          paddingRight: 'clamp(20px, 4vw, 60px)',
-        }}
-      >
+      {/* Header Aligned in Line with Site Logo on Mobile & Desktop */}
+      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-left space-y-1.5">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
           2026 Sponsors
         </h2>

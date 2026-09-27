@@ -500,12 +500,18 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
         }
       `}</style>
 
-      {/* Prominent Header Aligned with Generous Viewport Padding */}
-      <div className="w-full px-6 sm:px-12 lg:px-16 max-w-[1920px] mx-auto mb-8 sm:mb-12 text-left space-y-2">
-        <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white font-display tracking-tight">
+      {/* Header Aligned in Line with the Start of the Logos */}
+      <div 
+        className="w-full mb-6 sm:mb-8 text-left space-y-1.5 transition-all"
+        style={{
+          paddingLeft: 'clamp(155px, 20.5vw, 300px)',
+          paddingRight: 'clamp(20px, 4vw, 60px)',
+        }}
+      >
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
           2026 Sponsors
         </h2>
-        <p className="text-sm sm:text-base lg:text-lg text-slate-300 font-medium max-w-3xl">
+        <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-3xl">
           Official commercial banks in Ghana, central bank regulators, and payment infrastructure sponsors.
         </p>
       </div>

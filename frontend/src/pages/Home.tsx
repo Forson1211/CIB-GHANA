@@ -35,6 +35,7 @@ import { FeaturedSpeakersSlider } from '../components/events/FeaturedSpeakersSli
 import { SpeakerModal } from '../components/events/SpeakerModal';
 import { GalleryLightbox } from '../components/events/GalleryLightbox';
 import { EventHighlightMarquee } from '../components/events/EventHighlightMarquee';
+import { GhanaBanksSponsorsMarquee } from '../components/home/GhanaBanksSponsorsMarquee';
 interface AudienceItem {
   title: string;
   description: string;
@@ -483,6 +484,9 @@ export const Home: React.FC = () => {
           </div>
         </motion.div>
       </section>
+
+      {/* 2026 SPONSORS - GHANA COMMERCIAL BANKS MARQUEE */}
+      <GhanaBanksSponsorsMarquee />
 
       {/* 5. WHY ATTEND SECTION (Requirement #11) */}
       <section className="bg-[#C8102E] py-16 sm:py-20 text-white overflow-hidden relative shadow-inner">

@@ -29,16 +29,25 @@ Key Knowledge Base:
 - Track 2: Cybersecurity and Fraud Detection.
 - Track 3: Virtual Assets and Impact (eCedi, central bank digital assets).
 
-5. KEYNOTE SPEAKERS:
-- Dr. Ernest Addison (Governor, Bank of Ghana)
-- Robert Dzato (FCIB) (CEO, Chartered Institute of Bankers, Ghana)
-- Mansa Nettey (CEO, Standard Chartered Bank Ghana)
-- Hakim Ouzzani (MD, Societe Generale Ghana)
-- Abena Osei-Poku (MD, Ecobank Ghana)
-- John Kofi Adomakoh (MD, GCB Bank PLC)
-- Elsie Addo Awadzi (Financial Regulatory Advisor)
-- Samuel Sackey (CISO, Stanbic Bank Ghana)
-- Nana Ama Poku (Deputy CEO, Ghana EXIM Bank)
+5. CONFERENCE FACULTY & KEYNOTE SPEAKERS (18 Official Luminaries):
+- Robert Dzato (FCIB) — Chief Executive Officer, Chartered Institute of Bankers, Ghana
+- Dr. Johnson Pandit Asiama, FCIB(Hon.) — Governor, Bank of Ghana
+- Hon. Samuel Nartey George — Minister for Communication, Digital Technology and Innovations
+- Hon. Haruna Iddrisu — Minister for Education
+- Dr. Stephane Nwolley — Digital Currency & Virtual Assets Architect, Fintech & Digital Banking Council
+- Dr. Albert Antwi-Bosiako — Cybersecurity & Anti-Fraud Leader, National Cyber Security Authority
+- Clifford Duke Mettle, FCIB — International Trade Finance Leader, CIB Ghana Governing Council
+- Rita Elumelu, FCIB — Financial Crime & Trade Specialist, Chartered Institute of Bankers, Ghana
+- Doris Ahiati, FCIB — Executive Corporate Governance Leader, CIB Ghana Advisory Board
+- Farihan Alhassan — Head of Banking Supervision & Risk, Regulatory Affairs Directorate
+- Dr. Marcel Lukas — Associate Professor in Financial Technology, University of St Andrews (UK)
+- John Awuah — Chief Executive Officer, Ghana Association of Banks
+- Emelia Sackey, FCIB — Executive Director of Ethics & Governance, CIB Ghana
+- Frank Tawiah — Virtual Assets & Tokenization Specialist, Digital Finance Consortium
+- Philip Twum, ACIB — Digital Strategy & Fintech Partner, CIB Ghana
+- Philip Kwaw Sebuabe — Head of Digital Rails & Virtual Assets, Financial Technologies Group
+- Paul Baah Sackey, FCIB — Fellow & Senior Banking Leader, CIB Ghana
+- Charles Ofori Acquah, FCIB — Fellow & Executive Banking Advisor, CIB Ghana
 
 6. ABOUT CIB GHANA:
 - Established by Act of Parliament: Chartered Institute of Bankers Ghana Act, 2019 (Act 991).
@@ -49,9 +58,10 @@ Key Knowledge Base:
 - WhatsApp: +233 (0) 50 633 9248 (0506339248).
 - Emails: events@cibgh.org and info@cibgh.org.
 
-7. REGISTRATION & PAYMENTS:
+7. REGISTRATION, TICKETS & PAYMENTS:
 - Paystack integration supporting MTN Mobile Money, Telecel Cash, AT Money, and Visa/Mastercard debit and credit cards.
 - Instant automated QR digital ticket pass and tax invoice dispatched to email upon payment.
+- Dedicated Delegate Portal (/dashboard) for downloading session resources, presentation decks, and accredited CPD certificates.
 
 Guidelines:
 - Converse naturally and intelligently just like ChatGPT or Gemini.
@@ -215,8 +225,8 @@ router.post('/', async (req: Request, res: Response) => {
       reply = "📍 **Venue & Location**:\n\n• **Venue**: **Aqua Safari Resort, Ada, Greater Accra, Ghana**\n• **Setting**: Ghana's top riverfront luxury resort situated along the serene Volta River estuary.\n• **Amenities Included**: Air-conditioned conference halls, high-speed WiFi, waterfront dining, pontoon boat cruises, and luxury chalets.\n• **Accessibility**: Executive shuttle and on-site parking available for all registered delegates.";
     } else if (q.includes('date') || q.includes('when') || q.includes('day') || q.includes('november') || q.includes('deadline')) {
       reply = "📅 **Conference Schedule & Key Dates**:\n\n• **Dates**: **8th – 10th November, 2026** (3-Day Executive Programme)\n• **Early Bird Deadline**: **20th October, 2026** (Book early to secure discounted luxury chalet accommodation)\n• **Registration Close**: 5th November, 2026\n• **Daily Hours**: 08:00 AM – 17:30 GMT (followed by evening networking banquets)";
-    } else if (q.includes('speaker') || q.includes('governor') || q.includes('addison') || q.includes('dzato') || q.includes('faculty')) {
-      reply = "🎙️ **Featured Conference Speakers & Keynotes**:\n\n• **Dr. Ernest Addison** — Governor, Bank of Ghana\n• **Robert Dzato (FCIB)** — CEO, Chartered Institute of Bankers, Ghana\n• **Mansa Nettey** — CEO, Standard Chartered Bank Ghana\n• **Hakim Ouzzani** — Managing Director, Societe Generale Ghana\n• **Abena Osei-Poku** — Managing Director, Ecobank Ghana\n• **John Kofi Adomakoh** — Managing Director, GCB Bank PLC\n• **Elsie Addo Awadzi** — Financial Regulatory Advisor\n• **Samuel Sackey** — CISO, Stanbic Bank Ghana";
+    } else if (q.includes('speaker') || q.includes('governor') || q.includes('asiama') || q.includes('george') || q.includes('dzato') || q.includes('faculty') || q.includes('who is speaking') || q.includes('panel')) {
+      reply = "🎙️ **Featured Conference Faculty & Keynotes (18 Distinguished Leaders)**:\n\n• **Robert Dzato (FCIB)** — CEO, CIB Ghana\n• **Dr. Johnson Pandit Asiama, FCIB(Hon.)** — Governor, Bank of Ghana\n• **Hon. Samuel Nartey George** — Minister for Communication, Digital Technology & Innovations\n• **Hon. Haruna Iddrisu** — Minister for Education\n• **Dr. Stephane Nwolley** — Digital Currency & Virtual Assets Architect\n• **Dr. Albert Antwi-Bosiako** — Cybersecurity & Anti-Fraud Leader\n• **Clifford Duke Mettle, FCIB** — Trade Finance Leader\n• **Rita Elumelu, FCIB** — Financial Crime & Trade Specialist\n• **Doris Ahiati, FCIB** — Executive Corporate Governance Leader\n• **Farihan Alhassan** — Head of Banking Supervision & Risk\n• **Dr. Marcel Lukas** — Associate Professor in FinTech (Univ. of St Andrews)\n• **John Awuah** — CEO, Ghana Association of Banks\n• **Emelia Sackey, FCIB** — Executive Director of Ethics & Governance\n• **Frank Tawiah** — Virtual Assets & Tokenization Specialist\n• **Philip Twum, ACIB** — Digital Strategy & FinTech Partner\n• **Philip Kwaw Sebuabe** — Head of Digital Rails & Virtual Assets\n• **Paul Baah Sackey, FCIB** — Fellow & Senior Banking Leader\n• **Charles Ofori Acquah, FCIB** — Fellow & Executive Banking Advisor";
     } else if (q.includes('whatsapp') || q.includes('contact') || q.includes('phone') || q.includes('email') || q.includes('call')) {
       reply = "📞 **CIB Ghana Secretariat Contact Channels**:\n\n• 📱 **WhatsApp Support**: **+233 (0) 50 633 9248** (Instant response)\n• 📞 **Telephone**: **+233 (0) 302 541 308**\n• 📧 **Event Secretariat**: `events@cibgh.org`\n• 📧 **General Inquiries**: `info@cibgh.org`\n• 🏢 **Head Office**: CIB Ghana Secretariat, Trinity Avenue, Okponglo - East Legon, Accra, Ghana\n• 🕒 **Hours**: Monday to Friday: 8:00 AM – 5:00 PM GMT";
     } else if (q.includes('sponsor') || q.includes('partner') || q.includes('exhibit')) {

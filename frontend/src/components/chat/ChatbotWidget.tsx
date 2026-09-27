@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import chatbotIcon from '../../assets/chatbot-icon-gold.png';
 import { LivingChatbotAvatar } from './LivingChatbotAvatar';
+import { useApp } from '../../context/AppContext';
 
 interface ChatMessage {
   id: string;
@@ -38,6 +39,7 @@ const INITIAL_SUGGESTIONS = [
 ];
 
 export const ChatbotWidget: React.FC = () => {
+  const { speakers } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -413,21 +415,52 @@ export const ChatbotWidget: React.FC = () => {
       };
     }
 
+    // Match specific speaker from live speakers list
+    const matchedSpeaker = speakers.find((s) => {
+      const qClean = q.replace(/[^a-z0-9\s]/g, ' ');
+      const nameParts = (s.name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter((p) => p.length > 3 && !['dr', 'hon', 'fcib', 'acib', 'mr', 'mrs'].includes(p));
+      return nameParts.some((part) => qClean.includes(part));
+    });
+
+    if (matchedSpeaker) {
+      const exp = matchedSpeaker.expertise && matchedSpeaker.expertise.length > 0
+        ? `\n• **Core Expertise**: ${matchedSpeaker.expertise.join(', ')}`
+        : '';
+      const bio = matchedSpeaker.biography
+        ? `\n\n${matchedSpeaker.biography}`
+        : '';
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: `👤 **${matchedSpeaker.name}**\n\n• **Position**: ${matchedSpeaker.position}\n• **Organization**: ${matchedSpeaker.organization}\n• **Country**: ${matchedSpeaker.country || 'Ghana'}${exp}${bio}`,
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'View All Conference Faculty →', url: '/speakers' },
+          { label: 'Register for Conference', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
     // 9. Speakers & Faculty
     if (
       q.includes('speaker') ||
       q.includes('faculty') ||
       q.includes('who') ||
       q.includes('governor') ||
-      q.includes('addison') ||
+      q.includes('asiama') ||
       q.includes('dzato') ||
-      q.includes('mansa') ||
+      q.includes('george') ||
+      q.includes('haruna') ||
       q.includes('panel')
     ) {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "🎙️ **Featured Conference Speakers & Keynotes**:\n\n• **Dr. Ernest Addison** &mdash; Governor, Bank of Ghana\n• **Robert Dzato (FCIB)** &mdash; CEO, Chartered Institute of Bankers, Ghana\n• **Mansa Nettey** &mdash; CEO, Standard Chartered Bank Ghana\n• **Hakim Ouzzani** &mdash; Managing Director, Societe Generale Ghana\n• **Abena Osei-Poku** &mdash; Managing Director, Ecobank Ghana\n• **John Kofi Adomakoh** &mdash; Managing Director, GCB Bank PLC\n• **Elsie Addo Awadzi** &mdash; Financial Regulatory Advisor\n• **Samuel Sackey** &mdash; CISO, Stanbic Bank Ghana",
+        text: "🎙️ **Featured Conference Faculty & Keynotes (18 Distinguished Luminaries)**:\n\n• **Robert Dzato (FCIB)** — CEO, CIB Ghana\n• **Dr. Johnson Pandit Asiama, FCIB(Hon.)** — Governor, Bank of Ghana\n• **Hon. Samuel Nartey George** — Minister for Communication, Digital Technology & Innovations\n• **Hon. Haruna Iddrisu** — Minister for Education\n• **Dr. Stephane Nwolley** — Digital Currency & Virtual Assets Architect\n• **Dr. Albert Antwi-Bosiako** — Cybersecurity & Anti-Fraud Leader\n• **Clifford Duke Mettle, FCIB** — International Trade Finance Leader\n• **Rita Elumelu, FCIB** — Financial Crime & Trade Specialist\n• **Doris Ahiati, FCIB** — Executive Corporate Governance Leader\n• **Farihan Alhassan** — Head of Banking Supervision & Risk\n• **Dr. Marcel Lukas** — Associate Professor in FinTech (Univ. of St Andrews)\n• **John Awuah** — CEO, Ghana Association of Banks\n• **Emelia Sackey, FCIB** — Executive Director of Ethics & Governance\n• **Frank Tawiah** — Virtual Assets & Tokenization Specialist\n• **Philip Twum, ACIB** — Digital Strategy & FinTech Partner\n• **Philip Kwaw Sebuabe** — Head of Digital Rails & Virtual Assets\n• **Paul Baah Sackey, FCIB** — Fellow & Senior Banking Leader\n• **Charles Ofori Acquah, FCIB** — Fellow & Executive Banking Advisor",
         time: getCurrentTime(),
         actionLinks: [
           { label: 'View All Keynote Speakers & Bios →', url: '/speakers' },
@@ -494,6 +527,47 @@ export const ChatbotWidget: React.FC = () => {
         time: getCurrentTime(),
         actionLinks: [
           { label: 'Choose Your Attendance Mode →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
+        ],
+      };
+    }
+
+    // 12.5 Resources & Presentation Slide Downloads
+    if (
+      q.includes('resource') ||
+      q.includes('slide') ||
+      q.includes('presentation') ||
+      q.includes('download') ||
+      q.includes('deck') ||
+      q.includes('brochure') ||
+      q.includes('document')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "📚 **Conference Resources & Keynote Downloads**:\n\n• Executive summaries, keynote presentation slides, conference brochures, and banking compendiums are published on the **Resources** page.\n• Registered delegates can download official presentation decks directly to their device or access them in their Delegate Portal.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'Explore Conference Resources →', url: '/resources' },
+          { label: 'Access Delegate Portal', url: '/dashboard' },
+        ],
+      };
+    }
+
+    // 12.6 Agenda & Programme Itinerary
+    if (
+      q.includes('agenda') ||
+      q.includes('schedule') ||
+      q.includes('itinerary') ||
+      q.includes('programme') ||
+      q.includes('session')
+    ) {
+      return {
+        id: `bot-${Date.now()}`,
+        sender: 'bot',
+        text: "📑 **Conference Agenda & Programme Itinerary**:\n\n• **Day 1**: Opening Plenary, Governor's Keynote Address, CEO Debate on AI in Banking, and Executive Waterfront Networking Banquet.\n• **Day 2**: 3 Specialized Masterclass Tracks (AI Fraud Prevention, Cybersecurity Defense, and eCedi / Virtual Assets), followed by the CIB Gala Dinner.\n• **Day 3**: Closing Resolutions, CPD Accreditation Certifications, and Ada Pontoon Leisure Excursion.",
+        time: getCurrentTime(),
+        actionLinks: [
+          { label: 'View Interactive Agenda →', url: '/events/30th-national-banking-ethics-conference-2026#agenda' },
         ],
       };
     }

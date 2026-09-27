@@ -8,6 +8,7 @@ import {
 import { Button } from '../../components/ui/Button';
 import { Speaker } from '../../types';
 import { ImageCropModal } from '../../components/ui/ImageCropModal';
+import { supabase } from '../../lib/supabase';
 
 /* ─── Helpers ─── */
 
@@ -19,6 +20,41 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+
+/** Convert a base64 data-URL to a Blob */
+const base64ToBlob = (dataUrl: string): Blob => {
+  const [header, data] = dataUrl.split(',');
+  const mime = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
+  const binary = atob(data);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+};
+
+/**
+ * Upload a base64-cropped image to Supabase Storage and return a public URL.
+ * Falls back to the base64 string if Supabase is unavailable.
+ */
+const uploadToSupabase = async (base64: string, speakerId: string): Promise<string> => {
+  if (!supabase) return base64; // offline fallback
+  try {
+    const blob = base64ToBlob(base64);
+    const ext = blob.type.split('/')[1] ?? 'jpg';
+    const path = `speakers/${speakerId}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage
+      .from('speaker-photos')
+      .upload(path, blob, { upsert: true, contentType: blob.type });
+    if (error) {
+      console.warn('Supabase upload error, using base64 fallback:', error.message);
+      return base64;
+    }
+    const { data } = supabase.storage.from('speaker-photos').getPublicUrl(path);
+    return data.publicUrl ?? base64;
+  } catch (err) {
+    console.warn('Supabase storage unavailable, using base64 fallback:', err);
+    return base64;
+  }
+};
 
 /* ─── Empty speaker template ─── */
 const emptySpeaker = (): Partial<Speaker> => ({
@@ -56,7 +92,6 @@ const SpeakerModal: React.FC<{
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // Reset so the same file can be re-selected
     e.target.value = '';
     setUploading(true);
     try {
@@ -70,11 +105,23 @@ const SpeakerModal: React.FC<{
     }
   };
 
-  const handleCropComplete = (croppedBase64: string) => {
-    setPreviewUrl(croppedBase64);
-    set('photo_url', croppedBase64);
+  const handleCropComplete = async (croppedBase64: string) => {
     setShowCrop(false);
     setRawImageSrc(null);
+    setUploading(true);
+    try {
+      // Try to upload to Supabase Storage for a persistent public URL
+      const speakerId = form.id ?? `sp-${Date.now()}`;
+      const finalUrl = await uploadToSupabase(croppedBase64, speakerId);
+      setPreviewUrl(finalUrl);
+      set('photo_url', finalUrl);
+    } catch (err) {
+      // Absolute fallback: keep base64 (works locally only)
+      setPreviewUrl(croppedBase64);
+      set('photo_url', croppedBase64);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleCropCancel = () => {
@@ -319,11 +366,34 @@ export const AdminSpeakers: React.FC = () => {
     } else {
       addSpeaker(updated);
     }
+
+    // Background sync to Supabase (non-blocking, keeps site loading instant)
+    if (supabase && updated.id) {
+      Promise.resolve(
+        supabase
+          .from('speakers')
+          .upsert({
+            id: updated.id,
+            name: updated.name ?? '',
+            slug: updated.slug ?? '',
+            position: updated.position ?? '',
+            organization: updated.organization ?? '',
+            country: updated.country ?? 'Ghana',
+            photo_url: updated.photo_url ?? '',
+            biography: updated.biography ?? '',
+            expertise: updated.expertise ?? [],
+            is_keynote: updated.is_keynote ?? false,
+          })
+      ).catch(() => {});
+    }
   };
 
   const handleDelete = (id: string) => {
     if (confirm('Remove this speaker?')) {
       deleteSpeaker(id);
+      if (supabase) {
+        Promise.resolve(supabase.from('speakers').delete().eq('id', id)).catch(() => {});
+      }
     }
   };
 

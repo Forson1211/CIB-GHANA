@@ -91,43 +91,7 @@ export const Speakers: React.FC = () => {
 
       {/* Main Page Content */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
-        {/* Search & Filter Toolbar */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="bg-slate-50 p-6 rounded-3xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4"
-        >
-          <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by name, bank, or role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs focus:border-cib-green-600 focus:outline-none bg-white"
-            />
-          </div>
 
-          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto scrollbar-none pb-2 sm:pb-0">
-            <span className="text-xs text-slate-500 font-semibold shrink-0">
-              Expertise:
-            </span>
-            {allExpertise.slice(0, 6).map((exp) => (
-              <button
-                key={exp}
-                onClick={() => setSelectedExpertise(exp)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                  selectedExpertise === exp
-                    ? 'bg-cib-green-700 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                {exp === 'ALL' ? 'All Areas' : exp}
-              </button>
-            ))}
-          </div>
-        </motion.div>
 
         {/* Speakers Grid */}
         {filteredSpeakers.length === 0 ? (

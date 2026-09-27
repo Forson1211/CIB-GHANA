@@ -46,14 +46,63 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY_EVENTS = 'cib_ghana_events_v2';
+const STORAGE_KEY_EVENTS = 'cib_ghana_events_v6';
 const STORAGE_KEY_REGS = 'cib_ghana_registrations_v1';
 const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v1';
+// v8: Clean 18 conference faculty members; blacklisted all old mock speakers; fast local cache
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v8';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v8';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v2';
+
+export const PURGED_MOCK_SPEAKER_IDS = new Set([
+  'spk-1',
+  'spk-3',
+  'spk-4',
+  'spk-5',
+  'spk-6',
+  'spk-7',
+  'spk-8',
+  'spk-9',
+  'spk-10',
+  'spk-11',
+  'spk-12',
+]);
+
+export const PURGED_MOCK_SPEAKER_NAMES = [
+  'dr. ernest addison',
+  'ernest addison',
+  'mansa nettey',
+  'mawu nettey',
+  'hakim ouzzani',
+  'abena osei-poku',
+  'akenu osei-poku',
+  'prof. kweku',
+  'john kofi adomakoh',
+  'patricia poku diaby',
+  'kojo addo-kufuor',
+  'elsie addo awadzi',
+  'nana ama poku',
+];
+
+// Admin-created speakers have IDs like 'sp-1234567890' (sp- followed by timestamp digits)
+// We must NEVER purge them by name — only purge known old mock IDs.
+const isAdminCreatedSpeaker = (id: string): boolean => /^sp-\d+/.test(id);
+
+export const isPurgedMockSpeaker = (s: { id: string; name?: string }): boolean => {
+  // Never purge admin-created speakers regardless of name
+  if (isAdminCreatedSpeaker(s.id)) return false;
+  if (PURGED_MOCK_SPEAKER_IDS.has(s.id)) return true;
+  if (s.name) {
+    const clean = s.name.toLowerCase().trim();
+    for (const name of PURGED_MOCK_SPEAKER_NAMES) {
+      if (clean.includes(name)) return true;
+    }
+  }
+  return false;
+};
 
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
@@ -77,25 +126,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLiveSyncing, setIsLiveSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(new Date());
 
+  // Proactively clean up old speaker and event storage versions
+  useEffect(() => {
+    try {
+      [
+        'cib_ghana_speakers_v7',
+        'cib_ghana_speakers_v6',
+        'cib_ghana_speakers_v5',
+        'cib_ghana_deleted_spk_ids_v7',
+        'cib_ghana_events_v5',
+      ].forEach((key) => localStorage.removeItem(key));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const [events, setEvents] = useState<EventItem[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_EVENTS);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((evt) => {
-            const hasBothDays = evt.agenda && evt.agenda.length > 0 && evt.agenda.some((s: any) => s.day_number === 2);
-            if (!hasBothDays) {
-              const defaultAgenda = MOCK_EVENTS.find((m) => m.id === evt.id)?.agenda || MOCK_EVENTS[0].agenda;
-              return {
-                ...evt,
-                agenda: (evt.agenda && evt.agenda.length > 0)
-                  ? [...evt.agenda, ...defaultAgenda.filter((s) => s.day_number === 2).map((s) => ({ ...s, id: `${s.id}-${evt.id}`, event_id: evt.id }))]
-                  : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${evt.id}`, event_id: evt.id })),
-              };
-            }
-            return evt;
-          });
+          const onlyEvt1 = parsed.filter((evt) => evt.id === 'evt-1');
+          if (onlyEvt1.length > 0) {
+            return onlyEvt1.map((evt) => ({
+              ...evt,
+              speakers: MOCK_SPEAKERS.filter((s) => !isPurgedMockSpeaker(s)),
+              agenda: MOCK_EVENTS[0].agenda,
+            }));
+          }
         }
       } catch (e) {
         console.error(e);
@@ -116,14 +175,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [speakers, setSpeakers] = useState<Speaker[]>(() => {
+    // Read permanently-deleted speaker IDs so they never come back
+    let deletedIds = new Set<string>();
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) deletedIds = new Set(arr);
+      }
+    } catch { /* ignore */ }
+
     const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        const parsed: Speaker[] = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Remove any that were deleted or are purged mock speakers
+          // Admin-created speakers (sp-<timestamp>) are NEVER purged by name
+          const live = parsed.filter(
+            (s) => !deletedIds.has(s.id) && !isPurgedMockSpeaker(s)
+          );
+          // Backfill photo from MOCK_SPEAKERS ONLY if the saved speaker has no photo
+          // AND is a known mock speaker (never overwrite admin-uploaded photos)
+          const enriched = live.map((s) => {
+            if (!s.photo_url && !isAdminCreatedSpeaker(s.id)) {
+              const mock = MOCK_SPEAKERS.find((m) => m.id === s.id);
+              if (mock?.photo_url) return { ...s, photo_url: mock.photo_url };
+            }
+            return s;
+          });
+          // Add MOCK_SPEAKERS whose IDs aren't yet in localStorage and weren't deleted
+          const liveIds = new Set(enriched.map((s) => s.id));
+          const fresh = MOCK_SPEAKERS.filter(
+            (s) => !liveIds.has(s.id) && !deletedIds.has(s.id) && !isPurgedMockSpeaker(s)
+          );
+          return [...enriched, ...fresh];
+        }
       } catch (e) { console.error(e); }
     }
-    return MOCK_SPEAKERS;
+    // First load — seed from code-defined list (minus already-deleted and purged)
+    return MOCK_SPEAKERS.filter((s) => !deletedIds.has(s.id) && !isPurgedMockSpeaker(s));
   });
   const [sponsors, setSponsors] = useState<Sponsor[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
@@ -235,7 +326,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       twitter_url: speaker.twitter_url,
       website_url: speaker.website_url,
     };
-    setSpeakers((prev) => [...prev, newSpeaker]);
+    // If this speaker ID was previously blacklisted, un-blacklist it
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
+      if (raw) {
+        const arr: string[] = JSON.parse(raw);
+        if (Array.isArray(arr) && arr.includes(newSpeaker.id)) {
+          localStorage.setItem(STORAGE_KEY_DELETED_SPEAKERS, JSON.stringify(arr.filter((id) => id !== newSpeaker.id)));
+        }
+      }
+    } catch { /* ignore */ }
+
+    setSpeakers((prev) => {
+      // Prevent duplicates: if a speaker with the same id already exists, replace instead of append
+      if (prev.some((s) => s.id === newSpeaker.id)) {
+        return prev.map((s) => (s.id === newSpeaker.id ? newSpeaker : s));
+      }
+      return [...prev, newSpeaker];
+    });
   };
 
   const updateSpeaker = (id: string, updates: Partial<Speaker>) => {
@@ -245,7 +353,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteSpeaker = (id: string) => {
+    // 1. Remove from live state (useEffect auto-saves to STORAGE_KEY_SPEAKERS)
     setSpeakers((prev) => prev.filter((s) => s.id !== id));
+    // 2. Add to permanent deleted-IDs blacklist so it never re-appears on refresh
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
+      const arr: string[] = raw ? JSON.parse(raw) : [];
+      if (!arr.includes(id)) {
+        arr.push(id);
+        localStorage.setItem(STORAGE_KEY_DELETED_SPEAKERS, JSON.stringify(arr));
+      }
+    } catch { /* ignore */ }
   };
 
   const addSponsor = (sponsor: Partial<Sponsor>) => {
@@ -277,15 +395,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await ApiClient.getEvents();
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         setEvents((prev) => {
-          const backendIds = new Set(res.data.map((e) => e.id));
-          const localOnly = prev.filter((e) => !backendIds.has(e.id));
-          const merged = res.data.map((be) => {
+          const filtered = res.data.filter((e) => e.id === 'evt-1');
+          const targetList = filtered.length > 0 ? filtered : [MOCK_EVENTS[0]];
+          const merged = targetList.map((be) => {
             const local = prev.find((pe) => pe.id === be.id);
             const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
+            const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id === 'ag-d1-1' || s.title === 'REGISTRATION' || s.title?.includes('Deploying AI'));
             if (!local) {
               return {
                 ...be,
-                agenda: (be.agenda && be.agenda.length > 0)
+                agenda: (be.agenda && isUpToDate(be.agenda))
                   ? be.agenda
                   : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })),
                 speakers: (be.speakers && be.speakers.length > 0) ? be.speakers : (MOCK_EVENTS.find((m) => m.id === be.id)?.speakers || MOCK_SPEAKERS),
@@ -293,11 +412,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               };
             }
             const { resources: _locRes, speakers: _locSpk, agenda: _locAgenda, ...restLocal } = local;
-            const finalAgenda = (_locAgenda && _locAgenda.length > 0 && _locAgenda.some((s) => s.day_number === 2))
-              ? _locAgenda
-              : ((be.agenda && be.agenda.length > 0 && be.agenda.some((s) => s.day_number === 2))
-                  ? be.agenda
-                  : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
+            const finalAgenda = (be.agenda && isUpToDate(be.agenda))
+              ? be.agenda
+              : ((_locAgenda && isUpToDate(_locAgenda)) ? _locAgenda : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
             return {
               ...be,
               ...restLocal,
@@ -306,7 +423,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
             };
           });
-          return [...merged, ...localOnly];
+          return merged;
         });
         return;
       }
@@ -323,15 +440,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .order('start_date', { ascending: true });
         if (!error && Array.isArray(data) && data.length > 0) {
           setEvents((prev) => {
-            const sbIds = new Set(data.map((e: any) => e.id));
-            const localOnly = prev.filter((e) => !sbIds.has(e.id));
-            const merged = (data as EventItem[]).map((be) => {
+            const filtered = (data as EventItem[]).filter((e: any) => e.id === 'evt-1');
+            const targetList = filtered.length > 0 ? filtered : [MOCK_EVENTS[0]];
+            const merged = targetList.map((be) => {
               const local = prev.find((pe) => pe.id === be.id);
               const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
+              const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id === 'ag-d1-1' || s.title === 'REGISTRATION' || s.title?.includes('Deploying AI'));
               if (!local) {
                 return {
                   ...be,
-                  agenda: (be.agenda && be.agenda.length > 0)
+                  agenda: (be.agenda && isUpToDate(be.agenda))
                     ? be.agenda
                     : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })),
                   speakers: (be.speakers && be.speakers.length > 0) ? be.speakers : (MOCK_EVENTS.find((m) => m.id === be.id)?.speakers || MOCK_SPEAKERS),
@@ -339,11 +457,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 };
               }
               const { resources: _locRes, speakers: _locSpk, agenda: _locAgenda, ...restLocal } = local;
-              const finalAgenda = (_locAgenda && _locAgenda.length > 0 && _locAgenda.some((s) => s.day_number === 2))
-                ? _locAgenda
-                : ((be.agenda && be.agenda.length > 0 && be.agenda.some((s) => s.day_number === 2))
-                    ? be.agenda
-                    : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
+              const finalAgenda = (be.agenda && isUpToDate(be.agenda))
+                ? be.agenda
+                : ((_locAgenda && isUpToDate(_locAgenda)) ? _locAgenda : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
               return {
                 ...be,
                 ...restLocal,
@@ -352,7 +468,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
               };
             });
-            return [...merged, ...localOnly];
+            return merged;
           });
         }
       } catch (sbErr) {
@@ -421,6 +537,63 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLiveSyncing(false);
   };
 
+  // Fetch admin-saved speakers from Supabase and merge into local state
+  // This restores speakers that were lost if localStorage was cleared/version-bumped
+  const refreshSpeakers = async () => {
+    if (!supabase) return;
+    try {
+      const { data, error } = await supabase
+        .from('speakers')
+        .select('*')
+        .order('name', { ascending: true });
+      if (error || !Array.isArray(data) || data.length === 0) return;
+
+      setSpeakers((prev) => {
+        const prevIds = new Set(prev.map((s) => s.id));
+        const toAdd: Speaker[] = [];
+        const merged = prev.map((s) => {
+          // Find matching Supabase record — prefer Supabase photo if local has none
+          const remote = data.find((d: any) => d.id === s.id);
+          if (!remote) return s;
+          return {
+            ...s,
+            // Only backfill photo from Supabase if local doesn't have one
+            photo_url: s.photo_url || remote.photo_url || '',
+            name: s.name || remote.name || '',
+            position: s.position || remote.position || '',
+            organization: s.organization || remote.organization || '',
+          };
+        });
+
+        // Restore any Supabase speakers not present locally (e.g. after key bump)
+        for (const d of data as any[]) {
+          if (!prevIds.has(d.id) && !isPurgedMockSpeaker(d)) {
+            toAdd.push({
+              id: d.id,
+              name: d.name ?? '',
+              slug: d.slug ?? '',
+              position: d.position ?? '',
+              organization: d.organization ?? '',
+              country: d.country ?? 'Ghana',
+              photo_url: d.photo_url ?? '',
+              biography: d.biography ?? '',
+              expertise: Array.isArray(d.expertise) ? d.expertise : [],
+              is_keynote: d.is_keynote ?? false,
+              linkedin_url: d.linkedin_url ?? '',
+              twitter_url: d.twitter_url ?? '',
+              website_url: d.website_url ?? '',
+            });
+          }
+        }
+
+        if (toAdd.length === 0 && merged.every((s, i) => s === prev[i])) return prev;
+        return [...merged, ...toAdd];
+      });
+    } catch (err) {
+      console.warn('refreshSpeakers failed:', err);
+    }
+  };
+
   const refreshAll = async () => {
     setIsLiveSyncing(true);
     try {
@@ -434,6 +607,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Cross-tab and real-time backend synchronization for admin and attendees
   useEffect(() => {
     refreshAll();
+    // Restore admin-added speakers from Supabase (recovers from localStorage version bumps)
+    refreshSpeakers();
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY_REGS && e.newValue) {
@@ -470,8 +645,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  const getEventBySlug = (slug: string) => events.find((e) => e.slug === slug);
-  const getEventById = (id: string) => events.find((e) => e.id === id);
+  const getEventBySlug = (slug: string) =>
+    events.find((e) => e.slug === slug || e.id === slug) || (events.length > 0 ? events[0] : MOCK_EVENTS[0]);
+  const getEventById = (id: string) =>
+    events.find((e) => e.id === id || e.slug === id) || (events.length > 0 ? events[0] : MOCK_EVENTS[0]);
   const getRegistrationByNumber = (regNumber: string) => 
     registrations.find((r) => r.registration_number.toUpperCase() === regNumber.trim().toUpperCase());
 

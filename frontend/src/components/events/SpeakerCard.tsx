@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Speaker } from '../../types';
 import { ArrowRight } from 'lucide-react';
+import { ProfilePlaceholder } from '../ui/ProfilePlaceholder';
 
 interface SpeakerCardProps {
   speaker: Speaker;
@@ -9,22 +10,37 @@ interface SpeakerCardProps {
 }
 
 export const SpeakerCard: React.FC<SpeakerCardProps> = ({ speaker, onSelect, className = '' }) => {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [speaker.photo_url]);
+
+  const hasPhoto = Boolean(speaker.photo_url && speaker.photo_url.trim() !== '' && !imgError);
+
   return (
     <div
       onClick={() => onSelect(speaker)}
       className={`group cursor-pointer flex flex-col bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#008129] transition-all duration-300 overflow-hidden ${className}`}
     >
       {/* Photo Frame - Square aspect ratio for balanced, executive headshots */}
-      <div className="relative aspect-square w-full overflow-hidden bg-slate-100">
-        <img
-          src={speaker.photo_url}
-          alt={speaker.name}
-          className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
-        />
+      <div className="relative aspect-square w-full overflow-hidden bg-slate-100 flex items-center justify-center">
+        {hasPhoto ? (
+          <img
+            src={speaker.photo_url}
+            alt={speaker.name}
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+        ) : (
+          <ProfilePlaceholder className="w-full h-full" />
+        )}
 
         {/* Subtle vignette gradient at bottom of photo */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+        {hasPhoto && (
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity pointer-events-none" />
+        )}
 
         {speaker.is_keynote && (
           <div className="absolute top-2.5 left-2.5 z-10">

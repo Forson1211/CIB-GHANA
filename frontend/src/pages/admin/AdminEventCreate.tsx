@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ProfilePlaceholder } from '../../components/ui/ProfilePlaceholder';
 import {
   Check,
   ArrowRight,
@@ -765,11 +766,17 @@ export const AdminEventCreate: React.FC = () => {
                           : 'border-slate-200 bg-white hover:border-slate-300'
                       }`}
                     >
-                      <img
-                        src={spk.photo_url}
-                        alt=""
-                        className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200"
-                      />
+                      {spk.photo_url ? (
+                        <img
+                          src={spk.photo_url}
+                          alt=""
+                          className="w-10 h-10 rounded-full object-cover shrink-0 border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                          <ProfilePlaceholder className="w-full h-full" />
+                        </div>
+                      )}
                       <div className="truncate flex-1">
                         <span className="text-xs font-bold text-cib-charcoal-900 block truncate">
                           {spk.name}

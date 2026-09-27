@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Speaker } from '../../types';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
 import { MapPin, Building, Globe, ArrowUpRight } from 'lucide-react';
+import { ProfilePlaceholder } from '../ui/ProfilePlaceholder';
 
 interface SpeakerModalProps {
   speaker: Speaker | null;
@@ -17,19 +18,32 @@ export const SpeakerModal: React.FC<SpeakerModalProps> = ({
   onClose,
   eventTitle,
 }) => {
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [speaker?.photo_url]);
+
   if (!speaker) return null;
+
+  const hasPhoto = Boolean(speaker.photo_url && speaker.photo_url.trim() !== '' && !imgError);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Speaker Dossier" maxWidth="2xl">
       <div className="space-y-6">
         {/* Top Header Grid */}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shadow-md shrink-0 border-2 border-cib-gold-300">
-            <img
-              src={speaker.photo_url}
-              alt={speaker.name}
-              className="w-full h-full object-cover"
-            />
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shadow-md shrink-0 border-2 border-cib-gold-300 bg-slate-100 flex items-center justify-center">
+            {hasPhoto ? (
+              <img
+                src={speaker.photo_url}
+                alt={speaker.name}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <ProfilePlaceholder className="w-full h-full" />
+            )}
             {speaker.is_keynote && (
               <div className="absolute top-2 left-2 bg-cib-gold-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded shadow">
                 KEYNOTE

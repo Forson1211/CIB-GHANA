@@ -13,7 +13,6 @@ import {
   User,
   Building2,
   BadgeCheck,
-  Sparkles,
 } from 'lucide-react';
 
 // Direct synchronous localStorage fallbacks to prevent flash on page refresh
@@ -125,12 +124,6 @@ export const MyPortal: React.FC = () => {
         <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#dccb00]" />
-                <p className="text-[#daf09a] text-xs font-bold uppercase tracking-widest">
-                  Delegate &amp; Member Portal
-                </p>
-              </div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
                 Welcome,{' '}
                 <span className="text-[#dccb00]">

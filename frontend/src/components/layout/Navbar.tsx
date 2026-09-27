@@ -159,10 +159,9 @@ export const Navbar: React.FC = () => {
             {registeredUserEmail ? (
               <Link
                 to="/my-portal"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-md"
+                className="inline-flex items-center justify-center px-7 py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-md"
               >
-                <User className="w-4 h-4" />
-                <span>My Portal</span>
+                <span>Access Event</span>
               </Link>
             ) : (
               <Link
@@ -304,10 +303,9 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/my-portal"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-black text-base shadow-md transition-all"
+                  className="flex items-center justify-center w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-black text-base shadow-md transition-all"
                 >
-                  <User className="w-4 h-4" />
-                  <span>My Portal</span>
+                  <span>Access Event</span>
                 </Link>
               ) : (
                 <Link

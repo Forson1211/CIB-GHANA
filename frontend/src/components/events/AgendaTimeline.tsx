@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AgendaSession, Speaker } from '../../types';
 import { Clock, MapPin, Calendar, Users, Award, Mic, Coffee, Sparkles } from 'lucide-react';
+import { ProfilePlaceholder } from '../ui/ProfilePlaceholder';
 
 interface AgendaTimelineProps {
   sessions: AgendaSession[];
@@ -30,15 +31,32 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   const sessionDays = Array.from(new Set(sessions.map((s) => s.day_number))).sort((a, b) => a - b);
   const days = sessionDays.length >= 2 ? sessionDays : [1, 2];
 
-  // Filtered sessions
-  const filteredSessions = sessions.filter((s) => {
-    const matchesDay = s.day_number === activeDay;
-    const matchesType = selectedType === 'ALL' || s.session_type === selectedType;
-    return matchesDay && matchesType;
-  });
+  // Helper to convert "HH:MM" to total minutes for strict chronological sorting
+  const timeToMinutes = (timeStr?: string): number => {
+    if (!timeStr) return 0;
+    const [h, m] = timeStr.split(':').map((val) => parseInt(val, 10) || 0);
+    return (h || 0) * 60 + (m || 0);
+  };
 
-  const getSessionSpeakers = (speakerIds: string[]) => {
-    return speakers.filter((spk) => speakerIds.includes(spk.id));
+  // Filtered sessions strictly sorted by start time
+  const sortedSessions = React.useMemo(() => {
+    const list = sessions.filter((s) => {
+      const matchesDay = s.day_number === activeDay;
+      const matchesType = selectedType === 'ALL' || s.session_type === selectedType;
+      return matchesDay && matchesType;
+    });
+
+    return list.sort((a, b) => {
+      const diffStart = timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+      if (diffStart !== 0) return diffStart;
+      return timeToMinutes(a.end_time) - timeToMinutes(b.end_time);
+    });
+  }, [sessions, activeDay, selectedType]);
+
+  const getSessionSpeakers = (speakerIds?: string[]) => {
+    if (!speakerIds || !Array.isArray(speakerIds)) return [];
+    const validSpeakers = (speakers && Array.isArray(speakers)) ? speakers : [];
+    return validSpeakers.filter((spk) => spk && spk.id && speakerIds.includes(spk.id));
   };
 
   const dayLabels: Record<number, { title: string; date: string }> = {
@@ -72,11 +90,11 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                 onClick={() => setActiveDay(dayNum)}
                 className={`px-4 sm:px-6 py-2.5 rounded-lg text-xs font-black transition-all flex items-center gap-2.5 ${
                   isActive
-                    ? 'bg-white text-[#F20300] shadow-lg scale-[1.02]'
+                    ? 'bg-white text-[#008129] shadow-lg scale-[1.02]'
                     : 'text-white/90 hover:text-white hover:bg-white/10'
                 }`}
               >
-                <Calendar className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#F20300]' : 'text-yellow-300'}`} />
+                <Calendar className={`w-4 h-4 shrink-0 ${isActive ? 'text-[#008129]' : 'text-emerald-200'}`} />
                 <span className="tracking-wide text-xs sm:text-sm font-black">{labelInfo.title}</span>
                 <span className={`text-[11px] font-medium hidden sm:inline ${isActive ? 'text-slate-600' : 'text-white/80'}`}>
                   • {labelInfo.date}
@@ -86,15 +104,17 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           })}
         </div>
 
-        {/* Category Filters (Clean rounded badges) */}
+        {/* Category Filters (Clean badges preserving design) */}
         <div className="flex items-center gap-1.5 overflow-x-auto max-w-full pb-1 scrollbar-none">
-          {['ALL', 'KEYNOTE', 'PANEL', 'CEREMONY', 'NETWORKING'].map((type) => {
+          {['ALL', 'KEYNOTE', 'PANEL', 'MASTERCLASS', 'WORKSHOP', 'CEREMONY', 'NETWORKING'].map((type) => {
             const isActive = selectedType === type;
             const labelMap: Record<string, string> = {
               ALL: 'All Sessions',
               KEYNOTE: 'Keynotes',
               PANEL: 'Panels',
-              CEREMONY: 'Ceremony',
+              MASTERCLASS: 'Masterclasses',
+              WORKSHOP: 'Workshops',
+              CEREMONY: 'Ceremonies',
               NETWORKING: 'Networking',
             };
             return (
@@ -103,7 +123,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                 onClick={() => setSelectedType(type)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
                   isActive
-                    ? 'bg-white text-[#F20300] font-black shadow-sm'
+                    ? 'bg-white text-[#008129] font-black shadow-sm'
                     : 'bg-white/15 hover:bg-white/25 text-white border border-white/20 backdrop-blur-md'
                 }`}
               >
@@ -114,8 +134,8 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
         </div>
       </div>
 
-      {/* Grid of Sessions (Arranged beautifully like the 2nd image cards) */}
-      {filteredSessions.length === 0 ? (
+      {/* Grid of Sessions (Arranged beautifully in strict chronological order) */}
+      {sortedSessions.length === 0 ? (
         <div className="text-center py-10 px-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-md border border-white/40">
           <p className="text-slate-700 text-xs sm:text-sm font-medium">
             No sessions scheduled under this filter for {dayLabels[activeDay]?.title || `Day ${activeDay}`}.
@@ -123,7 +143,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredSessions.map((session) => {
+          {sortedSessions.map((session) => {
             const sessionSpeakers = getSessionSpeakers(session.speaker_ids);
             const conf = sessionTypeConfig[session.session_type] || sessionTypeConfig.NETWORKING;
             const Icon = conf.icon;
@@ -142,7 +162,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 font-display font-bold text-xs sm:text-sm text-slate-900">
-                          <Clock className="w-3 h-3 text-[#F20300]" />
+                          <Clock className="w-3 h-3 text-[#008129]" />
                           <span>{session.start_time} – {session.end_time}</span>
                         </div>
                         <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-0.5">
@@ -158,7 +178,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display leading-snug group-hover:text-[#F20300] transition-colors">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 font-display leading-snug group-hover:text-[#008129] transition-colors">
                     {session.title}
                   </h3>
 
@@ -181,13 +201,19 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                         <button
                           key={spk.id}
                           onClick={() => onSelectSpeaker && onSelectSpeaker(spk)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-red-50 border border-slate-200/70 hover:border-red-300 text-[11px] font-semibold text-slate-800 hover:text-[#F20300] transition-all"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-emerald-50 border border-slate-200/70 hover:border-emerald-300 text-[11px] font-semibold text-slate-800 hover:text-[#008129] transition-all"
                         >
-                          <img
-                            src={spk.photo_url}
-                            alt={spk.name}
-                            className="w-4 h-4 rounded-full object-cover border border-slate-200"
-                          />
+                          {spk.photo_url ? (
+                            <img
+                              src={spk.photo_url}
+                              alt={spk.name}
+                              className="w-4 h-4 rounded-full object-cover border border-slate-200"
+                            />
+                          ) : (
+                            <span className="w-4 h-4 rounded-full overflow-hidden border border-slate-200 flex items-center justify-center shrink-0">
+                              <ProfilePlaceholder className="w-full h-full" />
+                            </span>
+                          )}
                           <span>{spk.name}</span>
                         </button>
                       ))}

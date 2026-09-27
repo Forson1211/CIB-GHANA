@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import {
@@ -25,19 +25,16 @@ import {
   Zap,
   GraduationCap
 } from 'lucide-react';
-import { useApp } from '../context/AppContext';
+import { useApp, isPurgedMockSpeaker } from '../context/AppContext';
 import { Speaker } from '../types';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
 import { AnimatedCounter } from '../components/ui/AnimatedCounter';
-import { SpeakerCard } from '../components/events/SpeakerCard';
-import { SpeakerMarquee } from '../components/events/SpeakerMarquee';
+import { FeaturedSpeakersSlider } from '../components/events/FeaturedSpeakersSlider';
 import { SpeakerModal } from '../components/events/SpeakerModal';
-import { AgendaTimeline } from '../components/events/AgendaTimeline';
 import { GalleryLightbox } from '../components/events/GalleryLightbox';
 import { EventHighlightMarquee } from '../components/events/EventHighlightMarquee';
-import { MOCK_EVENTS } from '../data/mockData';
 interface AudienceItem {
   title: string;
   description: string;
@@ -96,6 +93,13 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { events, speakers, registeredUserEmail } = useApp();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
+
+  // Only featured/keynote speakers appear on the homepage slider
+  const featuredSpeakers = useMemo(() => {
+    const valid = speakers.filter((s) => !isPurgedMockSpeaker(s));
+    const keynotes = valid.filter((s) => s.is_keynote);
+    return keynotes.length > 0 ? keynotes : valid;
+  }, [speakers]);
 
   // Background photos for cinematic hero with smooth zoom & lag-free crossfade (venue images first)
   const heroBackgrounds = [
@@ -323,14 +327,13 @@ export const Home: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
                 className="flex flex-row flex-wrap items-center justify-start gap-3 sm:gap-4 pt-2 sm:pt-4"
               >
-                {/* Left Gradient Button: Register Now / My Portal */}
+                {/* Left Gradient Button: Register Now / Access Event */}
                 {registeredUserEmail ? (
                   <Link
                     to="/my-portal"
-                    className="w-auto inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-xl text-center whitespace-nowrap"
+                    className="w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-xl text-center whitespace-nowrap"
                   >
-                    <span>My Portal</span>
-                    <ArrowRight className="w-4 h-4 stroke-[2.5]" />
+                    <span>Access Event</span>
                   </Link>
                 ) : (
                   <Link
@@ -564,46 +567,11 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. SPEAKERS SECTION (Edge-to-edge Swiping) */}
-      <section className="w-full space-y-8 overflow-hidden">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeInUp}
-            className="flex flex-col sm:flex-row sm:items-end justify-between gap-4"
-          >
-            <div>
-              <h2 className="text-3xl sm:text-4xl font-black text-cib-charcoal-900 font-display uppercase tracking-tight">
-                Our Keynote Speakers
-              </h2>
-            </div>
-
-            <Link
-              to="/speakers"
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#008129] hover:underline group"
-            >
-              <span>View All Speakers</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Continuous Moving Speaker Track (Full Width Edge-to-Edge) */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.15 }}
-          transition={{ duration: 0.6 }}
-          className="w-full"
-        >
-          <SpeakerMarquee
-            speakers={speakers}
-            onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
-          />
-        </motion.div>
-      </section>
+      {/* 6. FEATURED SPEAKERS SECTION (Matching User Reference Layout in Brand Colors) */}
+      <FeaturedSpeakersSlider
+        speakers={featuredSpeakers}
+        onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
+      />
 
       {/* 6.5 WHO IT'S FOR SECTION (Interactive 3D Flip Cards in Brand Green) */}
       <section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -700,36 +668,7 @@ export const Home: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* 7. INTERACTIVE AGENDA SECTION (Compact Height, Full-width Brand Red-to-Yellow Gradient Background) */}
-      <section className="w-full bg-gradient-to-r from-[#F20300] via-[#F86400] to-[#FFC400] py-8 sm:py-12 text-white">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.15 }}
-          variants={fadeInUp}
-          className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6"
-        >
-          <div className="text-left max-w-3xl space-y-1.5">
-            <span className="text-[11px] font-black uppercase tracking-widest text-yellow-200">
-              PROGRAMME ITINERARY
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display uppercase tracking-tight">
-              CONFERENCE AGENDA
-            </h2>
-            <p className="text-white/95 text-xs sm:text-sm max-w-2xl font-medium">
-              Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across Day One and Day Two.
-            </p>
-          </div>
 
-          <div className="w-full">
-            <AgendaTimeline
-              sessions={(featuredEvent?.agenda && featuredEvent.agenda.length > 0) ? featuredEvent.agenda : MOCK_EVENTS[0].agenda}
-              speakers={speakers}
-              onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
-            />
-          </div>
-        </motion.div>
-      </section>
 
       {/* 8. VENUE HIGHLIGHTS & PHOTO STREAM (3-Row Infinite Marquee) */}
       <section className="w-full overflow-hidden space-y-6 sm:space-y-8 py-6">
@@ -893,10 +832,9 @@ export const Home: React.FC = () => {
                   {registeredUserEmail ? (
                     <Link
                       to="/my-portal"
-                      className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#F5A623] hover:bg-[#e09618] active:scale-95 text-white font-black text-sm uppercase tracking-wider transition-all shadow-xl"
+                      className="inline-flex items-center justify-center px-8 py-3.5 bg-[#F5A623] hover:bg-[#e09618] active:scale-95 text-white font-black text-sm uppercase tracking-wider transition-all shadow-xl"
                     >
-                      <span>My Portal</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <span>Access Event</span>
                     </Link>
                   ) : (
                     <Link

@@ -44,11 +44,6 @@ export const SpeakerModal: React.FC<SpeakerModalProps> = ({
             ) : (
               <ProfilePlaceholder className="w-full h-full" />
             )}
-            {speaker.is_keynote && (
-              <div className="absolute top-2 left-2 bg-cib-gold-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded shadow">
-                KEYNOTE
-              </div>
-            )}
           </div>
 
           <div className="text-center sm:text-left space-y-1.5 flex-1">

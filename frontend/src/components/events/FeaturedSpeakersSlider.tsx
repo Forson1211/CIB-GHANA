@@ -97,24 +97,24 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
         <div className="lg:hidden space-y-6">
           {/* Pure Green Brand Card Container (Sharp Edges) */}
           <div className="bg-[#008129] border border-[#006e23] rounded-none p-5 sm:p-7 shadow-xl space-y-5 sm:space-y-6 overflow-hidden text-white">
-            {/* Top Speaker Details */}
-            <div className="text-left space-y-1">
+            {/* Top Speaker Details - Stable fixed height prevents card from jumping/resizing */}
+            <div className="text-left h-[116px] sm:h-[130px] relative overflow-hidden">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSpeaker.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-1"
+                  className="absolute inset-0 flex flex-col justify-start space-y-1"
                 >
-                  <h3 className="text-2xl sm:text-3xl font-black font-display text-white tracking-tight leading-snug">
+                  <h3 className="text-xl sm:text-2xl font-black font-display text-white tracking-tight leading-snug line-clamp-1">
                     {currentSpeaker.name}
                   </h3>
-                  <p className="text-sm sm:text-base font-semibold text-white/95 leading-snug">
+                  <p className="text-xs sm:text-sm font-semibold text-white/95 leading-snug line-clamp-2">
                     {currentSpeaker.position}
                   </p>
-                  <p className="text-xs sm:text-sm font-medium text-white/80">
+                  <p className="text-[11px] sm:text-xs font-medium text-white/80 line-clamp-1">
                     {currentSpeaker.organization}
                   </p>
                 </motion.div>

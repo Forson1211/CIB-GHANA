@@ -41,14 +41,6 @@ export const SpeakerCard: React.FC<SpeakerCardProps> = ({ speaker, onSelect, cla
         {hasPhoto && (
           <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity pointer-events-none" />
         )}
-
-        {speaker.is_keynote && (
-          <div className="absolute top-2.5 left-2.5 z-10">
-            <span className="px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-[#F5A623] text-slate-950 shadow-md">
-              Keynote
-            </span>
-          </div>
-        )}
       </div>
 
       {/* Info Block */}

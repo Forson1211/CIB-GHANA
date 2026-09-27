@@ -9,6 +9,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import speakerRoutes from './routes/speakerRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 export function createApp(): Express {
@@ -21,8 +22,8 @@ export function createApp(): Express {
       credentials: true,
     })
   );
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: '20mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
   // Health and System Diagnostics
   app.get('/api/health', (req: Request, res: Response) => {
@@ -43,6 +44,7 @@ export function createApp(): Express {
   app.use('/api/tickets', ticketRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/chat', chatRoutes);
+  app.use('/api/speakers', speakerRoutes);
 
   // Email Preview Route (allows instant browser preview of dispatched payment receipt & pass)
   app.get('/api/emails/preview/:regNumber', (req: Request, res: Response) => {

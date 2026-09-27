@@ -1,4 +1,4 @@
-import { EventItem, Registration, DigitalTicket, CreateRegistrationRequest } from '../types';
+import { EventItem, Registration, DigitalTicket, CreateRegistrationRequest, Speaker } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -194,5 +194,30 @@ export class ApiClient {
     };
   }> {
     return this.request('/admin/stats');
+  }
+
+  // Speakers & Photos
+  static async uploadSpeakerPhoto(image: string, speakerId: string): Promise<{ success: boolean; url: string }> {
+    return this.request('/speakers/upload', {
+      method: 'POST',
+      body: JSON.stringify({ image, speakerId }),
+    });
+  }
+
+  static async getSpeakers(): Promise<{ success: boolean; data: Speaker[] }> {
+    return this.request('/speakers');
+  }
+
+  static async saveSpeaker(speaker: Partial<Speaker>): Promise<{ success: boolean; data: Speaker }> {
+    return this.request('/speakers', {
+      method: 'POST',
+      body: JSON.stringify(speaker),
+    });
+  }
+
+  static async deleteSpeaker(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/speakers/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
   }
 }

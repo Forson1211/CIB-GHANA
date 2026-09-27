@@ -3,7 +3,7 @@ import { EventItem, Registration, UserProfile, Speaker, Sponsor, EventResource }
 import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSORS } from '../data/mockData';
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
-import { supabase } from '../lib/supabase';
+import { supabase, supabaseAdmin, stringToUuid, uploadSpeakerPhotoToCloud } from '../lib/supabase';
 
 interface AppContextType {
   events: EventItem[];
@@ -20,6 +20,7 @@ interface AppContextType {
   getEventById: (id: string) => EventItem | undefined;
   getRegistrationByNumber: (regNumber: string) => Registration | undefined;
   refreshRegistrations: () => Promise<void>;
+  refreshSpeakers: () => Promise<void>;
   refreshAll: () => Promise<void>;
   isLiveSyncing: boolean;
   lastSyncedAt: Date | null;
@@ -52,9 +53,9 @@ const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-// v8: Clean 18 conference faculty members; blacklisted all old mock speakers; fast local cache
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v8';
-const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v8';
+// v9: Supabase-synced photos; service-role upload; no duplicates
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v9';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v9';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v2';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
@@ -104,6 +105,46 @@ export const isPurgedMockSpeaker = (s: { id: string; name?: string }): boolean =
   return false;
 };
 
+export const isSameSpeaker = (
+  a: { id?: string; name?: string; slug?: string },
+  b: { id?: string; name?: string; slug?: string }
+): boolean => {
+  if (a.id && b.id) {
+    if (a.id === b.id) return true;
+    if (stringToUuid(a.id) === b.id || a.id === stringToUuid(b.id)) return true;
+  }
+  if (a.slug && b.slug && a.slug === b.slug) return true;
+  const nameA = (a.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nameB = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (nameA && nameB) {
+    if (nameA === nameB) return true;
+    if (nameA.length > 5 && nameB.length > 5) {
+      if (nameA.includes(nameB) || nameB.includes(nameA)) return true;
+    }
+  }
+  return false;
+};
+
+export const deduplicateSpeakers = (list: Speaker[]): Speaker[] => {
+  const result: Speaker[] = [];
+  for (const s of list) {
+    if (isPurgedMockSpeaker(s)) continue;
+    const existingIndex = result.findIndex((r) => isSameSpeaker(r, s));
+    if (existingIndex === -1) {
+      result.push(s);
+    } else {
+      const existing = result[existingIndex];
+      const hasPhoto = (p?: string) => p && p.trim() !== '';
+      result[existingIndex] = {
+        ...existing,
+        ...s,
+        photo_url: hasPhoto(s.photo_url) ? s.photo_url : existing.photo_url,
+      };
+    }
+  }
+  return result;
+};
+
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
   if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
@@ -130,9 +171,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     try {
       [
+        'cib_ghana_speakers_v8',
         'cib_ghana_speakers_v7',
         'cib_ghana_speakers_v6',
         'cib_ghana_speakers_v5',
+        'cib_ghana_deleted_spk_ids_v8',
         'cib_ghana_deleted_spk_ids_v7',
         'cib_ghana_events_v5',
       ].forEach((key) => localStorage.removeItem(key));
@@ -209,12 +252,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const fresh = MOCK_SPEAKERS.filter(
             (s) => !liveIds.has(s.id) && !deletedIds.has(s.id) && !isPurgedMockSpeaker(s)
           );
-          return [...enriched, ...fresh];
+          return deduplicateSpeakers([...enriched, ...fresh]);
         }
       } catch (e) { console.error(e); }
     }
     // First load — seed from code-defined list (minus already-deleted and purged)
-    return MOCK_SPEAKERS.filter((s) => !deletedIds.has(s.id) && !isPurgedMockSpeaker(s));
+    return deduplicateSpeakers(
+      MOCK_SPEAKERS.filter((s) => !deletedIds.has(s.id) && !isPurgedMockSpeaker(s))
+    );
   });
   const [sponsors, setSponsors] = useState<Sponsor[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
@@ -537,62 +582,123 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLiveSyncing(false);
   };
 
-  // Fetch admin-saved speakers from Supabase and merge into local state
-  // This restores speakers that were lost if localStorage was cleared/version-bumped
+  // Fetch speakers from backend API / Supabase and merge into local state
+  // Ensures cloud photos and new speakers are visible on ALL devices (mobile, tablet, desktop)
   const refreshSpeakers = async () => {
-    if (!supabase) return;
+    let remoteSpeakers: any[] = [];
     try {
-      const { data, error } = await supabase
-        .from('speakers')
-        .select('*')
-        .order('name', { ascending: true });
-      if (error || !Array.isArray(data) || data.length === 0) return;
+      const res = await ApiClient.getSpeakers();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        remoteSpeakers = res.data;
+      }
+    } catch {
+      // ApiClient offline
+    }
 
-      setSpeakers((prev) => {
-        const prevIds = new Set(prev.map((s) => s.id));
-        const toAdd: Speaker[] = [];
-        const merged = prev.map((s) => {
-          // Find matching Supabase record — prefer Supabase photo if local has none
-          const remote = data.find((d: any) => d.id === s.id);
-          if (!remote) return s;
-          return {
-            ...s,
-            // Only backfill photo from Supabase if local doesn't have one
-            photo_url: s.photo_url || remote.photo_url || '',
-            name: s.name || remote.name || '',
-            position: s.position || remote.position || '',
-            organization: s.organization || remote.organization || '',
-          };
-        });
+    if (remoteSpeakers.length === 0 && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('speakers')
+          .select('*')
+          .order('name', { ascending: true });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          remoteSpeakers = data;
+        }
+      } catch (err) {
+        console.warn('Supabase speakers query failed:', err);
+      }
+    }
 
-        // Restore any Supabase speakers not present locally (e.g. after key bump)
-        for (const d of data as any[]) {
-          if (!prevIds.has(d.id) && !isPurgedMockSpeaker(d)) {
-            toAdd.push({
-              id: d.id,
-              name: d.name ?? '',
-              slug: d.slug ?? '',
-              position: d.position ?? '',
-              organization: d.organization ?? '',
-              country: d.country ?? 'Ghana',
-              photo_url: d.photo_url ?? '',
-              biography: d.biography ?? '',
-              expertise: Array.isArray(d.expertise) ? d.expertise : [],
-              is_keynote: d.is_keynote ?? false,
-              linkedin_url: d.linkedin_url ?? '',
-              twitter_url: d.twitter_url ?? '',
-              website_url: d.website_url ?? '',
+    if (remoteSpeakers.length === 0) return;
+
+    setSpeakers((prev) => {
+      // 1. Update existing speakers with cloud photo and latest info
+      const updated = prev.map((s) => {
+        const remote = remoteSpeakers.find((d: any) => isSameSpeaker(s, d));
+        if (!remote) return s;
+
+        // Prefer remote cloud photo URL (starts with http/https)
+        const remotePhoto = remote.photo_url && remote.photo_url.trim() !== '' ? remote.photo_url : '';
+        const localPhotoIsRemote = s.photo_url && (s.photo_url.startsWith('http://') || s.photo_url.startsWith('https://'));
+        const photoToUse = remotePhoto.startsWith('http')
+          ? remotePhoto
+          : (localPhotoIsRemote ? s.photo_url : (remotePhoto || s.photo_url || ''));
+
+        return {
+          ...s,
+          photo_url: photoToUse,
+          name: remote.name || s.name || '',
+          position: remote.position || s.position || '',
+          organization: remote.organization || s.organization || '',
+          biography: remote.biography || s.biography || '',
+        };
+      });
+
+      // 2. Add only genuine new remote speakers not already present locally
+      const toAdd: Speaker[] = [];
+      for (const d of remoteSpeakers) {
+        const alreadyExists = updated.some((p) => isSameSpeaker(p, d));
+        if (!alreadyExists && !isPurgedMockSpeaker(d)) {
+          toAdd.push({
+            id: d.id,
+            name: d.name ?? '',
+            slug: d.slug ?? '',
+            position: d.position ?? '',
+            organization: d.organization ?? '',
+            country: d.country ?? 'Ghana',
+            photo_url: d.photo_url ?? '',
+            biography: d.biography ?? '',
+            expertise: Array.isArray(d.expertise) ? d.expertise : [],
+            is_keynote: d.is_keynote ?? false,
+            linkedin_url: d.linkedin_url ?? '',
+            twitter_url: d.twitter_url ?? '',
+            website_url: d.website_url ?? '',
+          });
+        }
+      }
+
+      return deduplicateSpeakers([...updated, ...toAdd]);
+    });
+  };
+
+  // Auto-migrate any local base64 photos to cloud storage so they show on all devices
+  // Runs only once on mount — not on every speakers change to avoid loops
+  useEffect(() => {
+    const base64List = speakers.filter(
+      (s) => s.photo_url && s.photo_url.startsWith('data:image/')
+    );
+    if (base64List.length === 0) return;
+
+    Promise.allSettled(
+      base64List.map(async (spk) => {
+        try {
+          const { url, isPublic } = await uploadSpeakerPhotoToCloud(spk.photo_url, spk.id);
+          if (isPublic && url.startsWith('http')) {
+            setSpeakers((prev) =>
+              prev.map((s) => (s.id === spk.id ? { ...s, photo_url: url } : s))
+            );
+            const uuid = stringToUuid(spk.id);
+            const slug = spk.slug || spk.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+            await supabaseAdmin.from('speakers').upsert({
+              id: uuid,
+              name: spk.name,
+              slug,
+              position: spk.position,
+              organization: spk.organization,
+              country: spk.country || 'Ghana',
+              photo_url: url,
+              biography: spk.biography || '',
+              expertise: spk.expertise || [],
+              is_keynote: Boolean(spk.is_keynote),
             });
           }
+        } catch (err) {
+          console.warn('Base64 auto-upload failed:', err);
         }
-
-        if (toAdd.length === 0 && merged.every((s, i) => s === prev[i])) return prev;
-        return [...merged, ...toAdd];
-      });
-    } catch (err) {
-      console.warn('refreshSpeakers failed:', err);
-    }
-  };
+      })
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only
 
   const refreshAll = async () => {
     setIsLiveSyncing(true);
@@ -884,6 +990,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getEventById,
         getRegistrationByNumber,
         refreshRegistrations,
+        refreshSpeakers,
         refreshAll,
         isLiveSyncing,
         lastSyncedAt,

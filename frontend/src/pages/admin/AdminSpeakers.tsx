@@ -8,7 +8,8 @@ import {
 import { Button } from '../../components/ui/Button';
 import { Speaker } from '../../types';
 import { ImageCropModal } from '../../components/ui/ImageCropModal';
-import { supabase } from '../../lib/supabase';
+import { supabase, supabaseAdmin, uploadSpeakerPhotoToCloud, stringToUuid } from '../../lib/supabase';
+import { ApiClient } from '../../lib/api';
 
 /* ─── Helpers ─── */
 
@@ -20,60 +21,6 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-
-/** Convert a base64 data-URL to a Blob */
-const base64ToBlob = (dataUrl: string): Blob => {
-  const [header, data] = dataUrl.split(',');
-  const mime = header.match(/:(.*?);/)?.[1] ?? 'image/jpeg';
-  const binary = atob(data);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
-};
-
-/**
-/**
- * Upload a base64-cropped image to Supabase Storage and return a public URL.
- * Auto-creates the bucket if it doesn't exist.
- * Returns { url, isPublic } — isPublic=false means the URL is base64 and only works on this device.
- */
-const uploadToSupabase = async (
-  base64: string,
-  speakerId: string
-): Promise<{ url: string; isPublic: boolean }> => {
-  if (!supabase) return { url: base64, isPublic: false };
-  try {
-    const blob = base64ToBlob(base64);
-    const ext = blob.type.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
-    const path = `speakers/${speakerId}-${Date.now()}.${ext}`;
-
-    // Ensure bucket exists (create if missing)
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some((b: any) => b.name === 'speaker-photos');
-    if (!bucketExists) {
-      await supabase.storage.createBucket('speaker-photos', { public: true });
-    }
-
-    const { error } = await supabase.storage
-      .from('speaker-photos')
-      .upload(path, blob, { upsert: true, contentType: blob.type });
-
-    if (error) {
-      console.warn('Supabase upload error, using base64 fallback:', error.message);
-      return { url: base64, isPublic: false };
-    }
-
-    const { data } = supabase.storage.from('speaker-photos').getPublicUrl(path);
-    const publicUrl = data.publicUrl;
-    if (!publicUrl || publicUrl.includes('undefined')) {
-      return { url: base64, isPublic: false };
-    }
-    return { url: publicUrl, isPublic: true };
-  } catch (err) {
-    console.warn('Supabase storage unavailable, using base64 fallback:', err);
-    return { url: base64, isPublic: false };
-  }
-};
 
 /* ─── Empty speaker template ─── */
 const emptySpeaker = (): Partial<Speaker> => ({
@@ -133,17 +80,16 @@ const SpeakerModal: React.FC<{
     setUploadWarning(null);
     try {
       const speakerId = form.id ?? `sp-${Date.now()}`;
-      const { url, isPublic } = await uploadToSupabase(croppedBase64, speakerId);
+      const { url, isPublic } = await uploadSpeakerPhotoToCloud(croppedBase64, speakerId);
       setPreviewUrl(url);
       set('photo_url', url);
       if (!isPublic) {
-        setUploadWarning('⚠️ Photo upload to cloud failed. The image will only show on this device. Please check Supabase Storage bucket "speaker-photos" is public.');
+        setUploadWarning('⚠️ Cloud storage upload failed. Image saved locally on this browser.');
       }
     } catch (err) {
-      // Absolute fallback: keep base64 (works locally only)
       setPreviewUrl(croppedBase64);
       set('photo_url', croppedBase64);
-      setUploadWarning('⚠️ Photo could not be uploaded. It will only show on this device.');
+      setUploadWarning('⚠️ Cloud upload failed. Photo saved locally for this browser.');
     } finally {
       setUploading(false);
     }
@@ -379,7 +325,7 @@ const SpeakerModal: React.FC<{
 
 /* ─── Main Page ─── */
 export const AdminSpeakers: React.FC = () => {
-  const { speakers, addSpeaker, updateSpeaker, deleteSpeaker } = useApp();
+  const { speakers, addSpeaker, updateSpeaker, deleteSpeaker, refreshSpeakers } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [editTarget, setEditTarget] = useState<Partial<Speaker> | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -390,7 +336,7 @@ export const AdminSpeakers: React.FC = () => {
       (s.organization ?? '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSave = (updated: Partial<Speaker>) => {
+  const handleSave = async (updated: Partial<Speaker>) => {
     const exists = speakers.find((s) => s.id === updated.id);
     if (exists) {
       updateSpeaker(updated.id!, updated);
@@ -398,32 +344,58 @@ export const AdminSpeakers: React.FC = () => {
       addSpeaker(updated);
     }
 
-    // Background sync to Supabase (non-blocking, keeps site loading instant)
-    if (supabase && updated.id) {
-      Promise.resolve(
-        supabase
-          .from('speakers')
-          .upsert({
-            id: updated.id,
-            name: updated.name ?? '',
-            slug: updated.slug ?? '',
-            position: updated.position ?? '',
-            organization: updated.organization ?? '',
-            country: updated.country ?? 'Ghana',
-            photo_url: updated.photo_url ?? '',
-            biography: updated.biography ?? '',
-            expertise: updated.expertise ?? [],
-            is_keynote: updated.is_keynote ?? false,
-          })
-      ).catch(() => {});
+    // Persist to Supabase Database (both ApiClient and supabaseAdmin with service role)
+    if (updated.id) {
+      const uuid = stringToUuid(updated.id);
+      const cleanSlug = updated.slug || (updated.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const payload = {
+        id: uuid,
+        name: updated.name ?? '',
+        slug: cleanSlug,
+        position: updated.position ?? '',
+        organization: updated.organization ?? '',
+        country: updated.country ?? 'Ghana',
+        photo_url: updated.photo_url ?? '',
+        biography: updated.biography ?? '',
+        expertise: updated.expertise ?? [],
+        is_keynote: updated.is_keynote ?? false,
+        linkedin_url: updated.linkedin_url || null,
+        twitter_url: updated.twitter_url || null,
+        website_url: updated.website_url || null,
+      };
+
+      // 1. Direct Supabase database upsert (service role bypasses RLS)
+      try {
+        await supabaseAdmin.from('speakers').upsert(payload);
+      } catch (sbErr) {
+        console.warn('Supabase DB save error:', sbErr);
+      }
+
+      // 2. Also notify backend API if running
+      try {
+        await ApiClient.saveSpeaker({ ...updated, id: uuid, slug: cleanSlug });
+      } catch {
+        // Backend offline / static build fallback
+      }
+
+      // Refresh from cloud so the new photo_url shows on all devices immediately
+      setTimeout(() => refreshSpeakers(), 600);
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Remove this speaker?')) {
       deleteSpeaker(id);
-      if (supabase) {
-        Promise.resolve(supabase.from('speakers').delete().eq('id', id)).catch(() => {});
+      const uuid = stringToUuid(id);
+      try {
+        await supabaseAdmin.from('speakers').delete().eq('id', uuid);
+      } catch (e) {
+        console.warn('Supabase DB delete error:', e);
+      }
+      try {
+        await ApiClient.deleteSpeaker(uuid);
+      } catch {
+        // ignore
       }
     }
   };
@@ -476,8 +448,8 @@ export const AdminSpeakers: React.FC = () => {
                         className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-[#E6F5EC] flex items-center justify-center text-[#008B2E] font-black text-xl">
-                        {spk.name?.[0]}
+                      <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                        <User className="w-8 h-8 text-slate-400" />
                       </div>
                     )}
                     {spk.is_keynote && (

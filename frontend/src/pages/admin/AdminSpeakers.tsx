@@ -32,27 +32,46 @@ const base64ToBlob = (dataUrl: string): Blob => {
 };
 
 /**
+/**
  * Upload a base64-cropped image to Supabase Storage and return a public URL.
- * Falls back to the base64 string if Supabase is unavailable.
+ * Auto-creates the bucket if it doesn't exist.
+ * Returns { url, isPublic } — isPublic=false means the URL is base64 and only works on this device.
  */
-const uploadToSupabase = async (base64: string, speakerId: string): Promise<string> => {
-  if (!supabase) return base64; // offline fallback
+const uploadToSupabase = async (
+  base64: string,
+  speakerId: string
+): Promise<{ url: string; isPublic: boolean }> => {
+  if (!supabase) return { url: base64, isPublic: false };
   try {
     const blob = base64ToBlob(base64);
-    const ext = blob.type.split('/')[1] ?? 'jpg';
+    const ext = blob.type.split('/')[1]?.replace('jpeg', 'jpg') ?? 'jpg';
     const path = `speakers/${speakerId}-${Date.now()}.${ext}`;
+
+    // Ensure bucket exists (create if missing)
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some((b: any) => b.name === 'speaker-photos');
+    if (!bucketExists) {
+      await supabase.storage.createBucket('speaker-photos', { public: true });
+    }
+
     const { error } = await supabase.storage
       .from('speaker-photos')
       .upload(path, blob, { upsert: true, contentType: blob.type });
+
     if (error) {
       console.warn('Supabase upload error, using base64 fallback:', error.message);
-      return base64;
+      return { url: base64, isPublic: false };
     }
+
     const { data } = supabase.storage.from('speaker-photos').getPublicUrl(path);
-    return data.publicUrl ?? base64;
+    const publicUrl = data.publicUrl;
+    if (!publicUrl || publicUrl.includes('undefined')) {
+      return { url: base64, isPublic: false };
+    }
+    return { url: publicUrl, isPublic: true };
   } catch (err) {
     console.warn('Supabase storage unavailable, using base64 fallback:', err);
-    return base64;
+    return { url: base64, isPublic: false };
   }
 };
 
@@ -85,6 +104,7 @@ const SpeakerModal: React.FC<{
   const [rawImageSrc, setRawImageSrc] = useState<string | null>(null); // pre-crop
   const [showCrop, setShowCrop] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof Speaker, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
@@ -94,6 +114,7 @@ const SpeakerModal: React.FC<{
     if (!file) return;
     e.target.value = '';
     setUploading(true);
+    setUploadWarning(null);
     try {
       const base64 = await fileToBase64(file);
       setRawImageSrc(base64);
@@ -109,16 +130,20 @@ const SpeakerModal: React.FC<{
     setShowCrop(false);
     setRawImageSrc(null);
     setUploading(true);
+    setUploadWarning(null);
     try {
-      // Try to upload to Supabase Storage for a persistent public URL
       const speakerId = form.id ?? `sp-${Date.now()}`;
-      const finalUrl = await uploadToSupabase(croppedBase64, speakerId);
-      setPreviewUrl(finalUrl);
-      set('photo_url', finalUrl);
+      const { url, isPublic } = await uploadToSupabase(croppedBase64, speakerId);
+      setPreviewUrl(url);
+      set('photo_url', url);
+      if (!isPublic) {
+        setUploadWarning('⚠️ Photo upload to cloud failed. The image will only show on this device. Please check Supabase Storage bucket "speaker-photos" is public.');
+      }
     } catch (err) {
       // Absolute fallback: keep base64 (works locally only)
       setPreviewUrl(croppedBase64);
       set('photo_url', croppedBase64);
+      setUploadWarning('⚠️ Photo could not be uploaded. It will only show on this device.');
     } finally {
       setUploading(false);
     }
@@ -128,6 +153,7 @@ const SpeakerModal: React.FC<{
     setShowCrop(false);
     setRawImageSrc(null);
   };
+
 
   const addExpertise = () => {
     const tag = expertiseInput.trim();
@@ -207,8 +233,13 @@ const SpeakerModal: React.FC<{
                 onClick={() => fileRef.current?.click()}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed border-slate-200 hover:border-[#008B2E] hover:bg-[#F0FAF4] text-xs font-bold text-slate-500 hover:text-[#008B2E] transition-all"
               >
-                <Upload className="w-4 h-4" /> {uploading ? 'Processing…' : 'Upload Photo'}
+                <Upload className="w-4 h-4" /> {uploading ? 'Uploading to cloud…' : 'Upload Photo'}
               </button>
+              {uploadWarning && (
+                <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                  {uploadWarning}
+                </p>
+              )}
             </div>
           </div>
 

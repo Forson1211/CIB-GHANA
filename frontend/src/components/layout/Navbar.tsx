@@ -6,6 +6,7 @@ import {
   X,
   ChevronDown
 } from 'lucide-react';
+import { useApp } from '../../context/AppContext';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -15,6 +16,7 @@ export const Navbar: React.FC = () => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const { registeredUserEmail } = useApp();
 
   const isHomePage = location.pathname === '/';
 

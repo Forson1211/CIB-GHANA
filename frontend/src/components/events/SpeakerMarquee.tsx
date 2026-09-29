@@ -25,12 +25,13 @@ export const SpeakerMarquee: React.FC<SpeakerMarqueeProps> = ({ speakers, onSele
   // If there are 4 or fewer speakers, display a clean static grid
   if (speakers.length <= 4) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
         {speakers.map((speaker) => (
           <SpeakerCard
             key={speaker.id}
             speaker={speaker}
             onSelect={onSelectSpeaker}
+            className="h-full"
           />
         ))}
       </div>
@@ -66,13 +67,13 @@ export const SpeakerMarquee: React.FC<SpeakerMarqueeProps> = ({ speakers, onSele
         ref={scrollContainerRef}
         className="marquee-container overflow-x-auto scrollbar-none flex select-none py-3"
       >
-        <div className="animate-marquee-speakers flex gap-5 sm:gap-6">
+        <div className="animate-marquee-speakers flex gap-5 sm:gap-6 items-stretch">
           {[...speakers, ...speakers].map((speaker, idx) => (
             <SpeakerCard
               key={`${speaker.id}-${idx}`}
               speaker={speaker}
               onSelect={onSelectSpeaker}
-              className="w-52 sm:w-60 md:w-64 shrink-0"
+              className="w-52 sm:w-60 md:w-64 shrink-0 h-full"
             />
           ))}
         </div>

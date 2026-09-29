@@ -53,7 +53,7 @@ export const PastEvents: React.FC = () => {
   });
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-20">
+    <div className="min-h-screen bg-[#0D3A21] space-y-8 sm:space-y-10 pb-24 text-white">
       {/* Sleek Banner for Past Events (Green to Yellow Gradient & Left-aligned) */}
       <section className="w-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white py-10 sm:py-14 relative overflow-hidden shadow-sm">
         <motion.div
@@ -86,10 +86,10 @@ export const PastEvents: React.FC = () => {
             <button
               key={year}
               onClick={() => setSelectedYear(year)}
-              className={`px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={`px-5 py-2 rounded-none text-xs font-bold transition-all cursor-pointer ${
                 selectedYear === year
-                  ? 'bg-cib-green-700 text-white shadow-sm'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80'
+                  ? 'bg-[#008129] text-white font-bold shadow-md'
+                  : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 shadow-sm'
               }`}
             >
               {year === 'ALL' ? 'All Editions' : `Year ${year}`}
@@ -112,7 +112,7 @@ export const PastEvents: React.FC = () => {
                 key={event.id}
                 variants={cardVariant}
                 whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                className="group flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden"
+                className="group flex flex-col bg-white rounded-none border border-slate-200/80 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden"
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100">
                   <img

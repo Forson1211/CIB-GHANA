@@ -729,6 +729,7 @@ export class DataService {
     };
 
     eventsStore.set(newEvent.id, newEvent);
+    eventsStore.set(newEvent.slug, newEvent);
 
     if (supabase) {
       try {
@@ -1032,10 +1033,13 @@ export class DataService {
   }> {
     const event = (await this.getEventBySlugOrId(input.event_id)) || ({
       id: input.event_id,
-      title: input.event_title || '30th National Banking & Ethics Conference 2026',
+      title: input.event_title || 'CIB Ghana Executive Event',
       slug: input.event_id,
+      venue: 'CIB Ghana Secretariat, Accra',
+      start_date: new Date().toISOString().split('T')[0],
+      end_date: new Date().toISOString().split('T')[0],
       registration_types: [],
-      registration_fee: 1200,
+      registration_fee: input.total_amount !== undefined ? input.total_amount : 1200,
     } as any);
 
     const regType = event.registration_types?.find((t: any) => t.id === input.registration_type_id);

@@ -109,7 +109,7 @@ export const Events: React.FC = () => {
     selectedLocation !== 'ALL';
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-20">
+    <div className="min-h-screen bg-[#0D3A21] space-y-8 sm:space-y-10 pb-24 text-white">
       {/* Sleek Banner for Programmes (Green to Yellow Gradient & Left-aligned) */}
       <section className="w-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white py-10 sm:py-14 relative overflow-hidden shadow-sm">
         <motion.div
@@ -131,12 +131,12 @@ export const Events: React.FC = () => {
 
       {/* Main Page Content (Aligned with site) */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
-        {/* Search & Filter Toolbar */}
+        {/* Search & Filter Toolbar (Crisp White Card on Brand Green Background) */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="bg-slate-50 p-6 rounded-3xl border border-slate-200/80 space-y-4"
+          className="bg-white p-6 rounded-none border border-slate-200 space-y-4 shadow-xl text-slate-800"
         >
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -146,7 +146,7 @@ export const Events: React.FC = () => {
                 placeholder="Search events by title, topic, theme, or venue..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-base sm:text-xs focus:border-cib-green-600 focus:outline-none bg-white"
+                className="w-full pl-10 pr-4 py-2.5 rounded-none border border-slate-200 text-base sm:text-xs focus:border-[#008129] focus:outline-none bg-slate-50 text-slate-900 placeholder:text-slate-400"
               />
             </div>
 
@@ -154,10 +154,10 @@ export const Events: React.FC = () => {
             <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto scrollbar-none pb-2 md:pb-0">
               <button
                 onClick={() => setSelectedCategory('ALL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                className={`px-3.5 py-1.5 rounded-none text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   selectedCategory === 'ALL'
-                    ? 'bg-cib-green-700 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+                    ? 'bg-[#008129] text-white font-bold shadow-xs'
+                    : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 All
@@ -166,10 +166,10 @@ export const Events: React.FC = () => {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.name)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
+                  className={`px-3.5 py-1.5 rounded-none text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                     selectedCategory.toLowerCase() === cat.name.toLowerCase()
-                      ? 'bg-cib-green-700 text-white shadow-sm'
-                      : 'bg-white border border-slate-200 text-slate-600 hover:border-slate-300'
+                      ? 'bg-[#008129] text-white font-bold shadow-xs'
+                      : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
                   }`}
                 >
                   {cat.name}
@@ -178,13 +178,13 @@ export const Events: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-200 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 text-xs">
             <div className="flex flex-wrap items-center gap-3">
               {/* Event Type / Mode */}
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-cib-green-600"
+                className="px-3 py-1.5 rounded-none border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-[#008129]"
               >
                 <option value="ALL">All Modes (In-Person / Virtual)</option>
                 <option value="PHYSICAL">In-Person Only</option>
@@ -196,7 +196,7 @@ export const Events: React.FC = () => {
               <select
                 value={priceFilter}
                 onChange={(e) => setPriceFilter(e.target.value as any)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-cib-green-600"
+                className="px-3 py-1.5 rounded-none border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-[#008129]"
               >
                 <option value="ALL">All Pricing (Free & Paid)</option>
                 <option value="FREE">Free Admission</option>
@@ -207,7 +207,7 @@ export const Events: React.FC = () => {
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-cib-green-600"
+                className="px-3 py-1.5 rounded-none border border-slate-200 bg-white text-slate-700 focus:outline-none focus:border-[#008129]"
               >
                 {locations.map((loc) => (
                   <option key={loc} value={loc}>
@@ -219,7 +219,7 @@ export const Events: React.FC = () => {
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1 text-cib-red-600 hover:text-cib-red-800 font-bold ml-2"
+                  className="flex items-center gap-1 text-[#008129] hover:text-[#006821] font-bold ml-2 cursor-pointer transition-colors"
                 >
                   <X className="w-3.5 h-3.5" /> Clear filters
                 </button>
@@ -227,17 +227,17 @@ export const Events: React.FC = () => {
             </div>
 
             <div className="text-slate-500 font-medium">
-              Showing <strong className="text-cib-charcoal-900">{filteredEvents.length}</strong> available events
+              Showing <strong className="text-slate-900">{filteredEvents.length}</strong> available events
             </div>
           </div>
         </motion.div>
 
         {/* Events Results Grid */}
         {filteredEvents.length === 0 ? (
-          <div className="text-center py-20 bg-slate-50 rounded-3xl border border-slate-200 space-y-4">
+          <div className="text-center py-20 bg-white rounded-none border border-slate-200 space-y-4 text-slate-900 shadow-xl">
             <Search className="w-12 h-12 text-slate-400 mx-auto" />
-            <h3 className="text-xl font-bold text-cib-charcoal-900">No Matching Events Found</h3>
-            <p className="text-sm text-slate-500 max-w-md mx-auto">
+            <h3 className="text-xl font-bold text-slate-900">No Matching Events Found</h3>
+            <p className="text-sm text-slate-600 max-w-md mx-auto">
               Try adjusting your search criteria or resetting filters to explore all CIB Ghana calendar events.
             </p>
             <Button variant="primary" size="md" onClick={clearFilters}>

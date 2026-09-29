@@ -107,7 +107,7 @@ export const MyPortal: React.FC = () => {
     : '';
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#0D3A21] text-white pb-24">
       {/* 1. Hero Banner - Aligned flush with site container max-w-[1360px] */}
       <div className="w-full bg-[#008129] relative overflow-hidden">
         <div
@@ -124,9 +124,9 @@ export const MyPortal: React.FC = () => {
         <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight font-display">
                 Welcome,{' '}
-                <span className="text-[#dccb00]">
+                <span className="text-[#FFE500]">
                   {formattedFirstName || 'Delegate'}
                 </span>
                 !
@@ -138,7 +138,7 @@ export const MyPortal: React.FC = () => {
 
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 active:scale-95 border border-white/30 text-white text-sm font-bold transition-all rounded-none shadow-sm"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 active:scale-95 border border-white/30 text-white text-sm font-bold transition-all rounded-none shadow-sm cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Sign Out</span>
@@ -171,17 +171,17 @@ export const MyPortal: React.FC = () => {
       {/* 3. Main Content Area - Aligned flush with max-w-[1360px] */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
         {uniqueRegistrations.length === 0 ? (
-          <div className="text-center py-20 space-y-4 bg-white border border-slate-200 p-8 shadow-sm">
-            <div className="w-16 h-16 bg-[#008129]/10 flex items-center justify-center mx-auto">
+          <div className="text-center py-20 space-y-4 bg-white border border-slate-200 p-8 shadow-sm rounded-none">
+            <div className="w-16 h-16 bg-[#008129]/10 flex items-center justify-center mx-auto rounded-none">
               <Ticket className="w-8 h-8 text-[#008129]" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800">No Registrations Found</h2>
+            <h2 className="text-xl font-bold text-slate-800 font-display">No Registrations Found</h2>
             <p className="text-slate-500 max-w-sm mx-auto text-sm">
               You have not registered for any events yet. Browse the conference schedule to register.
             </p>
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 mt-4 px-7 py-3 bg-[#008129] hover:bg-[#007024] text-white font-bold text-sm transition-all"
+              className="inline-flex items-center gap-2 mt-4 px-7 py-3 bg-[#008129] hover:bg-[#007024] text-white font-bold text-sm transition-all rounded-none uppercase tracking-wider"
             >
               <span>Browse Events</span>
               <ArrowRight className="w-4 h-4" />
@@ -189,7 +189,7 @@ export const MyPortal: React.FC = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+            <h2 className="text-xs font-black text-white/80 uppercase tracking-widest">
               Your Registered Conference
             </h2>
 
@@ -200,7 +200,7 @@ export const MyPortal: React.FC = () => {
               return (
                 <div
                   key={reg.id}
-                  className="bg-white border border-slate-200 shadow-sm overflow-hidden"
+                  className="bg-white border border-slate-200 shadow-sm overflow-hidden rounded-none"
                 >
                   {/* Top brand accent bar */}
                   <div
@@ -218,7 +218,7 @@ export const MyPortal: React.FC = () => {
                         {/* Status badge */}
                         <div className="flex items-center gap-2.5 flex-wrap">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-widest ${
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-black uppercase tracking-widest rounded-none ${
                               isCheckedIn
                                 ? 'bg-[#008129] text-white'
                                 : 'bg-[#008129]/10 text-[#008129]'
@@ -240,7 +240,7 @@ export const MyPortal: React.FC = () => {
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 leading-tight">
+                        <h3 className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 leading-tight font-display">
                           {reg.event_title}
                         </h3>
 
@@ -303,7 +303,7 @@ export const MyPortal: React.FC = () => {
                         {event && (
                           <Link
                             to={`/events/${event.slug}/ticket/${reg.registration_number}`}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#008129] hover:bg-[#007024] active:scale-95 text-white text-sm font-black transition-all shadow-md whitespace-nowrap"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#008129] hover:bg-[#007024] active:scale-95 text-white text-sm font-black transition-all shadow-md whitespace-nowrap rounded-none uppercase tracking-wider cursor-pointer"
                           >
                             <Ticket className="w-4 h-4" />
                             <span>View Ticket</span>
@@ -312,7 +312,7 @@ export const MyPortal: React.FC = () => {
                         {event && (
                           <Link
                             to={`/events/${event.slug}`}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-slate-700 text-sm font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-slate-300 text-slate-700 text-sm font-bold hover:bg-slate-50 active:scale-95 transition-all whitespace-nowrap rounded-none cursor-pointer"
                           >
                             <span>Event Details</span>
                             <ArrowRight className="w-4 h-4" />

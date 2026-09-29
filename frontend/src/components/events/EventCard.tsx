@@ -102,7 +102,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, featured = false })
 
   return (
     <article
-      className={`group relative flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden ${
+      className={`group relative flex flex-col bg-white rounded-none border border-slate-200/80 shadow-card hover:shadow-card-hover transition-all duration-300 overflow-hidden ${
         featured ? 'ring-2 ring-cib-gold-400' : ''
       }`}
     >

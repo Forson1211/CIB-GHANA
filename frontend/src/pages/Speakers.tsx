@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, Variants } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { SpeakerCard } from '../components/events/SpeakerCard';
 import { SpeakerModal } from '../components/events/SpeakerModal';
 import { Speaker } from '../types';
-import { Search, Filter, Mic, Award } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { Search, Mic } from 'lucide-react';
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -39,6 +39,8 @@ const cardVariant: Variants = {
 
 export const Speakers: React.FC = () => {
   const { speakers } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const typeFilter = searchParams.get('type') || 'all';
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedExpertise, setSelectedExpertise] = useState('ALL');
@@ -53,6 +55,10 @@ export const Speakers: React.FC = () => {
   // Filter speakers
   const filteredSpeakers = useMemo(() => {
     return speakers.filter((spk) => {
+      // Role filter from dropdown links (?type=keynote or ?type=faculty)
+      if (typeFilter === 'keynote' && !spk.is_keynote) return false;
+      if (typeFilter === 'faculty' && spk.is_keynote) return false;
+
       const matchesExpertise =
         selectedExpertise === 'ALL' || spk.expertise?.includes(selectedExpertise);
 
@@ -66,10 +72,10 @@ export const Speakers: React.FC = () => {
 
       return matchesExpertise && matchesQuery;
     });
-  }, [speakers, selectedExpertise, searchQuery]);
+  }, [speakers, typeFilter, selectedExpertise, searchQuery]);
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-20">
+    <div className="min-h-screen bg-[#0D3A21] space-y-8 sm:space-y-10 pb-24 text-white">
       {/* Sleek Banner for Speakers (Green to Yellow Gradient & Left-aligned) */}
       <section className="w-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white py-10 sm:py-14 relative overflow-hidden shadow-sm">
         <motion.div
@@ -91,14 +97,62 @@ export const Speakers: React.FC = () => {
 
       {/* Main Page Content */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+        {/* Category Tabs & Search Bar (Crisp White Card controls) */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+          <div className="inline-flex rounded-none border border-slate-200 bg-white p-1 shadow-sm overflow-x-auto">
+            <button
+              type="button"
+              onClick={() => setSearchParams({})}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer whitespace-nowrap ${
+                typeFilter === 'all'
+                  ? 'bg-[#008129] text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              All Speakers ({speakers.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ type: 'keynote' })}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer whitespace-nowrap ${
+                typeFilter === 'keynote'
+                  ? 'bg-[#008129] text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              Keynotes &amp; Distinguished ({speakers.filter((s) => s.is_keynote).length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSearchParams({ type: 'faculty' })}
+              className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer whitespace-nowrap ${
+                typeFilter === 'faculty'
+                  ? 'bg-[#008129] text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              Panels &amp; Faculty ({speakers.filter((s) => !s.is_keynote).length})
+            </button>
+          </div>
 
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search speaker, title, bank..."
+              className="w-full pl-9 pr-4 py-2 text-xs border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 rounded-none focus:outline-none focus:border-[#008129] shadow-sm"
+            />
+          </div>
+        </div>
 
-        {/* Speakers Grid */}
+        {/* Speakers Grid - Aligned on a straight line */}
         {filteredSpeakers.length === 0 ? (
-          <div className="text-center py-16 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+          <div className="text-center py-16 bg-white rounded-none border border-slate-200 space-y-3 text-slate-900 shadow-xl">
             <Mic className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-lg font-bold text-cib-charcoal-900">No Speakers Found</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-lg font-bold text-slate-900">No Speakers Found</h3>
+            <p className="text-xs text-slate-600">
               No faculty members matched your selected criteria.
             </p>
           </div>
@@ -107,17 +161,19 @@ export const Speakers: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6 items-stretch"
           >
             {filteredSpeakers.map((speaker) => (
               <motion.div
                 key={speaker.id}
                 variants={cardVariant}
                 whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                className="h-full flex flex-col"
               >
                 <SpeakerCard
                   speaker={speaker}
                   onSelect={(spk) => setSelectedSpeaker(spk)}
+                  className="h-full"
                 />
               </motion.div>
             ))}

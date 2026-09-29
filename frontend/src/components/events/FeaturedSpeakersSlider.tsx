@@ -71,7 +71,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
 
   return (
     <section
-      className="w-full bg-white pt-10 sm:pt-14 lg:pt-16 pb-4 sm:pb-6 text-slate-900 overflow-hidden"
+      className="w-full bg-[#0D3A21] pt-10 sm:pt-14 lg:pt-16 pb-4 sm:pb-6 text-white overflow-hidden relative"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}
@@ -80,12 +80,12 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10">
         {/* Section Title & View More Speakers Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-cib-charcoal-900 font-display tracking-tight text-left">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-left">
             Featured Speakers
           </h2>
           <Link
             to="/speakers"
-            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-start sm:self-auto"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] border border-emerald-400/30 active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-start sm:self-auto"
           >
             VIEW MORE SPEAKERS
           </Link>
@@ -331,10 +331,10 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                       style={{
                         width: 'calc((100% - 3rem) / 3)',
                       }}
-                      className={`h-full shrink-0 relative bg-slate-100 rounded-none overflow-hidden border border-slate-200/80 cursor-pointer select-none transition-all duration-500 ${
+                      className={`h-full shrink-0 relative bg-slate-900 rounded-none overflow-hidden border cursor-pointer select-none transition-all duration-500 ${
                         isActive
-                          ? 'brightness-100 contrast-105 shadow-xl border-emerald-600/40 z-10'
-                          : 'brightness-[0.38] grayscale hover:brightness-85 hover:grayscale-0 shadow-md'
+                          ? 'brightness-100 contrast-105 shadow-2xl border-emerald-400/80 z-10'
+                          : 'border-white/10 brightness-[0.38] grayscale hover:brightness-85 hover:grayscale-0 shadow-md'
                       }`}
                       title={isActive ? `View ${spk.name}` : `Switch to ${spk.name}`}
                     >
@@ -374,7 +374,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
 
         {/* Section Separation Line Indicator */}
         <div className="pt-6 sm:pt-10 w-full flex items-center justify-center">
-          <div className="w-full h-px bg-slate-200 relative flex items-center justify-center">
+          <div className="w-full h-px bg-white/15 relative flex items-center justify-center">
             <span className="h-1 w-20 bg-[#008129] rounded-none absolute" />
           </div>
         </div>

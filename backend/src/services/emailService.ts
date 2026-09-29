@@ -1,5 +1,6 @@
 import { config } from '../config/index.js';
-import { DigitalTicket, Registration } from '../types/index.js';
+import { DigitalTicket, Registration, EventItem } from '../types/index.js';
+import { DataService } from './dataService.js';
 import nodemailer, { type Transporter } from 'nodemailer';
 import fs from 'fs';
 import path from 'path';
@@ -7,9 +8,11 @@ import path from 'path';
 export interface PaymentEmailOptions {
   registration: Registration;
   ticket: DigitalTicket;
+  event?: EventItem;
   eventTitle?: string;
   eventVenue?: string;
   eventDate?: string;
+  eventSlug?: string;
 }
 
 export interface EmailDispatchResult {
@@ -102,9 +105,39 @@ export class EmailService {
     const { registration, ticket } = options;
     const recipient = registration.email;
     const attendeeName = `${registration.first_name} ${registration.last_name}`.trim();
-    const eventTitle = options.eventTitle || ticket.event_title || registration.event_title || '30th National Banking & Ethics Conference 2026';
-    const eventVenue = options.eventVenue || ticket.event_venue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
-    const eventDate = options.eventDate || ticket.event_date || 'November 8 - 10, 2026';
+
+    // 1. Resolve event details dynamically for whichever program was registered for
+    let event: EventItem | null = options.event || null;
+    if (!event) {
+      const eventLookupKey = registration.event_id || ticket.event_id;
+      if (eventLookupKey) {
+        try {
+          event = await DataService.getEventBySlugOrId(eventLookupKey);
+        } catch {
+          // fallback to null
+        }
+      }
+    }
+
+    const eventTitle = options.eventTitle || event?.title || ticket.event_title || registration.event_title || 'CIB Ghana Event';
+    const eventVenue = options.eventVenue || event?.venue || event?.location || ticket.event_venue || 'CIB Ghana Secretariat, Accra';
+
+    // Dynamic Date Formatting
+    let eventDate = options.eventDate || ticket.event_date;
+    if (!eventDate && event?.start_date) {
+      if (event.end_date && event.end_date !== event.start_date) {
+        const startPart = new Date(event.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        const endPart = new Date(event.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        eventDate = `${startPart} - ${endPart}`;
+      } else {
+        eventDate = new Date(event.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      }
+    }
+    if (!eventDate || eventDate.includes('undefined')) {
+      eventDate = 'Conference Dates to be Communicated';
+    }
+
+    const eventSlug = options.eventSlug || event?.slug || registration.event_id || ticket.event_id || 'events';
     const regNumber = registration.registration_number || ticket.registration_number;
     const amountFormatted = this.formatCurrency(registration.total_amount, registration.currency || 'GHS');
     const paymentRef = registration.payment_reference || `PAY_${Date.now()}`;
@@ -117,10 +150,9 @@ export class EmailService {
       minute: '2-digit',
     });
 
-    const ticketPassUrl = `${config.clientUrl}/events/30th-national-banking-ethics-conference-2026/ticket/${encodeURIComponent(regNumber)}`;
-    const qrImageUrl = ticket.qr_code_data?.startsWith('data:image')
-      ? ticket.qr_code_data
-      : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(regNumber)}`;
+    const ticketPassUrl = `${config.clientUrl}/events/${encodeURIComponent(eventSlug)}/ticket/${encodeURIComponent(regNumber)}`;
+    // Always use public HTTPS QR URL so Gmail and webmail proxies (which strictly block data:image base64 URIs) render the QR pass cleanly
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`;
 
     const subject = `Payment Confirmed & Pass Issued: ${eventTitle} (Ref: ${regNumber})`;
 
@@ -132,26 +164,26 @@ export class EmailService {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Payment Receipt & Accreditation Pass - CIB Ghana</title>
         <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px 12px; color: #1e293b; line-height: 1.6; }
-          .email-card { max-width: 620px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
-          .header { background: #03254C; background-image: linear-gradient(135deg, #03254C 0%, #0A5C36 100%); color: #ffffff; padding: 36px 24px; text-align: center; }
-          .header-badge { display: inline-block; padding: 5px 14px; background: #C5A059; color: #03254C; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-radius: 9999px; margin-bottom: 12px; }
-          .title { font-size: 22px; font-weight: 800; margin: 0 0 6px 0; letter-spacing: -0.5px; color: #ffffff; line-height: 1.3; }
-          .subtitle { margin: 0; opacity: 0.9; font-size: 13px; color: #f8fafc; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 24px 12px; color: #1e293b; line-height: 1.6; }
+          .email-card { max-width: 600px; margin: 0 auto; background-color: #ffffff; border: none; border-radius: 0; }
+          .header { background-color: #0A5C36; color: #ffffff; padding: 36px 28px 28px 28px; text-align: center; border-radius: 0; }
+          .header-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #D4AF37; margin: 0 0 10px 0; }
+          .title { font-size: 21px; font-weight: 700; margin: 0 0 8px 0; letter-spacing: -0.3px; color: #ffffff; line-height: 1.3; }
+          .subtitle { margin: 0; font-size: 13px; color: #DCF0E5; font-weight: 400; line-height: 1.4; }
           .content { padding: 32px 28px; }
-          .receipt-hero { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 18px 20px; text-align: center; margin-bottom: 26px; }
-          .receipt-status { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #065f46; margin-bottom: 6px; }
-          .receipt-amount { font-size: 28px; font-weight: 900; color: #065f46; margin: 0; }
-          .section-title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b; margin: 24px 0 12px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
-          .table-details { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 14px; }
+          .receipt-hero { background-color: #F0F9F4; border: none; border-radius: 0; padding: 22px 20px; text-align: center; margin-bottom: 28px; }
+          .receipt-status { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #0A5C36; margin-bottom: 4px; }
+          .receipt-amount { font-size: 30px; font-weight: 800; color: #0A5C36; margin: 4px 0 6px 0; letter-spacing: -0.5px; }
+          .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0A5C36; margin: 28px 0 12px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+          .table-details { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 13px; }
           .table-details td { padding: 8px 0; vertical-align: top; }
           .label-col { color: #64748b; font-weight: 500; width: 42%; }
-          .val-col { font-weight: 700; color: #0f172a; text-align: right; }
-          .qr-box { text-align: center; padding: 24px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 12px; margin: 28px 0; }
-          .qr-img { width: 170px; height: 170px; border-radius: 8px; background: #ffffff; padding: 8px; border: 1px solid #e2e8f0; display: block; margin: 0 auto; }
-          .btn-cta { display: block; width: fit-content; margin: 20px auto 0 auto; background: #1B7E3E; color: #ffffff !important; padding: 14px 32px; font-weight: 800; font-size: 14px; text-decoration: none; border-radius: 8px; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
-          .notice-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 14px 16px; font-size: 13px; color: #92400e; border-radius: 4px; margin: 24px 0; }
-          .footer { background: #f8fafc; padding: 24px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+          .val-col { font-weight: 600; color: #0f172a; text-align: right; }
+          .qr-box { text-align: center; padding: 28px 20px; background-color: #f8fafc; border: none; border-radius: 0; margin: 28px 0; }
+          .qr-img { width: 160px; height: 160px; display: block; margin: 0 auto; border: none; }
+          .btn-cta { display: inline-block; margin-top: 18px; background-color: #0A5C36; color: #ffffff !important; padding: 13px 28px; font-weight: 700; font-size: 13px; text-decoration: none; border-radius: 0; letter-spacing: 0.5px; text-transform: uppercase; text-align: center; border: none; }
+          .notice-box { background-color: #f8fafc; border: none; border-radius: 0; padding: 16px 20px; font-size: 13px; color: #334155; line-height: 1.6; margin: 24px 0; }
+          .footer { background-color: #ffffff; padding: 24px; text-align: center; font-size: 12px; color: #64748b; border: none; border-top: 1px solid #f1f5f9; line-height: 1.6; }
           .footer p { margin: 4px 0; }
         </style>
       </head>
@@ -159,28 +191,26 @@ export class EmailService {
         <div class="email-card">
           <!-- Header -->
           <div class="header">
-            <span class="header-badge">Official Payment Receipt & Digital Pass</span>
+            <p class="header-eyebrow">Chartered Institute of Bankers, Ghana</p>
             <h1 class="title">${eventTitle}</h1>
-            <p class="subtitle">Chartered Institute of Bankers, Ghana • Established under Act 991</p>
+            <p class="subtitle">Official Payment Receipt & Digital Accreditation Pass &bull; Established under Act 991</p>
           </div>
 
           <!-- Body -->
           <div class="content">
-            <p style="font-size: 15px; margin-top: 0;">
+            <p style="font-size: 15px; margin-top: 0; color: #0f172a;">
               Dear <strong>${attendeeName}</strong>,
             </p>
-            <p style="font-size: 14px; color: #334155;">
+            <p style="font-size: 14px; color: #334155; margin-bottom: 24px;">
               Thank you for registering. We are pleased to confirm that your payment has been processed successfully. Below is your official tax receipt and delegate accreditation pass.
             </p>
 
             <!-- Payment Receipt Box -->
             <div class="receipt-hero">
-              <div class="receipt-status">
-                <span>&#10004;</span> Payment Verified & Confirmed
-              </div>
+              <div class="receipt-status">Payment Verified & Confirmed</div>
               <div class="receipt-amount">${amountFormatted}</div>
-              <p style="margin: 4px 0 0 0; font-size: 12px; color: #047857; font-weight: 500;">
-                Transaction Reference: <strong style="font-family: monospace;">${paymentRef}</strong>
+              <p style="margin: 0; font-size: 12px; color: #475569;">
+                Transaction Reference: <strong style="font-family: 'Courier New', Courier, monospace; color: #0f172a;">${paymentRef}</strong>
               </p>
             </div>
 
@@ -189,7 +219,7 @@ export class EmailService {
             <table class="table-details">
               <tr>
                 <td class="label-col">Amount Paid:</td>
-                <td class="val-col" style="color: #065f46;">${amountFormatted}</td>
+                <td class="val-col" style="color: #0A5C36; font-weight: 700;">${amountFormatted}</td>
               </tr>
               <tr>
                 <td class="label-col">Payment Channel:</td>
@@ -197,7 +227,7 @@ export class EmailService {
               </tr>
               <tr>
                 <td class="label-col">Payment Status:</td>
-                <td class="val-col" style="color: #065f46;">SUCCESSFUL / PAID</td>
+                <td class="val-col" style="color: #0A5C36; font-weight: 700;">SUCCESSFUL / PAID</td>
               </tr>
               <tr>
                 <td class="label-col">Transaction Date:</td>
@@ -218,7 +248,7 @@ export class EmailService {
               </tr>
               <tr>
                 <td class="label-col">Registration Number:</td>
-                <td class="val-col" style="font-family: monospace; color: #03254C; font-size: 15px;">${regNumber}</td>
+                <td class="val-col" style="font-family: 'Courier New', Courier, monospace; color: #0A5C36; font-weight: 700; font-size: 14px;">${regNumber}</td>
               </tr>
               <tr>
                 <td class="label-col">Organization:</td>
@@ -244,14 +274,14 @@ export class EmailService {
 
             <!-- Digital Pass & QR Code Section -->
             <div class="qr-box">
-              <h3 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 800; color: #03254C;">
-                Your Official Digital Entry Pass
+              <h3 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+                Official Digital Entry Pass
               </h3>
-              <p style="margin: 0 0 16px 0; font-size: 12px; color: #64748b;">
+              <p style="margin: 0 0 18px 0; font-size: 12px; color: #64748b;">
                 Present this scannable QR code at the registration desk for priority accreditation
               </p>
-              <img src="${qrImageUrl}" alt="Accreditation QR Pass" class="qr-img" />
-              <p style="margin: 12px 0 0 0; font-family: monospace; font-size: 15px; font-weight: 800; color: #03254C;">
+              <img src="${qrImageUrl}" alt="Accreditation QR Pass" width="160" height="160" class="qr-img" style="width: 160px; height: 160px; display: block; margin: 0 auto; border: none; background: #ffffff;" />
+              <p style="margin: 14px 0 0 0; font-family: 'Courier New', Courier, monospace; font-size: 15px; font-weight: 700; color: #0A5C36;">
                 ${regNumber}
               </p>
               <a href="${ticketPassUrl}" class="btn-cta">
@@ -261,11 +291,11 @@ export class EmailService {
 
             <!-- Venue & Check-in Advisory -->
             <div class="notice-box">
-              <strong>Check-in Notice:</strong> Registration and delegate room check-in begins at 08:30 GMT on Sunday, 8th November 2026 at Aqua Safari Resort Convention Pavilion, Ada Foah. Please keep this email accessible on your mobile phone.
+              <strong style="color: #0f172a;">Check-in Notice:</strong> Delegate accreditation and registration for <strong>${eventTitle}</strong> will take place at <strong>${eventVenue}</strong> (${eventDate}). Please keep this digital pass accessible on your mobile device for priority check-in.
             </div>
 
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">
-              If you have any questions or require special assistance, please contact the CIB Ghana Secretariat at <a href="mailto:events@cibghana.org" style="color: #1B7E3E; font-weight: bold;">events@cibghana.org</a> or call <strong>+233 (0) 302 543 456</strong>.
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 0; line-height: 1.6;">
+              If you have any questions or require special assistance, please contact the CIB Ghana Secretariat at <a href="mailto:events@cibghana.org" style="color: #0A5C36; font-weight: 600; text-decoration: none;">events@cibghana.org</a> or call <strong>+233 (0) 302 543 456</strong>.
             </p>
           </div>
 
@@ -273,8 +303,8 @@ export class EmailService {
           <div class="footer">
             <p><strong>Chartered Institute of Bankers, Ghana</strong></p>
             <p>Okponglo-East Legon, Trinity Avenue, P.O. Box AN 14455, Accra, Ghana</p>
-            <p>Tel: +233 (0) 302 543 456 | Email: info@cibgh.org | Web: www.cibgh.org</p>
-            <p style="font-size: 11px; color: #94a3b8; margin-top: 10px;">
+            <p>Tel: +233 (0) 302 543 456 &bull; Email: info@cibgh.org &bull; Web: www.cibgh.org</p>
+            <p style="font-size: 11px; color: #94a3b8; margin-top: 12px;">
               This email serves as an official proof of payment and tax receipt under the Chartered Institute of Bankers, Ghana Act 2019 (Act 991).
             </p>
           </div>
@@ -290,11 +320,11 @@ OFFICIAL PAYMENT RECEIPT & ACCREDITATION PASS
 Event: ${eventTitle}
 Registration Number: ${regNumber}
 Delegate: ${attendeeName}
-Organization: ${registration.organization || 'N/A'}
+Organization: ${registration.organization || 'Chartered Banking Professional'}
 Amount Paid: ${amountFormatted}
 Payment Reference: ${paymentRef}
 Payment Method: ${paymentMethodLabel}
-Payment Status: SUCCESSFUL
+Payment Status: ${registration.payment_status || 'SUCCESSFUL'}
 Dates: ${eventDate}
 Venue: ${eventVenue}
 
@@ -379,9 +409,9 @@ Address: Okponglo-East Legon, Trinity Avenue, Accra, Ghana
               from: fromAddress,
               reply_to: replyToAddress,
               to: testRecipient,
-              subject: `[Delegate: ${recipient}] ${subject}`,
-              text: `[Delivered to account owner ${testRecipient} during Resend sandbox mode]\n\n` + plainText,
-              html: `<div style="background:#fef3c7;padding:10px 16px;border-bottom:1px solid #f59e0b;font-size:12px;color:#92400e;text-align:center;"><strong>[Sandbox Notice]</strong> Delivered to verified owner (${testRecipient}) for registered attendee: <strong>${recipient}</strong></div>` + htmlContent,
+              subject,
+              text: plainText,
+              html: htmlContent,
             }),
           });
           const fallbackData: any = await fallbackRes.json();

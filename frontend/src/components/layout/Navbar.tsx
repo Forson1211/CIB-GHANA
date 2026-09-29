@@ -1,52 +1,100 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu,
   X,
-  ChevronDown,
-  User,
-  Shield,
-  ArrowUpRight,
-  Sparkles,
-  ExternalLink,
-  Calendar,
-  Layers
+  ChevronDown
 } from 'lucide-react';
-import { CIB_LOGO_URL, DEMO_USERS } from '../../data/mockData';
-import { useApp } from '../../context/AppContext';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentUser, setCurrentUser, registeredUserEmail } = useApp();
+
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const scrollPos =
+        window.scrollY ||
+        window.pageYOffset ||
+        document.documentElement?.scrollTop ||
+        document.body?.scrollTop ||
+        0;
+      // Immediately show the solid brand green navbar as soon as the user starts scrolling
+      setIsScrolled(scrollPos > 10);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  useEffect(() => {
-    setMobileMenuOpen(false);
-    setUserDropdownOpen(false);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    document.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
+    };
   }, [location.pathname]);
 
-  const isActive = (path: string) => {
-    if (path === '/' && location.pathname === '/') return true;
-    if (path !== '/' && location.pathname.startsWith(path)) return true;
-    return false;
+  // Close menus on page navigation
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setActiveDropdown(null);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  }, [location.pathname, location.search, location.hash]);
+
+  // Click outside and ESC key listener to reliably close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveDropdown(null);
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = (menuTitle: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveDropdown(menuTitle);
+  };
+
+  const handleMouseLeave = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150);
+  };
+
+  const handleToggleClick = (menuTitle: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setActiveDropdown((prev) => (prev === menuTitle ? null : menuTitle));
   };
 
   const handleHomeNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     setMobileMenuOpen(false);
-    setUserDropdownOpen(false);
+    setActiveDropdown(null);
 
     if (location.pathname === '/') {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
@@ -57,128 +105,203 @@ export const Navbar: React.FC = () => {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       document.body.scrollTop = 0;
-      setTimeout(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        document.body.scrollTop = 0;
-      }, 50);
     }
   };
 
+  const navDropdowns = [
+    {
+      title: 'Programme',
+      links: [
+        {
+          label: 'Schedule & Agenda',
+          path: '/events/30th-national-banking-ethics-conference-2026#agenda',
+        },
+        {
+          label: '30th Ethics Conference',
+          path: '/events/30th-national-banking-ethics-conference-2026',
+        },
+        {
+          label: 'All Events',
+          path: '/events',
+        },
+        {
+          label: 'Past Editions',
+          path: '/past-events',
+        },
+      ],
+    },
+    {
+      title: 'Speakers',
+      links: [
+        {
+          label: 'Keynote Speakers',
+          path: '/speakers?type=keynote',
+        },
+        {
+          label: 'Panels & Faculty',
+          path: '/speakers?type=faculty',
+        },
+        {
+          label: 'All Speakers',
+          path: '/speakers',
+        },
+      ],
+    },
+    {
+      title: 'Exhibition & Sponsors',
+      links: [
+        {
+          label: 'Partners',
+          path: '/partners',
+        },
+        {
+          label: 'Sponsors',
+          path: '/sponsors',
+        },
+      ],
+    },
+    {
+      title: 'Resources',
+      links: [
+        {
+          label: 'Conference Papers',
+          path: '/resources',
+        },
+        {
+          label: 'Delegate Portal',
+          path: '/my-portal',
+        },
+        {
+          label: 'Contact Us',
+          path: '/contact',
+        },
+      ],
+    },
+  ];
+
   return (
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-slate-200 py-2'
-          : 'bg-white border-b border-slate-100 shadow-sm py-2 sm:py-2.5'
+      className={`transition-all duration-300 z-50 ${
+        isHomePage
+          ? `fixed top-0 left-0 right-0 ${
+              isScrolled || mobileMenuOpen
+                ? 'bg-[#0D3A21] shadow-2xl border-b border-white/10 py-2 sm:py-2.5'
+                : 'bg-transparent border-none py-4 sm:py-5'
+            }`
+          : 'sticky top-0 bg-[#0D3A21] border-b border-white/10 shadow-xl py-2.5 sm:py-3'
       }`}
     >
-      <div className="relative z-50 max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Brand Logo */}
+          {/* Brand Wordmark matching reference screenshot (no crest logo) */}
           <Link
             to="/"
             onClick={handleHomeNavigation}
-            className="flex items-center group focus:outline-none py-1 ml-0.5 sm:-ml-2 md:-ml-3.5 cursor-pointer"
+            className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none py-1 select-none"
           >
-            <img
-              src="/cib-logo-navbar.png"
-              alt="Chartered Institute of Bankers, Ghana"
-              className="h-16 sm:h-18 md:h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-200"
-            />
+            {/* Stacked Wordmark in exact reference screenshot style */}
+            <div className="flex flex-col text-left font-black tracking-tight leading-none uppercase">
+              <span className="text-[#FFE500] text-[13px] sm:text-[15px] font-black tracking-wider drop-shadow-sm">
+                CIB GHANA
+              </span>
+              <span className="text-white text-[15px] sm:text-[17px] font-black tracking-wider leading-none mt-0.5">
+                BANKING &amp; ETHICS
+              </span>
+              <span className="text-white text-[13px] sm:text-[15px] font-black tracking-wider leading-none mt-0.5">
+                CONFERENCE
+              </span>
+            </div>
+
+            {/* Vertical Date Divider */}
+            <div className="self-stretch w-[1.5px] bg-white/40 mx-0.5 sm:mx-1 my-0.5" />
+
+            {/* Stacked Date */}
+            <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
+              <span className="text-[13px] sm:text-[15px] tracking-tight">8-10</span>
+              <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">NOV</span>
+              <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">2026</span>
+            </div>
           </Link>
 
-          {/* Desktop Navigation Links - Large, Clear & Legible */}
-          <nav className="hidden lg:flex items-center gap-1.5 xl:gap-3">
-            {/* Home - Direct Link, No Dropdown */}
-            <Link
-              to="/"
-              onClick={handleHomeNavigation}
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                isActive('/') ? 'text-[#008129] font-black' : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Home
-            </Link>
+          {/* Desktop Navigation Links matching screenshot */}
+          <nav ref={navRef} className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {navDropdowns.map((menu) => (
+              <div
+                key={menu.title}
+                className="relative"
+                onMouseEnter={() => handleMouseEnter(menu.title)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  type="button"
+                  onClick={() => handleToggleClick(menu.title)}
+                  aria-expanded={activeDropdown === menu.title}
+                  className={`flex items-center gap-1.5 px-3 py-2 text-[14px] xl:text-[15px] font-medium transition-colors focus:outline-none cursor-pointer rounded-none ${
+                    activeDropdown === menu.title
+                      ? 'text-[#FFE500]'
+                      : 'text-white/95 hover:text-[#FFE500]'
+                  }`}
+                >
+                  <span>{menu.title}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      activeDropdown === menu.title ? 'rotate-180 text-[#FFE500]' : 'opacity-80'
+                    }`}
+                  />
+                </button>
 
-            {/* Events */}
-            <Link
-              to="/events"
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                isActive('/events') ? 'text-[#008129] font-black' : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Events
-            </Link>
-
-            {/* Speakers */}
-            <Link
-              to="/speakers"
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                isActive('/speakers') ? 'text-[#008129] font-black' : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Speakers
-            </Link>
-
-            {/* Partners & Sponsors */}
-            <Link
-              to="/partners"
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                location.pathname === '/partners' || location.pathname === '/sponsors'
-                  ? 'text-[#008129] font-black'
-                  : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Partners &amp; Sponsors
-            </Link>
-
-            {/* Resources */}
-            <Link
-              to="/resources"
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                isActive('/resources') ? 'text-[#008129] font-black' : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Resources
-            </Link>
-
-            {/* Contact */}
-            <Link
-              to="/contact"
-              className={`px-2.5 xl:px-3 py-2 rounded-none text-base font-bold transition-colors ${
-                isActive('/contact') ? 'text-[#008129] font-black' : 'text-slate-900 hover:text-[#008129]'
-              }`}
-            >
-              Contact
-            </Link>
+                {/* Dropdown Menu - solid background color, not glass, no round edges, simple words, no sub-text */}
+                <AnimatePresence>
+                  {activeDropdown === menu.title && (
+                    <div
+                      className="absolute top-full left-0 pt-1.5 z-50 min-w-[210px]"
+                      onMouseEnter={() => handleMouseEnter(menu.title)}
+                      onMouseLeave={handleMouseLeave}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 3 }}
+                        transition={{ duration: 0.12, ease: 'easeOut' }}
+                        className="bg-[#0D3A21] border border-[#1b5835] shadow-2xl py-1 rounded-none"
+                      >
+                        {menu.links.map((link) => (
+                          <Link
+                            key={link.label}
+                            to={link.path}
+                            onClick={() => setActiveDropdown(null)}
+                            className="block px-4 py-2.5 rounded-none text-[13.5px] font-semibold text-white/95 hover:text-[#FFE500] hover:bg-[#144f2e] transition-colors whitespace-nowrap cursor-pointer"
+                          >
+                            {link.label}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
           </nav>
 
-          {/* Right Action Cluster */}
+          {/* Right Action Button with Green and Yellow Gradient */}
           <div className="hidden sm:flex items-center gap-3">
-            {registeredUserEmail ? (
-              <Link
-                to="/my-portal"
-                className="inline-flex items-center justify-center px-7 py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-md"
-              >
-                <span>Access Event</span>
-              </Link>
-            ) : (
-              <Link
-                to="/events/30th-national-banking-ethics-conference-2026/register"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-extrabold text-sm sm:text-base transition-all duration-200 shadow-md"
-              >
-                <span>Register Now</span>
-                <ArrowUpRight className="w-4 h-4 text-white stroke-[2.5]" />
-              </Link>
-            )}
+            <Link
+              to={
+                registeredUserEmail
+                  ? '/my-portal'
+                  : '/events/30th-national-banking-ethics-conference-2026/register'
+              }
+              className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 shadow-md"
+            >
+              <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
+            </Link>
           </div>
 
-          {/* Mobile Hamburger Button */}
+          {/* Mobile Hamburger Button (Gold/Yellow with sharp corners) */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1 text-slate-950 bg-transparent border-0 shadow-none outline-none focus:outline-none active:opacity-70 transition-opacity"
+              className="p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer"
               aria-label="Toggle Navigation Menu"
             >
               <AnimatePresence mode="wait" initial={false}>
@@ -190,17 +313,17 @@ export const Navbar: React.FC = () => {
                     exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <X className="w-7 h-7 stroke-[2.85] text-slate-950" />
+                    <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                   </motion.div>
                 ) : (
                   <motion.div
                     key="menu-icon"
                     initial={{ rotate: 90, opacity: 0 }}
                     animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: -90, opacity: 0 }}
+                    exit={{ rotate: 90, opacity: 0 }}
                     transition={{ duration: 0.15 }}
                   >
-                    <Menu className="w-7 h-7 stroke-[2.85] text-slate-950" />
+                    <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -209,7 +332,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer Overlay (Pure solid white, overlays on top without pushing content down) */}
+      {/* Mobile Menu Drawer Overlay (Solid brand background, no glass, no round edges) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -218,105 +341,40 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute top-full left-0 right-0 z-50 bg-white border-t border-b border-slate-200 shadow-2xl px-4 sm:px-6 pt-3 pb-6 space-y-1.5 lg:hidden text-slate-900 max-h-[calc(100dvh-75px)] overflow-y-auto"
+            className="absolute top-full left-0 right-0 z-50 bg-[#0D3A21] border-t border-b border-white/15 shadow-2xl px-4 sm:px-6 pt-4 pb-6 space-y-4 lg:hidden text-white max-h-[calc(100dvh-75px)] overflow-y-auto rounded-none"
           >
-            <Link
-              to="/"
-              onClick={(e) => {
-                setMobileMenuOpen(false);
-                handleHomeNavigation(e);
-              }}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                isActive('/')
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Home</span>
-            </Link>
+            {navDropdowns.map((menu) => (
+              <div key={menu.title} className="border-b border-white/10 pb-3">
+                <div className="text-xs uppercase font-extrabold tracking-wider text-[#FFE500] px-3 py-1">
+                  {menu.title}
+                </div>
+                <div className="space-y-1 mt-1">
+                  {menu.links.map((link) => (
+                    <Link
+                      key={link.label}
+                      to={link.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2 rounded-none text-sm font-medium text-white/90 hover:text-[#FFE500] hover:bg-[#144f2e] transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
 
-            <Link
-              to="/events"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                isActive('/events')
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Events</span>
-            </Link>
-
-            <Link
-              to="/speakers"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                isActive('/speakers')
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Speakers</span>
-            </Link>
-
-            {/* Partners & Sponsors */}
-            <Link
-              to="/partners"
-              onClick={() => {
-                setMobileMenuOpen(false);
-              }}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                location.pathname === '/partners' || location.pathname === '/sponsors'
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Partners &amp; Sponsors</span>
-            </Link>
-
-            <Link
-              to="/resources"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                isActive('/resources')
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Resources</span>
-            </Link>
-
-            <Link
-              to="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center justify-between px-4 py-3 rounded-none text-base font-bold transition-all ${
-                isActive('/contact')
-                  ? 'text-[#008129] font-black bg-slate-50 border-l-4 border-[#008129]'
-                  : 'text-slate-900 hover:text-[#008129] hover:bg-slate-50 border-l-4 border-transparent'
-              }`}
-            >
-              <span>Contact</span>
-            </Link>
-
-            <div className="pt-4 border-t border-slate-200 space-y-2">
-              {registeredUserEmail ? (
-                <Link
-                  to="/my-portal"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-black text-base shadow-md transition-all"
-                >
-                  <span>Access Event</span>
-                </Link>
-              ) : (
-                <Link
-                  to="/events/30th-national-banking-ethics-conference-2026/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-black text-base shadow-md transition-all"
-                >
-                  <span>Register Now</span>
-                  <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
-                </Link>
-              )}
+            <div className="pt-2">
+              <Link
+                to={
+                  registeredUserEmail
+                    ? '/my-portal'
+                    : '/events/30th-national-banking-ethics-conference-2026/register'
+                }
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg transition-all"
+              >
+                <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
+              </Link>
             </div>
           </motion.div>
         )}
@@ -324,4 +382,3 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
-

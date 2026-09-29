@@ -84,7 +84,7 @@ export const Resources: React.FC = () => {
   });
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-20">
+    <div className="min-h-screen bg-[#0D3A21] space-y-8 sm:space-y-10 pb-24 text-white">
       {/* Sleek Banner for Resources (Green to Yellow Gradient & Left-aligned) */}
       <section className="w-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white py-10 sm:py-14 relative overflow-hidden shadow-sm">
         <motion.div
@@ -107,11 +107,12 @@ export const Resources: React.FC = () => {
       {/* Main Page Content */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Filter & Search Toolbar */}
+        {/* Filter & Search Toolbar (Crisp White Card) */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="bg-slate-50 p-6 rounded-3xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4"
+          className="bg-white p-6 rounded-none border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-800 shadow-xl"
         >
           <div className="relative w-full sm:w-80">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -120,7 +121,7 @@ export const Resources: React.FC = () => {
               placeholder="Search document title or event..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-base sm:text-xs focus:border-cib-green-600 focus:outline-none bg-white"
+              className="w-full pl-10 pr-4 py-2.5 rounded-none border border-slate-200 text-base sm:text-xs focus:border-[#008129] focus:outline-none bg-slate-50 text-slate-900 placeholder:text-slate-400"
             />
           </div>
 
@@ -129,10 +130,10 @@ export const Resources: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                className={`px-3.5 py-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-cib-green-700 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    ? 'bg-[#008129] text-white font-bold shadow-xs'
+                    : 'bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 {cat === 'ALL' ? 'All Formats' : cat}
@@ -147,19 +148,19 @@ export const Resources: React.FC = () => {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="py-16 sm:py-20 px-6 text-center bg-slate-50/70 border border-slate-200/80 rounded-2xl max-w-xl mx-auto space-y-4 shadow-sm"
+            className="py-16 sm:py-20 px-6 text-center bg-white border border-slate-200 rounded-none max-w-xl mx-auto space-y-4 shadow-xl text-slate-900"
           >
-            <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#1B7E3E] flex items-center justify-center mx-auto shadow-xs">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 text-[#008129] flex items-center justify-center mx-auto shadow-xs border border-emerald-100">
               <FileText className="w-8 h-8 stroke-[1.8]" />
             </div>
 
             <div className="space-y-1.5">
-              <h3 className="text-lg sm:text-xl font-bold text-slate-800 font-display">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-900 font-display">
                 {allResources.length === 0
                   ? 'No Resources Available Yet'
                   : 'No Matching Resources Found'}
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
                 {allResources.length === 0
                   ? 'Conference brochures, keynote slides, and official documents will be published here as soon as they become available.'
                   : 'We couldn’t find any documents matching your current search query or category filter.'}
@@ -174,7 +175,7 @@ export const Resources: React.FC = () => {
                     setSearchQuery('');
                     setSelectedCategory('ALL');
                   }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-none bg-[#008129] text-white text-xs font-bold hover:bg-[#007024] transition-colors shadow-xs cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset Filters</span>
@@ -194,7 +195,7 @@ export const Resources: React.FC = () => {
                 key={res.id}
                 variants={cardVariant}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className="bg-white p-6 rounded-2xl border border-slate-200 shadow-card hover:border-cib-green-300 hover:shadow-xl transition-all flex flex-col justify-between space-y-4"
+                className="bg-white p-6 rounded-none border border-slate-200 shadow-card hover:border-[#FFE500] hover:shadow-xl transition-all flex flex-col justify-between space-y-4"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-2">

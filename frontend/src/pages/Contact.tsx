@@ -48,7 +48,7 @@ export const Contact: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#0D3A21] pb-24 text-white">
       {/* 1. HERO SECTION WITH IMAGE & CLEAR GREEN TO YELLOW BRAND GRADIENT */}
       <section className="relative pt-20 pb-44 sm:pt-24 sm:pb-52 overflow-hidden bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white shadow-sm">
         {/* Background Image with Green to Yellow Color Wash */}
@@ -89,7 +89,7 @@ export const Contact: React.FC = () => {
             viewBox="0 0 1440 100"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-12 sm:h-16 md:h-20 text-slate-50 fill-current"
+            className="w-full h-12 sm:h-16 md:h-20 text-[#0D3A21] fill-current"
             preserveAspectRatio="none"
           >
             <path d="M0,40 C360,100 1080,0 1440,60 L1440,100 L0,100 Z" />
@@ -97,7 +97,7 @@ export const Contact: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. FLOATING WHITE TWO-COLUMN CONTACT CARD */}
+      {/* 2. FLOATING TWO-COLUMN CONTACT CARD */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 -mt-28 sm:-mt-36 md:-mt-40 mb-16 sm:mb-20">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -389,20 +389,20 @@ export const Contact: React.FC = () => {
       {/* 3. WIDE GOOGLE MAP SECTION */}
       <section
         ref={mapSectionRef}
-        className="relative w-full h-[420px] sm:h-[480px] border-t border-slate-200 overflow-hidden bg-slate-100"
+        className="relative w-full h-[420px] sm:h-[480px] border-t border-white/10 overflow-hidden bg-[#072113]"
       >
         {/* Loading skeleton - shows until iframe is loaded */}
         {!mapLoaded && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-100 animate-pulse">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#072113] animate-pulse">
             <div className="flex flex-col items-center gap-3">
               <div className="relative">
-                <div className="w-12 h-12 rounded-full bg-[#008129]/20 flex items-center justify-center">
-                  <MapPin className="w-6 h-6 text-[#008129]" />
+                <div className="w-12 h-12 rounded-none bg-white/10 flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-[#FFE500]" />
                 </div>
                 {/* Breathing ring on skeleton pin */}
-                <span className="absolute inset-0 rounded-full border-2 border-[#008129]/40 animate-ping" />
+                <span className="absolute inset-0 rounded-none border-2 border-[#FFE500]/40 animate-ping" />
               </div>
-              <p className="text-sm font-semibold text-slate-500">Loading map…</p>
+              <p className="text-sm font-semibold text-white/70">Loading map…</p>
             </div>
           </div>
         )}

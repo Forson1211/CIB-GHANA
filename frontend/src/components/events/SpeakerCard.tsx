@@ -21,10 +21,10 @@ export const SpeakerCard: React.FC<SpeakerCardProps> = ({ speaker, onSelect, cla
   return (
     <div
       onClick={() => onSelect(speaker)}
-      className={`group cursor-pointer flex flex-col bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#008129] transition-all duration-300 overflow-hidden ${className}`}
+      className={`group cursor-pointer flex flex-col h-full bg-white border border-slate-200 shadow-sm hover:shadow-xl hover:border-[#008129] transition-all duration-300 overflow-hidden rounded-none ${className}`}
     >
       {/* Photo Frame - Square aspect ratio for balanced, executive headshots */}
-      <div className="relative aspect-square w-full overflow-hidden bg-slate-100 flex items-center justify-center">
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-slate-100 flex items-center justify-center">
         {hasPhoto ? (
           <img
             src={speaker.photo_url}
@@ -43,23 +43,23 @@ export const SpeakerCard: React.FC<SpeakerCardProps> = ({ speaker, onSelect, cla
         )}
       </div>
 
-      {/* Info Block */}
+      {/* Info Block - Equalized heights so cards line up horizontally */}
       <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 bg-white">
-        <div className="space-y-0.5">
-          <h4 className="text-base sm:text-base font-bold text-slate-900 font-display line-clamp-2 group-hover:text-[#008129] transition-colors">
+        <div className="space-y-1">
+          <h4 className="text-sm sm:text-base font-bold text-slate-900 font-display line-clamp-2 min-h-[2.75rem] flex items-center group-hover:text-[#008129] transition-colors leading-snug">
             {speaker.name}
           </h4>
-          <p className="text-sm font-bold text-[#008129] line-clamp-2">
+          <p className="text-xs sm:text-sm font-bold text-[#008129] line-clamp-2 min-h-[2.25rem] flex items-start leading-snug">
             {speaker.position}
           </p>
-          <p className="text-xs font-semibold text-slate-500 line-clamp-2">
+          <p className="text-xs font-semibold text-slate-500 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
             {speaker.organization}
           </p>
         </div>
 
-        {/* View Profile CTA - Solid green button with hover arrow */}
-        <div className="mt-3 pt-2.5 border-t border-slate-100">
-          <span className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-[#008129] group-hover:bg-[#006e22] text-white text-xs font-bold transition-all duration-200 shadow-sm">
+        {/* View Profile CTA - Solid green button with hover arrow pinned to bottom */}
+        <div className="mt-auto pt-3 border-t border-slate-100">
+          <span className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-[#008129] group-hover:bg-[#006e22] text-white text-xs font-bold transition-all duration-200 shadow-sm rounded-none">
             <span>View Profile</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </span>

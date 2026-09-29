@@ -16,7 +16,6 @@ import { Resources } from './pages/Resources';
 import { Contact } from './pages/Contact';
 
 import { PartnersSponsors } from './pages/PartnersSponsors';
-import { Login } from './pages/Login';
 import { MyPortal } from './pages/MyPortal';
 import { NotFound } from './pages/NotFound';
 
@@ -54,7 +53,7 @@ function DpiScaleManager() {
       }
 
       const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isDesktop = !isMobile && (window.screen.width >= 1024 || window.innerWidth >= 1024);
+      const isDesktop = !isMobile && window.innerWidth >= 1024;
 
       if (isDesktop && window.devicePixelRatio && window.devicePixelRatio > 1) {
         (document.body.style as any).zoom = (1 / window.devicePixelRatio).toString();
@@ -76,11 +75,29 @@ if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
   window.history.scrollRestoration = 'manual';
 }
 
-// Helper component to ensure all page transitions always scroll to the top
+// Helper component to ensure page transitions scroll to top, or smoothly to hash anchor when present
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
   React.useLayoutEffect(() => {
+    if (hash) {
+      const targetId = hash.replace('#', '');
+      const scrollToHashElement = () => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          return true;
+        }
+        return false;
+      };
+
+      if (!scrollToHashElement()) {
+        const timer = setTimeout(scrollToHashElement, 150);
+        return () => clearTimeout(timer);
+      }
+      return;
+    }
+
     // Immediately set scroll to top before browser paint
     const originalBehavior = document.documentElement.style.scrollBehavior;
     document.documentElement.style.scrollBehavior = 'auto';
@@ -105,7 +122,7 @@ function ScrollToTop() {
     });
 
     return () => cancelAnimationFrame(rafId);
-  }, [pathname]);
+  }, [pathname, hash]);
 
   return null;
 }
@@ -116,7 +133,11 @@ function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <div className="min-h-screen flex flex-col bg-white text-cib-charcoal-900 relative">
+    <div
+      className={`min-h-screen flex flex-col ${
+        isAdminRoute ? 'bg-slate-100 text-cib-charcoal-900' : 'bg-[#0D3A21] text-white'
+      } relative`}
+    >
       <ScrollProgressBar />
       {!isAdminRoute && <Navbar />}
       <main className="flex-1">{children}</main>
@@ -145,6 +166,7 @@ export function App() {
             <Route path="/events/:slug" element={<EventDetails />} />
             <Route path="/events/:slug/register" element={<Register />} />
             <Route path="/events/:slug/ticket/:id" element={<Ticket />} />
+            <Route path="/ticket/:id" element={<Ticket />} />
             <Route path="/speakers" element={<Speakers />} />
             <Route path="/partners" element={<PartnersSponsors />} />
             <Route path="/sponsors" element={<PartnersSponsors />} />
@@ -152,9 +174,9 @@ export function App() {
             <Route path="/past-events" element={<PastEvents />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Login />} />
-            {/* /dashboard redirects to the new attendee portal */}
+            <Route path="/login" element={<Navigate to="/my-portal" replace />} />
+            <Route path="/register" element={<Navigate to="/events" replace />} />
+            {/* /dashboard redirects to the attendee portal */}
             <Route path="/dashboard" element={<Navigate to="/my-portal" replace />} />
             <Route path="/my-portal" element={<MyPortal />} />
 

@@ -473,7 +473,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
 
 export const GhanaBanksSponsorsMarquee: React.FC = () => {
   return (
-    <section className="w-full bg-[#0D3B22] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl">
+    <section className="w-full bg-[#0D3A21] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl">
       {/* Dynamic Keyframes for smooth continuous hardware-accelerated movement to the RIGHT */}
       <style>{`
         @keyframes cibMarqueeRight {

@@ -140,7 +140,7 @@ export const EventDetails: React.FC = () => {
   };
 
   return (
-    <div className="space-y-16 sm:space-y-24 pb-20">
+    <div className="min-h-screen bg-[#0D3A21] text-white space-y-16 sm:space-y-24 pb-20">
       {/* 1. CINEMATIC EVENT HERO (Requirement #16 & #47) */}
       <section className="relative min-h-[75vh] flex items-center bg-[#032616] text-white overflow-hidden">
         {/* Background Visual - Aqua Safari Resort Banner (Bright & Clear) */}
@@ -262,15 +262,15 @@ export const EventDetails: React.FC = () => {
           {/* Main Description */}
           <div className="lg:col-span-8 space-y-6">
             <div className="space-y-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-cib-green-700">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#FFE500]">
                 OVERVIEW
               </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-cib-charcoal-900 font-display">
+              <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight uppercase">
                 ABOUT THE EVENT
               </h2>
             </div>
 
-            <div className="prose prose-slate max-w-none text-slate-700 leading-relaxed space-y-4">
+            <div className="max-w-none text-white/85 leading-relaxed space-y-4">
               {(event?.description || '').split('\n\n').map((paragraph, idx) => (
                 <p key={idx} className="text-base sm:text-lg">
                   {paragraph}
@@ -278,24 +278,105 @@ export const EventDetails: React.FC = () => {
               ))}
             </div>
 
-            {/* KEY THEMES (Requirement #16) */}
+            {/* KEY THEMES (Requirement #16 - Matching Reference Design Image 2) */}
             {event.themes && event.themes.length > 0 && (
-              <div className="pt-6 space-y-4">
-                <h3 className="text-lg font-bold text-cib-charcoal-900 font-display">
-                  Core Conference Themes
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {event.themes.map((theme, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200/80"
-                    >
-                      <CheckCircle2 className="w-5 h-5 text-cib-green-700 shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm font-semibold text-slate-800">
-                        {theme}
-                      </span>
-                    </div>
-                  ))}
+              <div className="pt-8 space-y-5">
+                <div className="bg-[#072113] text-white p-6 sm:p-8 rounded-none border border-white/10 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
+                  
+                  <div className="space-y-1 pb-4 border-b border-white/10 text-left">
+                    <span className="text-[11px] font-black uppercase tracking-widest text-[#FFE500]">
+                      INSIGHTS. ACTIONS. OUTCOMES.
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-white font-display">
+                      Core Conference Themes
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300">
+                      New Risks. New Rules. New Growth &bull; 30th National Banking &amp; Ethics Conference
+                    </p>
+                  </div>
+
+                  <div className="divide-y divide-white/10 mt-2 text-left">
+                    {event.themes.map((theme, idx) => {
+                      const icons = [
+                        {
+                          cat: 'Technology Rewiring',
+                          desc: 'Scaling technology, ethical AI & fraud detection',
+                          badge: (
+                            <svg viewBox="0 0 48 48" className="w-10 h-10 shrink-0" fill="none">
+                              <rect x="10" y="10" width="28" height="28" rx="6" fill="#831843" stroke="#EC4899" strokeWidth="1.5" />
+                              <rect x="16" y="16" width="16" height="16" rx="3" fill="#072113" stroke="#06B6D4" strokeWidth="1.5" />
+                              <circle cx="24" cy="24" r="3" fill="#FACC15" />
+                              <path d="M16 10V4M24 10V4M32 10V4M16 44V38M24 44V38M32 44V38M10 16H4M10 24H4M10 32H4M44 16H38M44 24H38M44 32H38" stroke="#06B6D4" strokeWidth="1.5" strokeLinecap="round" />
+                            </svg>
+                          ),
+                        },
+                        {
+                          cat: 'Policy Rewiring',
+                          desc: 'Aligning ethical culture & boardroom accountability',
+                          badge: (
+                            <svg viewBox="0 0 48 48" className="w-10 h-10 shrink-0" fill="none">
+                              <rect x="12" y="8" width="22" height="14" rx="3" transform="rotate(35 24 16)" fill="#EC4899" stroke="#38BDF8" strokeWidth="1.5" />
+                              <path d="M24 22L8 38" stroke="#F59E0B" strokeWidth="3.5" strokeLinecap="round" />
+                              <rect x="28" y="34" width="16" height="8" rx="2" fill="#1E293B" stroke="#A855F7" strokeWidth="1.5" />
+                            </svg>
+                          ),
+                        },
+                        {
+                          cat: 'Geoeconomic Rewiring',
+                          desc: 'Building cross-border payments & AfCFTA trade corridors',
+                          badge: (
+                            <svg viewBox="0 0 48 48" className="w-10 h-10 shrink-0" fill="none">
+                              <circle cx="24" cy="24" r="16" fill="#0F766E" stroke="#38BDF8" strokeWidth="1.5" />
+                              <ellipse cx="24" cy="24" rx="8" ry="16" stroke="#F43F5E" strokeWidth="1.5" strokeDasharray="2 2" />
+                              <line x1="8" y1="24" x2="40" y2="24" stroke="#FBBF24" strokeWidth="1.5" />
+                            </svg>
+                          ),
+                        },
+                        {
+                          cat: 'Capital Rewiring',
+                          desc: 'Rebuilding investment priorities & balance sheet resilience',
+                          badge: (
+                            <svg viewBox="0 0 48 48" className="w-10 h-10 shrink-0" fill="none">
+                              <circle cx="24" cy="24" r="15" stroke="#F59E0B" strokeWidth="2.5" fill="#0A2F1B" />
+                              <circle cx="24" cy="24" r="5" fill="#EC4899" />
+                              <line x1="24" y1="9" x2="24" y2="19" stroke="#38BDF8" strokeWidth="2" />
+                              <line x1="24" y1="29" x2="24" y2="39" stroke="#38BDF8" strokeWidth="2" />
+                              <line x1="9" y1="24" x2="19" y2="24" stroke="#38BDF8" strokeWidth="2" />
+                              <line x1="29" y1="24" x2="39" y2="24" stroke="#38BDF8" strokeWidth="2" />
+                            </svg>
+                          ),
+                        },
+                        {
+                          cat: 'Sustainability Rewiring',
+                          desc: 'Mobilizing ESG & green finance frameworks for African banks',
+                          badge: (
+                            <svg viewBox="0 0 48 48" className="w-10 h-10 shrink-0" fill="none">
+                              <circle cx="24" cy="24" r="16" fill="#052E16" stroke="#10B981" strokeWidth="1.5" />
+                              <path d="M24 12C24 12 32 18 32 26C32 32 28 36 22 36C16 36 14 32 14 26C14 18 24 12 24 12Z" fill="#10B981" />
+                              <path d="M24 16V34" stroke="#FFE500" strokeWidth="1.5" />
+                            </svg>
+                          ),
+                        },
+                      ];
+                      const meta = icons[idx % icons.length];
+                      return (
+                        <div key={idx} className="py-3.5 sm:py-4 flex items-center gap-3.5 group">
+                          <div className="shrink-0 group-hover:scale-105 transition-transform duration-200">
+                            {meta.badge}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-sm sm:text-base font-bold text-white group-hover:text-[#FFE500] transition-colors leading-tight">
+                              {meta.cat}
+                            </h4>
+                            <p className="text-xs text-slate-300 font-normal leading-snug mt-0.5">
+                              {meta.desc}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -303,7 +384,7 @@ export const EventDetails: React.FC = () => {
 
           {/* Quick Registration / Registered Delegate Sidebar Card */}
           <div className="lg:col-span-4">
-            <div className="sticky top-24 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/90 shadow-card space-y-6">
+            <div className="sticky top-24 bg-white p-6 sm:p-8 rounded-none border border-slate-200/90 shadow-card space-y-6">
               {isUserRegistered ? (
                 /* Registered State Card */
                 <div className="space-y-5">
@@ -367,7 +448,7 @@ export const EventDetails: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => navigate(ticketUrl)}
-                      className="w-full inline-flex flex-row items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#008B2E] hover:bg-[#007326] active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-emerald-700/20 transition-all cursor-pointer whitespace-nowrap"
+                      className="w-full inline-flex flex-row items-center justify-center gap-2 py-2.5 px-4 rounded-none bg-[#008B2E] hover:bg-[#007326] active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-emerald-700/20 transition-all cursor-pointer whitespace-nowrap"
                     >
                       <Ticket className="w-4 h-4 shrink-0" />
                       <span>View Ticket</span>
@@ -416,7 +497,7 @@ export const EventDetails: React.FC = () => {
                       <Button
                         variant="accent"
                         size="lg"
-                        className="w-full"
+                        className="w-full rounded-none"
                         showArrow
                         onClick={() => navigate(`/events/${event.slug}/register`)}
                       >
@@ -425,14 +506,14 @@ export const EventDetails: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowUnlockModal(true)}
-                        className="w-full py-2.5 px-3 rounded-xl border border-emerald-200 hover:border-emerald-400 bg-emerald-50/60 hover:bg-emerald-100/60 text-emerald-900 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-none border border-emerald-200 hover:border-emerald-400 bg-emerald-50/60 hover:bg-emerald-100/60 text-emerald-900 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <KeyRound className="w-3.5 h-3.5 text-emerald-700" />
                         <span>Already Registered? Unlock with Email</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="p-3 bg-slate-100 text-slate-600 rounded-xl text-center text-xs font-bold">
+                    <div className="p-3 bg-slate-100 text-slate-600 rounded-none text-center text-xs font-bold">
                       Registration is currently closed
                     </div>
                   )}

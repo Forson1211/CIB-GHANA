@@ -190,14 +190,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          const onlyEvt1 = parsed.filter((evt) => evt.id === 'evt-1');
-          if (onlyEvt1.length > 0) {
-            return onlyEvt1.map((evt) => ({
-              ...evt,
-              speakers: MOCK_SPEAKERS.filter((s) => !isPurgedMockSpeaker(s)),
-              agenda: MOCK_EVENTS[0].agenda,
-            }));
-          }
+          return parsed.map((evt) => {
+            if (evt.id === 'evt-1') {
+              return {
+                ...evt,
+                speakers: MOCK_SPEAKERS.filter((s) => !isPurgedMockSpeaker(s)),
+                agenda: MOCK_EVENTS[0].agenda,
+              };
+            }
+            return evt;
+          });
         }
       } catch (e) {
         console.error(e);
@@ -440,8 +442,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await ApiClient.getEvents();
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         setEvents((prev) => {
-          const filtered = res.data.filter((e) => e.id === 'evt-1');
-          const targetList = filtered.length > 0 ? filtered : [MOCK_EVENTS[0]];
+          const targetList = res.data;
           const merged = targetList.map((be) => {
             const local = prev.find((pe) => pe.id === be.id);
             const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
@@ -485,8 +486,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .order('start_date', { ascending: true });
         if (!error && Array.isArray(data) && data.length > 0) {
           setEvents((prev) => {
-            const filtered = (data as EventItem[]).filter((e: any) => e.id === 'evt-1');
-            const targetList = filtered.length > 0 ? filtered : [MOCK_EVENTS[0]];
+            const targetList = (data as EventItem[]);
             const merged = targetList.map((be) => {
               const local = prev.find((pe) => pe.id === be.id);
               const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;

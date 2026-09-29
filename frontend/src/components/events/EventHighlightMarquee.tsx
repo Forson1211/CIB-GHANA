@@ -206,7 +206,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r1-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-slate-100 border border-slate-200/80 group relative"
+              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -218,7 +218,7 @@ export const EventHighlightMarquee: React.FC = () => {
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
-                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#F5A623] font-extrabold">
+                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#FFE500] font-extrabold">
                   <ZoomIn className="w-3.5 h-3.5" /> Click to enlarge
                 </span>
               </div>
@@ -234,7 +234,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r2-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-48 sm:w-60 md:w-72 h-60 sm:h-[300px] md:h-[360px] aspect-[4/5] shrink-0 rounded-none overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-slate-100 border border-slate-200/80 group relative"
+              className="w-48 sm:w-60 md:w-72 h-60 sm:h-[300px] md:h-[360px] aspect-[4/5] shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -246,7 +246,7 @@ export const EventHighlightMarquee: React.FC = () => {
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
-                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#F5A623] font-extrabold">
+                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#FFE500] font-extrabold">
                   <ZoomIn className="w-3.5 h-3.5" /> Click to enlarge
                 </span>
               </div>
@@ -262,7 +262,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r3-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer bg-slate-100 border border-slate-200/80 group relative"
+              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -274,7 +274,7 @@ export const EventHighlightMarquee: React.FC = () => {
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
-                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#F5A623] font-extrabold">
+                <span className="mt-1 flex items-center gap-1 text-[11px] text-[#FFE500] font-extrabold">
                   <ZoomIn className="w-3.5 h-3.5" /> Click to enlarge
                 </span>
               </div>

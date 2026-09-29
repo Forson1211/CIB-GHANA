@@ -24,56 +24,57 @@ export function generateEmailTemplate(type: EmailPayload['template'], data: Reco
       return {
         subject: `Payment Confirmed & Pass Issued: ${eventTitle} (Ref: ${regNumber})`,
         html: `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #E2E8F0; border-radius: 12px; background: #ffffff;">
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border: none; border-radius: 0;">
             <!-- Header -->
-            <div style="text-align: center; border-bottom: 2px solid #0A5C36; padding-bottom: 16px; margin-bottom: 24px;">
-              <span style="display: inline-block; padding: 4px 12px; background: #C5A059; color: #03254C; font-weight: bold; border-radius: 9999px; font-size: 11px; text-transform: uppercase; margin-bottom: 8px;">
-                Official Payment Receipt & Digital Pass
-              </span>
-              <h1 style="color: #03254C; margin: 4px 0 0 0; font-size: 22px; font-weight: 800;">Chartered Institute of Bankers, Ghana</h1>
-              <p style="color: #64748B; margin: 4px 0 0 0; font-size: 13px;">Established under CIB Act 2019 (Act 991)</p>
+            <div style="background-color: #0A5C36; color: #ffffff; padding: 36px 28px 28px 28px; text-align: center; border-radius: 0;">
+              <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #D4AF37;">Chartered Institute of Bankers, Ghana</p>
+              <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 21px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.3;">${eventTitle}</h1>
+              <p style="color: #DCF0E5; margin: 0; font-size: 13px; font-weight: 400; line-height: 1.4;">Official Payment Receipt & Digital Accreditation Pass &bull; Established under Act 991</p>
             </div>
 
-            <!-- Payment Confirmed Banner -->
-            <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; padding: 16px; text-align: center; margin-bottom: 24px;">
-              <span style="color: #065F46; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
-                &#10004; Payment Confirmed & Settled
-              </span>
-              <h2 style="color: #065F46; font-size: 26px; font-weight: 900; margin: 4px 0;">
-                GHS ${amount}
-              </h2>
-              <p style="color: #047857; font-size: 12px; margin: 0;">
-                Reference: <strong style="font-family: monospace;">${reference}</strong>
+            <!-- Content -->
+            <div style="padding: 32px 28px;">
+              <p style="font-size: 15px; color: #0f172a; margin-top: 0;">Dear <strong>${attendeeName}</strong>,</p>
+              <p style="font-size: 14px; color: #334155; line-height: 1.5; margin-bottom: 24px;">
+                Thank you for registering. We are pleased to confirm that your payment has been processed successfully. Below is your official tax receipt and delegate accreditation pass.
+              </p>
+
+              <!-- Payment Confirmed Banner -->
+              <div style="background-color: #F0F9F4; border: none; border-radius: 0; padding: 22px 20px; text-align: center; margin-bottom: 28px;">
+                <div style="color: #0A5C36; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;">
+                  Payment Verified & Confirmed
+                </div>
+                <div style="color: #0A5C36; font-size: 30px; font-weight: 800; margin: 4px 0 6px 0; letter-spacing: -0.5px;">
+                  GHS ${amount}
+                </div>
+                <p style="color: #475569; font-size: 12px; margin: 0;">
+                  Transaction Reference: <strong style="font-family: 'Courier New', Courier, monospace; color: #0f172a;">${reference}</strong>
+                </p>
+              </div>
+              
+              <!-- Summary Box -->
+              <div style="background-color: #F8FAFC; border: none; border-radius: 0; padding: 20px 24px; margin: 24px 0; font-size: 13px; line-height: 1.8;">
+                <p style="margin: 4px 0;"><strong>Event:</strong> ${eventTitle}</p>
+                <p style="margin: 4px 0;"><strong>Venue:</strong> ${eventVenue}</p>
+                <p style="margin: 4px 0;"><strong>Dates:</strong> ${eventDate}</p>
+                <p style="margin: 4px 0;"><strong>Registration ID:</strong> <span style="font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: 700; color: #0A5C36;">${regNumber}</span></p>
+                <p style="margin: 4px 0;"><strong>Payment Method:</strong> ${paymentMethod}</p>
+              </div>
+              
+              <p style="font-size: 13px; color: #475569; line-height: 1.6;">
+                Please present your registration ID or scan your digital ticket pass at the check-in desk upon arrival at the venue for instant accreditation.
+              </p>
+              
+              <div style="text-align: center; margin: 28px 0;">
+                <a href="${ticketUrl}" style="background-color: #0A5C36; color: #ffffff !important; padding: 13px 28px; text-decoration: none; border-radius: 0; font-weight: 700; display: inline-block; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border: none;">
+                  VIEW & DOWNLOAD DIGITAL PASS
+                </a>
+              </div>
+              
+              <p style="color: #64748B; font-size: 11px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 28px; line-height: 1.6;">
+                Chartered Institute of Bankers, Ghana &bull; Okponglo-East Legon, Trinity Avenue, Accra &bull; events@cibghana.org
               </p>
             </div>
-
-            <p style="font-size: 15px; color: #1E293B;">Dear <strong>${attendeeName}</strong>,</p>
-            <p style="font-size: 14px; color: #334155; line-height: 1.5;">
-              Thank you for registering for <strong>${eventTitle}</strong>. We are pleased to confirm your payment and reserve your delegate seat.
-            </p>
-            
-            <!-- Summary Box -->
-            <div style="background: #F8FAFC; border-left: 4px solid #D4AF37; padding: 16px; margin: 20px 0; border-radius: 4px; font-size: 13px; line-height: 1.8;">
-              <p style="margin: 3px 0;"><strong>Event:</strong> ${eventTitle}</p>
-              <p style="margin: 3px 0;"><strong>Venue:</strong> ${eventVenue}</p>
-              <p style="margin: 3px 0;"><strong>Dates:</strong> ${eventDate}</p>
-              <p style="margin: 3px 0;"><strong>Registration ID:</strong> <span style="font-family: monospace; font-size: 15px; font-weight: bold; color: #0A5C36;">${regNumber}</span></p>
-              <p style="margin: 3px 0;"><strong>Payment Method:</strong> ${paymentMethod}</p>
-            </div>
-            
-            <p style="font-size: 13px; color: #475569;">
-              Please present your registration ID or scan your digital ticket pass at the check-in desk upon arrival at the venue for instant accreditation.
-            </p>
-            
-            <div style="text-align: center; margin: 28px 0;">
-              <a href="${ticketUrl}" style="background-color: #1B7E3E; color: #ffffff; padding: 13px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
-                VIEW YOUR DIGITAL PASS
-              </a>
-            </div>
-            
-            <p style="color: #64748B; font-size: 11px; text-align: center; border-top: 1px solid #E2E8F0; padding-top: 16px; margin-top: 28px;">
-              Chartered Institute of Bankers, Ghana &bull; Okponglo-East Legon, Trinity Avenue, Accra &bull; events@cibghana.org
-            </p>
           </div>
         `,
       };

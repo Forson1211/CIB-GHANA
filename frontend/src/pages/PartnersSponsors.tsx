@@ -374,7 +374,7 @@ export const PartnersSponsors: React.FC = () => {
       : sponsors.filter((s) => s.type === 'SPONSOR');
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-[#0D3A21] pb-24 text-white">
       {/* 1. CINEMATIC HERO SECTION WITH GREEN TO YELLOW BRAND GRADIENT */}
       <section className="relative pt-20 pb-28 sm:pt-24 sm:pb-36 bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white overflow-hidden shadow-sm">
         {/* Background Visual */}
@@ -445,7 +445,7 @@ export const PartnersSponsors: React.FC = () => {
             viewBox="0 0 1440 80"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-10 sm:h-14 text-slate-50 fill-current"
+            className="w-full h-10 sm:h-14 text-[#0D3A21] fill-current"
             preserveAspectRatio="none"
           >
             <path d="M0,30 C360,70 1080,0 1440,40 L1440,80 L0,80 Z" />
@@ -455,10 +455,10 @@ export const PartnersSponsors: React.FC = () => {
 
       {/* 2. LOGO SHOWCASE GRID (Big prominent logos, zero text clutter) */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20 space-y-12">
-        {/* Action Header */}
-        <div className="bg-white p-6 sm:p-7 rounded-none border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Action Header Card (White card on green page) */}
+        <div className="bg-white p-6 sm:p-7 rounded-none border border-slate-200 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
-            <span className="text-xs font-bold uppercase tracking-widest text-[#1B7E3E] block">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#008129] block">
               {activeTab === 'PARTNERS' ? 'OFFICIAL PARTNERS' : 'OFFICIAL SPONSORS'}
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, X, ExternalLink } from 'lucide-react';
+import { Play, X, ExternalLink, Sparkles } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 interface ThemeItem {
   id: string;
@@ -11,6 +12,87 @@ interface ThemeItem {
 
 export const CoreConferenceThemes: React.FC = () => {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [compassRotation, setCompassRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const handlePlayClick = () => {
+    // 1. Compass spins: turn turn turn! (+1440 degrees = 4 complete rotations)
+    setCompassRotation((prev) => prev + 1440);
+    setIsSpinning(true);
+    setShowSparkles(true);
+
+    // 2. Exact origin from the video button coordinates
+    const rect = buttonRef.current?.getBoundingClientRect();
+    const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+    const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
+
+    // 3. 1st Wave: 360-degree radial blast of congratulation sparkles & stars
+    confetti({
+      particleCount: 85,
+      spread: 360,
+      startVelocity: 42,
+      origin: { x, y },
+      colors: ['#FFE500', '#FFD700', '#008129', '#10B981', '#EC4899', '#38BDF8', '#FFFFFF', '#F59E0B'],
+      shapes: ['star', 'circle'],
+      scalar: 1.25,
+      ticks: 140,
+      zIndex: 9999,
+    });
+
+    // 4. 2nd Wave: Intense celebratory golden glitter explosion
+    setTimeout(() => {
+      confetti({
+        particleCount: 70,
+        spread: 160,
+        startVelocity: 50,
+        origin: { x, y },
+        colors: ['#FFD700', '#FFE500', '#008129', '#FFFFFF', '#EC4899', '#8B5CF6'],
+        shapes: ['star'],
+        scalar: 1.3,
+        ticks: 150,
+        zIndex: 9999,
+      });
+    }, 280);
+
+    // 5. 3rd Wave: Left & right celebration cannons
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 80,
+        startVelocity: 45,
+        origin: { x: Math.max(0.08, x - 0.12), y },
+        colors: ['#FFE500', '#008129', '#38BDF8', '#F59E0B'],
+        zIndex: 9999,
+      });
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 80,
+        startVelocity: 45,
+        origin: { x: Math.min(0.92, x + 0.12), y },
+        colors: ['#FFE500', '#008129', '#EC4899', '#10B981'],
+        zIndex: 9999,
+      });
+    }, 560);
+
+    // 6. Stop spinning state after 2.4s
+    setTimeout(() => {
+      setIsSpinning(false);
+    }, 2400);
+
+    // 7. Hide celebratory banner after 4.2s
+    setTimeout(() => {
+      setShowSparkles(false);
+    }, 4200);
+
+    // 8. Open video modal after full celebratory spin and sparkles blow
+    setTimeout(() => {
+      setVideoModalOpen(true);
+    }, 2400);
+  };
 
   const themes: ThemeItem[] = [
     {
@@ -166,151 +248,229 @@ export const CoreConferenceThemes: React.FC = () => {
               {/* Outer Ambient Glow Ring */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-rose-500/20 via-indigo-500/20 to-emerald-500/20 blur-xl animate-pulse" />
 
-              {/* The Woven Compass SVG */}
-              <svg viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl">
-                <defs>
-                  {/* Concentric Woven Thread Gradients */}
-                  <linearGradient id="thread-blue" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#1E3A8A" />
-                    <stop offset="50%" stopColor="#3B82F6" />
-                    <stop offset="100%" stopColor="#1D4ED8" />
-                  </linearGradient>
-                  <linearGradient id="thread-rose" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#881337" />
-                    <stop offset="50%" stopColor="#E11D48" />
-                    <stop offset="100%" stopColor="#BE123C" />
-                  </linearGradient>
-                  <linearGradient id="thread-ochre" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#78350F" />
-                    <stop offset="50%" stopColor="#F59E0B" />
-                    <stop offset="100%" stopColor="#B45309" />
-                  </linearGradient>
-                  <linearGradient id="thread-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#064E3B" />
-                    <stop offset="50%" stopColor="#10B981" />
-                    <stop offset="100%" stopColor="#047857" />
-                  </linearGradient>
-                  <linearGradient id="thread-violet" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#4C1D95" />
-                    <stop offset="50%" stopColor="#8B5CF6" />
-                    <stop offset="100%" stopColor="#6D28D9" />
-                  </linearGradient>
-                  <linearGradient id="star-light" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#F8FAFC" />
-                    <stop offset="50%" stopColor="#CBD5E1" />
-                    <stop offset="100%" stopColor="#64748B" />
-                  </linearGradient>
-                  <linearGradient id="star-dark" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#334155" />
-                    <stop offset="50%" stopColor="#1E293B" />
-                    <stop offset="100%" stopColor="#0F172A" />
-                  </linearGradient>
-                </defs>
+              {/* Celebratory Congratulation Sparkles Floating Banner */}
+              <AnimatePresence>
+                {showSparkles && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.85 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    className="absolute -top-12 sm:-top-14 z-40 px-5 sm:px-6 py-2.5 rounded-none bg-gradient-to-r from-[#FFE500] via-[#FFF380] to-[#FFE500] text-slate-950 font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_12px_40px_rgba(255,229,0,0.65)] flex items-center gap-2.5 pointer-events-none whitespace-nowrap border-2 border-yellow-300"
+                  >
+                    <Sparkles className="w-4 h-4 text-slate-950 fill-slate-950 animate-spin" />
+                    <span>🎉 Congratulations! Conference Preview Unlocked!</span>
+                    <Sparkles className="w-4 h-4 text-slate-950 fill-slate-950 animate-spin" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-                {/* Outer Ring Segment 1: Radial Woven Cord Texture */}
-                <circle cx="250" cy="250" r="236" fill="#0A2F1B" stroke="#1E293B" strokeWidth="4" />
+              {/* Shockwave Rings when Spinning */}
+              {isSpinning && (
+                <>
+                  <motion.div
+                    initial={{ scale: 0.7, opacity: 0.95 }}
+                    animate={{ scale: 1.9, opacity: 0 }}
+                    transition={{ duration: 1.1, repeat: 2, ease: 'easeOut' }}
+                    className="absolute inset-auto w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-[#FFE500] pointer-events-none z-15"
+                  />
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 1 }}
+                    animate={{ scale: 2.5, opacity: 0 }}
+                    transition={{ duration: 1.3, delay: 0.2, repeat: 2, ease: 'easeOut' }}
+                    className="absolute inset-auto w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-emerald-400 pointer-events-none z-15"
+                  />
+                </>
+              )}
 
-                {/* Layered Colored Woven Rings (36 radiating cord segments) */}
-                <g strokeWidth="9" strokeLinecap="round" opacity="0.95">
-                  {Array.from({ length: 36 }).map((_, i) => {
-                    const angle = (i * 10 * Math.PI) / 180;
-                    const r1 = 150;
-                    const r2 = 230;
-                    const x1 = 250 + r1 * Math.cos(angle);
-                    const y1 = 250 + r1 * Math.sin(angle);
-                    const x2 = 250 + r2 * Math.cos(angle);
-                    const y2 = 250 + r2 * Math.sin(angle);
-                    const colors = [
-                      '#1E3A8A', '#3B82F6', '#881337', '#E11D48',
-                      '#D97706', '#F59E0B', '#065F46', '#10B981',
-                      '#4C1D95', '#8B5CF6', '#0284C7', '#06B6D4'
-                    ];
-                    const strokeColor = colors[i % colors.length];
+              {/* Dynamic In-DOM Star Sparkles radiating outwards in 360 degrees */}
+              {isSpinning && (
+                <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
+                  {Array.from({ length: 16 }).map((_, idx) => {
+                    const angle = (idx * 22.5 * Math.PI) / 180;
+                    const distance = 170;
+                    const targetX = Math.cos(angle) * distance;
+                    const targetY = Math.sin(angle) * distance;
                     return (
-                      <line
-                        key={i}
-                        x1={x1}
-                        y1={y1}
-                        x2={x2}
-                        y2={y2}
-                        stroke={strokeColor}
-                        strokeDasharray="14 3"
-                      />
+                      <motion.div
+                        key={idx}
+                        initial={{ x: 0, y: 0, scale: 0.2, opacity: 1 }}
+                        animate={{
+                          x: targetX,
+                          y: targetY,
+                          scale: [0.2, 1.6, 0.9, 0],
+                          opacity: [1, 1, 0.8, 0],
+                          rotate: [0, 360],
+                        }}
+                        transition={{ duration: 1.5, delay: (idx % 4) * 0.08, ease: 'easeOut' }}
+                        className="absolute"
+                      >
+                        <Sparkles className="w-6 h-6 text-[#FFE500] drop-shadow-[0_0_12px_rgba(255,229,0,0.9)]" />
+                      </motion.div>
                     );
                   })}
-                </g>
+                </div>
+              )}
 
-                {/* Secondary Middle Concentric Ring */}
-                <circle cx="250" cy="250" r="160" fill="#0B132B" stroke="#FFE500" strokeWidth="2.5" />
-                <circle cx="250" cy="250" r="148" fill="#1C1A27" stroke="#EC4899" strokeWidth="2" strokeDasharray="6 3" />
+              {/* The Woven Compass SVG - Animated to turn turn turn! */}
+              <motion.div
+                animate={{ rotate: compassRotation }}
+                transition={{
+                  duration: 2.2,
+                  ease: [0.16, 1, 0.3, 1], // Smooth powerful turn turn turn with gradual deceleration
+                }}
+                className="w-full h-full relative flex items-center justify-center pointer-events-none"
+              >
+                <svg viewBox="0 0 500 500" className="w-full h-full drop-shadow-2xl">
+                  <defs>
+                    {/* Concentric Woven Thread Gradients */}
+                    <linearGradient id="thread-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#1E3A8A" />
+                      <stop offset="50%" stopColor="#3B82F6" />
+                      <stop offset="100%" stopColor="#1D4ED8" />
+                    </linearGradient>
+                    <linearGradient id="thread-rose" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#881337" />
+                      <stop offset="50%" stopColor="#E11D48" />
+                      <stop offset="100%" stopColor="#BE123C" />
+                    </linearGradient>
+                    <linearGradient id="thread-ochre" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#78350F" />
+                      <stop offset="50%" stopColor="#F59E0B" />
+                      <stop offset="100%" stopColor="#B45309" />
+                    </linearGradient>
+                    <linearGradient id="thread-emerald" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#064E3B" />
+                      <stop offset="50%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#047857" />
+                    </linearGradient>
+                    <linearGradient id="thread-violet" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#4C1D95" />
+                      <stop offset="50%" stopColor="#8B5CF6" />
+                      <stop offset="100%" stopColor="#6D28D9" />
+                    </linearGradient>
+                    <linearGradient id="star-light" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#F8FAFC" />
+                      <stop offset="50%" stopColor="#CBD5E1" />
+                      <stop offset="100%" stopColor="#64748B" />
+                    </linearGradient>
+                    <linearGradient id="star-dark" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#334155" />
+                      <stop offset="50%" stopColor="#1E293B" />
+                      <stop offset="100%" stopColor="#0F172A" />
+                    </linearGradient>
+                  </defs>
 
-                {/* Inner Textured Cord Spokes */}
-                <g strokeWidth="7" strokeLinecap="round" opacity="0.85">
-                  {Array.from({ length: 24 }).map((_, i) => {
-                    const angle = (i * 15 * Math.PI) / 180;
-                    const r1 = 70;
-                    const r2 = 145;
-                    const x1 = 250 + r1 * Math.cos(angle);
-                    const y1 = 250 + r1 * Math.sin(angle);
-                    const x2 = 250 + r2 * Math.cos(angle);
-                    const y2 = 250 + r2 * Math.sin(angle);
-                    const colors = ['#E11D48', '#38BDF8', '#F59E0B', '#10B981', '#A855F7', '#EC4899'];
-                    return (
-                      <line
-                        key={`inner-${i}`}
-                        x1={x1}
-                        y1={y1}
-                        x2={x2}
-                        y2={y2}
-                        stroke={colors[i % colors.length]}
-                      />
-                    );
-                  })}
-                </g>
+                  {/* Outer Ring Segment 1: Radial Woven Cord Texture */}
+                  <circle cx="250" cy="250" r="236" fill="#0A2F1B" stroke="#1E293B" strokeWidth="4" />
 
-                {/* Dimensional 8-Point Metallic Compass Star */}
-                {/* North Major Point */}
-                <polygon points="250,250 250,20 236,250" fill="url(#star-light)" />
-                <polygon points="250,250 250,20 264,250" fill="url(#star-dark)" />
+                  {/* Layered Colored Woven Rings (36 radiating cord segments) */}
+                  <g strokeWidth="9" strokeLinecap="round" opacity="0.95">
+                    {Array.from({ length: 36 }).map((_, i) => {
+                      const angle = (i * 10 * Math.PI) / 180;
+                      const r1 = 150;
+                      const r2 = 230;
+                      const x1 = 250 + r1 * Math.cos(angle);
+                      const y1 = 250 + r1 * Math.sin(angle);
+                      const x2 = 250 + r2 * Math.cos(angle);
+                      const y2 = 250 + r2 * Math.sin(angle);
+                      const colors = [
+                        '#1E3A8A', '#3B82F6', '#881337', '#E11D48',
+                        '#D97706', '#F59E0B', '#065F46', '#10B981',
+                        '#4C1D95', '#8B5CF6', '#0284C7', '#06B6D4'
+                      ];
+                      const strokeColor = colors[i % colors.length];
+                      return (
+                        <line
+                          key={i}
+                          x1={x1}
+                          y1={y1}
+                          x2={x2}
+                          y2={y2}
+                          stroke={strokeColor}
+                          strokeDasharray="14 3"
+                        />
+                      );
+                    })}
+                  </g>
 
-                {/* South Major Point */}
-                <polygon points="250,250 250,480 264,250" fill="url(#star-light)" />
-                <polygon points="250,250 250,480 236,250" fill="url(#star-dark)" />
+                  {/* Secondary Middle Concentric Ring */}
+                  <circle cx="250" cy="250" r="160" fill="#0B132B" stroke="#FFE500" strokeWidth="2.5" />
+                  <circle cx="250" cy="250" r="148" fill="#1C1A27" stroke="#EC4899" strokeWidth="2" strokeDasharray="6 3" />
 
-                {/* East Major Point */}
-                <polygon points="250,250 480,250 250,236" fill="url(#star-light)" />
-                <polygon points="250,250 480,250 250,264" fill="url(#star-dark)" />
+                  {/* Inner Textured Cord Spokes */}
+                  <g strokeWidth="7" strokeLinecap="round" opacity="0.85">
+                    {Array.from({ length: 24 }).map((_, i) => {
+                      const angle = (i * 15 * Math.PI) / 180;
+                      const r1 = 70;
+                      const r2 = 145;
+                      const x1 = 250 + r1 * Math.cos(angle);
+                      const y1 = 250 + r1 * Math.sin(angle);
+                      const x2 = 250 + r2 * Math.cos(angle);
+                      const y2 = 250 + r2 * Math.sin(angle);
+                      const colors = ['#E11D48', '#38BDF8', '#F59E0B', '#10B981', '#A855F7', '#EC4899'];
+                      return (
+                        <line
+                          key={`inner-${i}`}
+                          x1={x1}
+                          y1={y1}
+                          x2={x2}
+                          y2={y2}
+                          stroke={colors[i % colors.length]}
+                        />
+                      );
+                    })}
+                  </g>
 
-                {/* West Major Point */}
-                <polygon points="250,250 20,250 250,264" fill="url(#star-light)" />
-                <polygon points="250,250 20,250 250,236" fill="url(#star-dark)" />
+                  {/* Dimensional 8-Point Metallic Compass Star */}
+                  {/* North Major Point */}
+                  <polygon points="250,250 250,20 236,250" fill="url(#star-light)" />
+                  <polygon points="250,250 250,20 264,250" fill="url(#star-dark)" />
 
-                {/* Diagonal Minor Points */}
-                {/* North-East */}
-                <polygon points="250,250 410,90 242,242" fill="url(#star-light)" opacity="0.9" />
-                <polygon points="250,250 410,90 258,258" fill="url(#star-dark)" opacity="0.9" />
+                  {/* South Major Point */}
+                  <polygon points="250,250 250,480 264,250" fill="url(#star-light)" />
+                  <polygon points="250,250 250,480 236,250" fill="url(#star-dark)" />
 
-                {/* North-West */}
-                <polygon points="250,250 90,90 258,242" fill="url(#star-light)" opacity="0.9" />
-                <polygon points="250,250 90,90 242,258" fill="url(#star-dark)" opacity="0.9" />
+                  {/* East Major Point */}
+                  <polygon points="250,250 480,250 250,236" fill="url(#star-light)" />
+                  <polygon points="250,250 480,250 250,264" fill="url(#star-dark)" />
 
-                {/* South-East */}
-                <polygon points="250,250 410,410 258,242" fill="url(#star-light)" opacity="0.9" />
-                <polygon points="250,250 410,410 242,258" fill="url(#star-dark)" opacity="0.9" />
+                  {/* West Major Point */}
+                  <polygon points="250,250 20,250 250,264" fill="url(#star-light)" />
+                  <polygon points="250,250 20,250 250,236" fill="url(#star-dark)" />
 
-                {/* South-West */}
-                <polygon points="250,250 90,410 242,242" fill="url(#star-light)" opacity="0.9" />
-                <polygon points="250,250 90,410 258,258" fill="url(#star-dark)" opacity="0.9" />
+                  {/* Diagonal Minor Points */}
+                  {/* North-East */}
+                  <polygon points="250,250 410,90 242,242" fill="url(#star-light)" opacity="0.9" />
+                  <polygon points="250,250 410,90 258,258" fill="url(#star-dark)" opacity="0.9" />
 
-                {/* Compass Center Pivot Ring */}
-                <circle cx="250" cy="250" r="54" fill="#000000" opacity="0.4" />
-              </svg>
+                  {/* North-West */}
+                  <polygon points="250,250 90,90 258,242" fill="url(#star-light)" opacity="0.9" />
+                  <polygon points="250,250 90,90 242,258" fill="url(#star-dark)" opacity="0.9" />
 
-              {/* Center Golden Play Button matching reference screenshot */}
+                  {/* South-East */}
+                  <polygon points="250,250 410,410 258,242" fill="url(#star-light)" opacity="0.9" />
+                  <polygon points="250,250 410,410 242,258" fill="url(#star-dark)" opacity="0.9" />
+
+                  {/* South-West */}
+                  <polygon points="250,250 90,410 242,242" fill="url(#star-light)" opacity="0.9" />
+                  <polygon points="250,250 90,410 258,258" fill="url(#star-dark)" opacity="0.9" />
+
+                  {/* Compass Center Pivot Ring */}
+                  <circle cx="250" cy="250" r="54" fill="#000000" opacity="0.4" />
+                </svg>
+              </motion.div>
+
+              {/* Center Golden Play Button with interactive feedback */}
               <button
+                ref={buttonRef}
                 type="button"
-                onClick={() => setVideoModalOpen(true)}
-                className="absolute inset-auto w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-tr from-[#E5A800] via-[#FFD700] to-[#FFE500] hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(255,229,0,0.6)] flex items-center justify-center cursor-pointer transition-all duration-300 z-20 group-hover:brightness-110"
+                onClick={handlePlayClick}
+                className={`absolute inset-auto w-18 h-18 sm:w-22 sm:h-22 rounded-full bg-gradient-to-tr from-[#E5A800] via-[#FFD700] to-[#FFE500] hover:scale-110 active:scale-95 shadow-[0_0_40px_rgba(255,229,0,0.6)] flex items-center justify-center cursor-pointer transition-all duration-300 z-20 group-hover:brightness-110 ${
+                  isSpinning
+                    ? 'scale-110 ring-4 ring-[#FFE500] shadow-[0_0_60px_rgba(255,229,0,0.95)]'
+                    : ''
+                }`}
                 aria-label="Play 30th Conference Preview Video"
               >
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#FFD700]/30 backdrop-blur-sm border-2 border-white/60 flex items-center justify-center">

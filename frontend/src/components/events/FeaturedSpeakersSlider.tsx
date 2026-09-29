@@ -77,7 +77,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
       onTouchStart={() => setIsHovered(true)}
       onTouchEnd={() => setTimeout(() => setIsHovered(false), 2000)}
     >
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10">
         {/* Section Title & View More Speakers Button */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-left">
@@ -239,12 +239,15 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
         </div>
 
         {/* ---------------------------------------------------- */}
-        {/* 2. DESKTOP LAYOUT (lg and above) - Sliding Track     */}
+        {/* 2. DESKTOP LAYOUT (lg and above) - Perfectly on line with site */}
         {/* ---------------------------------------------------- */}
-        <div className="hidden lg:block">
-          <div className="grid grid-cols-4 gap-6 items-stretch">
-            {/* Card 1: Pure Green Info Box (Sharp Edges, Fixed on Left) */}
-            <div className="bg-[#008129] border border-[#006e23] rounded-none p-8 flex flex-col justify-between h-[420px] shadow-xl relative overflow-hidden select-none text-white z-20">
+        <div className="hidden lg:block w-full overflow-hidden">
+          <div className="flex gap-5 items-stretch w-full">
+            {/* Card 1: Pure Green Info Box (Sharp Edges, Seamless No Stroke) */}
+            <div
+              style={{ width: 'calc((100% - 3 * 1.25rem) / 4)' }}
+              className="shrink-0 bg-[#008129] rounded-none p-6 xl:p-8 flex flex-col justify-between h-[390px] xl:h-[405px] shadow-xl relative overflow-hidden select-none text-white z-20"
+            >
               {/* Top Navigation Arrow Buttons (Yellow & Sharp Edges) */}
               <div className="flex items-center gap-2.5 z-10">
                 <button
@@ -265,28 +268,22 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                 </button>
               </div>
 
-              {/* Bottom Content Area */}
+              {/* Bottom Content Area - Always reliably visible */}
               <div className="space-y-3 z-10 mt-auto">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentSpeaker.id}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -12 }}
-                    transition={{ duration: 0.22 }}
-                    className="space-y-1.5 text-left"
-                  >
-                    <h3 className="text-3xl font-black font-display text-white tracking-tight leading-snug">
-                      {currentSpeaker.name}
-                    </h3>
-                    <p className="text-base font-semibold text-white/95 leading-snug">
-                      {currentSpeaker.position}
-                    </p>
-                    <p className="text-sm font-medium text-white/80">
-                      {currentSpeaker.organization}
-                    </p>
-                  </motion.div>
-                </AnimatePresence>
+                <div
+                  key={currentSpeaker.id}
+                  className="space-y-1.5 text-left"
+                >
+                  <h3 className="text-2xl xl:text-3xl font-black font-display text-white tracking-tight leading-snug">
+                    {currentSpeaker.name}
+                  </h3>
+                  <p className="text-sm xl:text-base font-semibold text-white/95 leading-snug">
+                    {currentSpeaker.position}
+                  </p>
+                  <p className="text-xs xl:text-sm font-medium text-white/80">
+                    {currentSpeaker.organization}
+                  </p>
+                </div>
 
                 {onSelectSpeaker && (
                   <button
@@ -304,12 +301,12 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
               <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
             </div>
 
-            {/* Cards 2, 3, 4: Sliding Photos Carousel Window (Moving one to the other) */}
-            <div className="col-span-3 overflow-hidden relative h-[420px]">
+            {/* Cards 2, 3, 4: Sliding Photos Carousel Window (No Strokes Around Pictures) */}
+            <div className="flex-1 overflow-hidden relative h-[390px] xl:h-[405px]">
               <motion.div
-                className="flex gap-6 h-full"
+                className="flex gap-5 h-full"
                 animate={{
-                  x: `calc(-${currentIndex} * ((100% - 3rem) / 3 + 1.5rem))`,
+                  x: `calc(-${currentIndex} * ((100% - 2 * 1.25rem) / 3 + 1.25rem))`,
                 }}
                 transition={{
                   duration: 0.75,
@@ -329,12 +326,12 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                         }
                       }}
                       style={{
-                        width: 'calc((100% - 3rem) / 3)',
+                        width: 'calc((100% - 2 * 1.25rem) / 3)',
                       }}
-                      className={`h-full shrink-0 relative bg-slate-900 rounded-none overflow-hidden border cursor-pointer select-none transition-all duration-500 ${
+                      className={`h-full shrink-0 relative bg-slate-900 rounded-none overflow-hidden cursor-pointer select-none transition-all duration-500 ${
                         isActive
-                          ? 'brightness-100 contrast-105 shadow-2xl border-emerald-400/80 z-10'
-                          : 'border-white/10 brightness-[0.38] grayscale hover:brightness-85 hover:grayscale-0 shadow-md'
+                          ? 'brightness-100 contrast-105 shadow-2xl z-10'
+                          : 'brightness-[0.38] grayscale hover:brightness-85 hover:grayscale-0 shadow-md'
                       }`}
                       title={isActive ? `View ${spk.name}` : `Switch to ${spk.name}`}
                     >
@@ -352,7 +349,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                       {isActive && (
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity flex items-end p-4">
                           <span className="text-[11px] font-black uppercase tracking-wider bg-[#FFE500] text-slate-950 px-2.5 py-1 rounded-none shadow">
-                            View Profile
+                            VIEW PROFILE
                           </span>
                         </div>
                       )}

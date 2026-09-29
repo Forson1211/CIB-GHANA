@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, X, ExternalLink, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Play, Sparkles, Cpu, Scale, Globe, Landmark, Leaf } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ThemeItem {
@@ -11,87 +11,84 @@ interface ThemeItem {
 }
 
 export const CoreConferenceThemes: React.FC = () => {
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
   const [compassRotation, setCompassRotation] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
-  const [showSparkles, setShowSparkles] = useState(false);
+  const [sparklesActive, setSparklesActive] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handlePlayClick = () => {
-    // 1. Compass spins: turn turn turn! (+1440 degrees = 4 complete rotations)
-    setCompassRotation((prev) => prev + 1440);
+    if (isSpinning) return;
+
+    // 1. Compass turns and turns for 3 seconds (+2160 degrees = 6 full rotations)
+    setCompassRotation((prev) => prev + 2160);
     setIsSpinning(true);
-    setShowSparkles(true);
+    setSparklesActive(false);
 
-    // 2. Exact origin from the video button coordinates
-    const rect = buttonRef.current?.getBoundingClientRect();
-    const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
-    const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
-
-    // 3. 1st Wave: 360-degree radial blast of congratulation sparkles & stars
-    confetti({
-      particleCount: 85,
-      spread: 360,
-      startVelocity: 42,
-      origin: { x, y },
-      colors: ['#FFE500', '#FFD700', '#008129', '#10B981', '#EC4899', '#38BDF8', '#FFFFFF', '#F59E0B'],
-      shapes: ['star', 'circle'],
-      scalar: 1.25,
-      ticks: 140,
-      zIndex: 9999,
-    });
-
-    // 4. 2nd Wave: Intense celebratory golden glitter explosion
+    // 2. Exactly 3 seconds of turning before showing the sparkles
     setTimeout(() => {
+      setIsSpinning(false);
+      setSparklesActive(true);
+
+      // Coordinates of the center button
+      const rect = buttonRef.current?.getBoundingClientRect();
+      const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+      const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.5;
+
+      // 1st Wave: 360-degree radial blast of golden sparkles & stars
       confetti({
-        particleCount: 70,
-        spread: 160,
-        startVelocity: 50,
+        particleCount: 95,
+        spread: 360,
+        startVelocity: 44,
         origin: { x, y },
-        colors: ['#FFD700', '#FFE500', '#008129', '#FFFFFF', '#EC4899', '#8B5CF6'],
-        shapes: ['star'],
-        scalar: 1.3,
+        colors: ['#FFE500', '#FFD700', '#008129', '#10B981', '#EC4899', '#38BDF8', '#FFFFFF', '#F59E0B'],
+        shapes: ['star', 'circle'],
+        scalar: 1.25,
         ticks: 150,
         zIndex: 9999,
       });
-    }, 280);
 
-    // 5. 3rd Wave: Left & right celebration cannons
-    setTimeout(() => {
-      confetti({
-        particleCount: 50,
-        angle: 60,
-        spread: 80,
-        startVelocity: 45,
-        origin: { x: Math.max(0.08, x - 0.12), y },
-        colors: ['#FFE500', '#008129', '#38BDF8', '#F59E0B'],
-        zIndex: 9999,
-      });
-      confetti({
-        particleCount: 50,
-        angle: 120,
-        spread: 80,
-        startVelocity: 45,
-        origin: { x: Math.min(0.92, x + 0.12), y },
-        colors: ['#FFE500', '#008129', '#EC4899', '#10B981'],
-        zIndex: 9999,
-      });
-    }, 560);
+      // 2nd Wave: High-velocity fireworks spray (+250ms)
+      setTimeout(() => {
+        confetti({
+          particleCount: 75,
+          spread: 160,
+          startVelocity: 50,
+          origin: { x, y },
+          colors: ['#FFD700', '#FFE500', '#008129', '#FFFFFF', '#EC4899', '#8B5CF6'],
+          shapes: ['star'],
+          scalar: 1.3,
+          ticks: 140,
+          zIndex: 9999,
+        });
+      }, 250);
 
-    // 6. Stop spinning state after 2.4s
-    setTimeout(() => {
-      setIsSpinning(false);
-    }, 2400);
+      // 3rd Wave: Left & right celebration cannons (+500ms)
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 80,
+          startVelocity: 45,
+          origin: { x: Math.max(0.08, x - 0.12), y },
+          colors: ['#FFE500', '#008129', '#38BDF8', '#F59E0B'],
+          zIndex: 9999,
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 80,
+          startVelocity: 45,
+          origin: { x: Math.min(0.92, x + 0.12), y },
+          colors: ['#FFE500', '#008129', '#EC4899', '#10B981'],
+          zIndex: 9999,
+        });
+      }, 500);
 
-    // 7. Hide celebratory banner after 4.2s
-    setTimeout(() => {
-      setShowSparkles(false);
-    }, 4200);
-
-    // 8. Open video modal after full celebratory spin and sparkles blow
-    setTimeout(() => {
-      setVideoModalOpen(true);
-    }, 2400);
+      // Turn off in-DOM sparkles after 2.5s
+      setTimeout(() => {
+        setSparklesActive(false);
+      }, 2500);
+    }, 3000);
   };
 
   const themes: ThemeItem[] = [
@@ -99,127 +96,31 @@ export const CoreConferenceThemes: React.FC = () => {
       id: 'tech',
       title: 'Technology Rewiring',
       subtitle: 'Scaling technology, ethical AI & fraud detection',
-      icon: (
-        <svg viewBox="0 0 64 64" className="w-11 h-11 sm:w-13 sm:h-13 shrink-0" fill="none">
-          <rect x="14" y="14" width="36" height="36" rx="8" fill="url(#chip-bg)" stroke="#EC4899" strokeWidth="1.5" />
-          <rect x="22" y="22" width="20" height="20" rx="4" fill="#072113" stroke="#06B6D4" strokeWidth="1.5" />
-          <circle cx="32" cy="32" r="4" fill="#FACC15" />
-          {/* Circuit Pins */}
-          <path d="M22 14V6M32 14V6M42 14V6M22 58V50M32 58V50M42 58V50M14 22H6M14 32H6M14 42H6M58 22H50M58 32H50M58 42H50" stroke="#06B6D4" strokeWidth="2" strokeLinecap="round" />
-          <path d="M26 26L30 30M38 26L34 30M26 38L30 34M38 38L34 34" stroke="#EC4899" strokeWidth="1.5" />
-          <defs>
-            <linearGradient id="chip-bg" x1="14" y1="14" x2="50" y2="50" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#831843" />
-              <stop offset="0.5" stopColor="#312E81" />
-              <stop offset="1" stopColor="#0E7490" />
-            </linearGradient>
-          </defs>
-        </svg>
-      ),
+      icon: <Cpu className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
       id: 'policy',
       title: 'Policy Rewiring',
       subtitle: 'Aligning ethical culture & boardroom accountability',
-      icon: (
-        <svg viewBox="0 0 64 64" className="w-11 h-11 sm:w-13 sm:h-13 shrink-0" fill="none">
-          {/* Gavel Head */}
-          <rect x="18" y="12" width="28" height="18" rx="4" transform="rotate(35 32 21)" fill="url(#gavel-head)" stroke="#38BDF8" strokeWidth="1.5" />
-          <path d="M20 18L44 35" stroke="#F43F5E" strokeWidth="2" />
-          <path d="M16 23L40 40" stroke="#FBBF24" strokeWidth="2" />
-          {/* Gavel Handle */}
-          <path d="M32 30L12 50" stroke="url(#gavel-handle)" strokeWidth="4.5" strokeLinecap="round" />
-          {/* Impact Pedestal */}
-          <rect x="36" y="44" width="22" height="12" rx="3" fill="#1E293B" stroke="#A855F7" strokeWidth="1.5" />
-          <line x1="38" y1="50" x2="56" y2="50" stroke="#FBBF24" strokeWidth="1.5" />
-          <defs>
-            <linearGradient id="gavel-head" x1="18" y1="12" x2="46" y2="30" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#EC4899" />
-              <stop offset="0.5" stopColor="#6366F1" />
-              <stop offset="1" stopColor="#0284C7" />
-            </linearGradient>
-            <linearGradient id="gavel-handle" x1="32" y1="30" x2="12" y2="50" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#F59E0B" />
-              <stop offset="1" stopColor="#EC4899" />
-            </linearGradient>
-          </defs>
-        </svg>
-      ),
+      icon: <Scale className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
       id: 'geoeconomic',
       title: 'Geoeconomic Rewiring',
       subtitle: 'Building cross-border payments & AfCFTA trade corridors',
-      icon: (
-        <svg viewBox="0 0 64 64" className="w-11 h-11 sm:w-13 sm:h-13 shrink-0" fill="none">
-          {/* Multicolored Globe with Woven Latitude & Continents */}
-          <circle cx="32" cy="32" r="22" fill="url(#globe-grad)" stroke="#38BDF8" strokeWidth="1.5" />
-          <ellipse cx="32" cy="32" rx="11" ry="22" stroke="#F43F5E" strokeWidth="1.5" strokeDasharray="3 2" />
-          <line x1="10" y1="32" x2="54" y2="32" stroke="#FBBF24" strokeWidth="1.5" />
-          <path d="M14 22Q32 26 50 22M14 42Q32 38 50 42" stroke="#A855F7" strokeWidth="1.5" />
-          {/* Trade Connection Points */}
-          <circle cx="24" cy="24" r="3" fill="#FFE500" />
-          <circle cx="40" cy="38" r="3" fill="#22C55E" />
-          <path d="M24 24L40 38" stroke="#FFE500" strokeWidth="1.5" strokeDasharray="2 2" />
-          <defs>
-            <radialGradient id="globe-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(32 32) rotate(45) scale(24)">
-              <stop stopColor="#1E3A8A" />
-              <stop offset="0.6" stopColor="#0F766E" />
-              <stop offset="1" stopColor="#042F2E" />
-            </radialGradient>
-          </defs>
-        </svg>
-      ),
+      icon: <Globe className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
       id: 'capital',
       title: 'Capital Rewiring',
       subtitle: 'Rebuilding investment priorities & balance sheet resilience',
-      icon: (
-        <svg viewBox="0 0 64 64" className="w-11 h-11 sm:w-13 sm:h-13 shrink-0" fill="none">
-          {/* Steering Wheel / Capital Helm */}
-          <circle cx="32" cy="32" r="20" stroke="url(#wheel-ring)" strokeWidth="3" fill="#0A2F1B" />
-          <circle cx="32" cy="32" r="7" fill="#F59E0B" stroke="#FFE500" strokeWidth="1.5" />
-          {/* Wheel Spokes */}
-          <line x1="32" y1="12" x2="32" y2="25" stroke="#EC4899" strokeWidth="2.5" />
-          <line x1="32" y1="39" x2="32" y2="52" stroke="#EC4899" strokeWidth="2.5" />
-          <line x1="12" y1="32" x2="25" y2="32" stroke="#38BDF8" strokeWidth="2.5" />
-          <line x1="39" y1="32" x2="52" y2="32" stroke="#38BDF8" strokeWidth="2.5" />
-          <line x1="18" y1="18" x2="27" y2="27" stroke="#A855F7" strokeWidth="2" />
-          <line x1="37" y1="37" x2="46" y2="46" stroke="#A855F7" strokeWidth="2" />
-          <line x1="18" y1="46" x2="27" y2="37" stroke="#10B981" strokeWidth="2" />
-          <line x1="37" y1="27" x2="46" y2="18" stroke="#10B981" strokeWidth="2" />
-          <defs>
-            <linearGradient id="wheel-ring" x1="12" y1="12" x2="52" y2="52" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#F59E0B" />
-              <stop offset="0.33" stopColor="#EC4899" />
-              <stop offset="0.66" stopColor="#6366F1" />
-              <stop offset="1" stopColor="#10B981" />
-            </linearGradient>
-          </defs>
-        </svg>
-      ),
+      icon: <Landmark className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
       id: 'sustainability',
       title: 'Sustainability Rewiring',
       subtitle: 'Mobilizing ESG & green finance frameworks for African banks',
-      icon: (
-        <svg viewBox="0 0 64 64" className="w-11 h-11 sm:w-13 sm:h-13 shrink-0" fill="none">
-          {/* Stylized Glowing Eco Leaf & Energy Rings */}
-          <circle cx="32" cy="32" r="22" fill="#052E16" stroke="#10B981" strokeWidth="1.5" />
-          <path d="M32 14C32 14 44 22 44 34C44 42 38 48 30 48C22 48 18 42 18 34C18 24 32 14 32 14Z" fill="url(#leaf-grad)" stroke="#34D399" strokeWidth="1.5" />
-          <path d="M32 20V46" stroke="#FFE500" strokeWidth="2" strokeLinecap="round" />
-          <path d="M32 28Q38 30 42 32M32 34Q38 36 41 39M32 28Q26 30 22 32M32 34Q26 36 23 39" stroke="#A7F3D0" strokeWidth="1.5" />
-          <defs>
-            <linearGradient id="leaf-grad" x1="18" y1="14" x2="44" y2="48" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#059669" />
-              <stop offset="0.5" stopColor="#10B981" />
-              <stop offset="1" stopColor="#047857" />
-            </linearGradient>
-          </defs>
-        </svg>
-      ),
+      icon: <Leaf className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
   ];
 
@@ -248,43 +149,26 @@ export const CoreConferenceThemes: React.FC = () => {
               {/* Outer Ambient Glow Ring */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-rose-500/20 via-indigo-500/20 to-emerald-500/20 blur-xl animate-pulse" />
 
-              {/* Celebratory Congratulation Sparkles Floating Banner */}
-              <AnimatePresence>
-                {showSparkles && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.85 }}
-                    transition={{ duration: 0.35, ease: 'easeOut' }}
-                    className="absolute -top-12 sm:-top-14 z-40 px-5 sm:px-6 py-2.5 rounded-none bg-gradient-to-r from-[#FFE500] via-[#FFF380] to-[#FFE500] text-slate-950 font-black text-xs sm:text-sm uppercase tracking-widest shadow-[0_12px_40px_rgba(255,229,0,0.65)] flex items-center gap-2.5 pointer-events-none whitespace-nowrap border-2 border-yellow-300"
-                  >
-                    <Sparkles className="w-4 h-4 text-slate-950 fill-slate-950 animate-spin" />
-                    <span>🎉 Congratulations! Conference Preview Unlocked!</span>
-                    <Sparkles className="w-4 h-4 text-slate-950 fill-slate-950 animate-spin" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Shockwave Rings when Spinning */}
-              {isSpinning && (
+              {/* Shockwave Rings when Sparkles Burst */}
+              {sparklesActive && (
                 <>
                   <motion.div
                     initial={{ scale: 0.7, opacity: 0.95 }}
-                    animate={{ scale: 1.9, opacity: 0 }}
-                    transition={{ duration: 1.1, repeat: 2, ease: 'easeOut' }}
+                    animate={{ scale: 2.2, opacity: 0 }}
+                    transition={{ duration: 1.2, repeat: 1, ease: 'easeOut' }}
                     className="absolute inset-auto w-40 h-40 sm:w-48 sm:h-48 rounded-full border-4 border-[#FFE500] pointer-events-none z-15"
                   />
                   <motion.div
                     initial={{ scale: 0.5, opacity: 1 }}
-                    animate={{ scale: 2.5, opacity: 0 }}
-                    transition={{ duration: 1.3, delay: 0.2, repeat: 2, ease: 'easeOut' }}
+                    animate={{ scale: 2.8, opacity: 0 }}
+                    transition={{ duration: 1.4, delay: 0.15, repeat: 1, ease: 'easeOut' }}
                     className="absolute inset-auto w-40 h-40 sm:w-48 sm:h-48 rounded-full border-2 border-emerald-400 pointer-events-none z-15"
                   />
                 </>
               )}
 
               {/* Dynamic In-DOM Star Sparkles radiating outwards in 360 degrees */}
-              {isSpinning && (
+              {sparklesActive && (
                 <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                   {Array.from({ length: 16 }).map((_, idx) => {
                     const angle = (idx * 22.5 * Math.PI) / 180;
@@ -312,12 +196,12 @@ export const CoreConferenceThemes: React.FC = () => {
                 </div>
               )}
 
-              {/* The Woven Compass SVG - Animated to turn turn turn! */}
+              {/* The Woven Compass SVG - Animated to turn and turn for 3 seconds */}
               <motion.div
                 animate={{ rotate: compassRotation }}
                 transition={{
-                  duration: 2.2,
-                  ease: [0.16, 1, 0.3, 1], // Smooth powerful turn turn turn with gradual deceleration
+                  duration: 3.0,
+                  ease: [0.2, 0.8, 0.25, 1], // Smooth turning for 3 seconds with gradual deceleration
                 }}
                 className="w-full h-full relative flex items-center justify-center pointer-events-none"
               >
@@ -471,7 +355,7 @@ export const CoreConferenceThemes: React.FC = () => {
                     ? 'scale-110 ring-4 ring-[#FFE500] shadow-[0_0_60px_rgba(255,229,0,0.95)]'
                     : ''
                 }`}
-                aria-label="Play 30th Conference Preview Video"
+                aria-label="Spin 30th Conference Themes Compass"
               >
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#FFD700]/30 backdrop-blur-sm border-2 border-white/60 flex items-center justify-center">
                   <Play className="w-7 h-7 sm:w-8 sm:h-8 text-slate-950 fill-slate-950 ml-1 drop-shadow" />
@@ -479,7 +363,7 @@ export const CoreConferenceThemes: React.FC = () => {
               </button>
             </div>
             <p className="text-xs text-white/60 font-semibold tracking-wider uppercase mt-4 text-center lg:text-left w-full max-w-[530px] pl-1">
-              Watch 30th Conference Highlights &amp; Preview
+              30th National Banking &amp; Ethics Conference Themes Compass
             </p>
           </div>
 
@@ -496,23 +380,23 @@ export const CoreConferenceThemes: React.FC = () => {
             </div>
 
             {/* List of 5 Themes */}
-            <div className="divide-y divide-white/10">
+            <div>
               {themes.map((theme) => (
                 <div
                   key={theme.id}
-                  className="py-4 sm:py-5 flex items-center gap-4 sm:gap-5 group hover:bg-white/[0.02] transition-colors rounded-lg"
+                  className="py-5 sm:py-6 flex items-center gap-5 sm:gap-6 group hover:bg-white/[0.03] transition-colors border-b border-white/[0.22] last:border-b-0"
                 >
-                  {/* Left Illustrated Icon Badge */}
-                  <div className="shrink-0 group-hover:scale-105 transition-transform duration-200">
+                  {/* Left Big White Icon */}
+                  <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
                     {theme.icon}
                   </div>
 
-                  {/* Right Content: Clean 2-Tier Title & Concise Subtitle matching Reference Design */}
+                  {/* Right Content: 2-Tier Title & Concise Subtitle */}
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-base sm:text-lg font-bold text-white group-hover:text-[#FFE500] transition-colors leading-tight">
+                    <h4 className="text-base sm:text-lg md:text-xl font-bold text-white group-hover:text-[#FFE500] transition-colors leading-tight">
                       {theme.title}
                     </h4>
-                    <p className="text-xs sm:text-sm text-slate-300 font-normal leading-snug mt-1">
+                    <p className="text-xs sm:text-sm text-white/75 font-normal leading-snug mt-1">
                       {theme.subtitle}
                     </p>
                   </div>
@@ -522,48 +406,6 @@ export const CoreConferenceThemes: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Video Modal */}
-      <AnimatePresence>
-        {videoModalOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
-            onClick={() => setVideoModalOpen(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-4xl bg-slate-950 rounded-2xl overflow-hidden border border-white/20 shadow-2xl"
-            >
-              <div className="flex items-center justify-between p-4 border-b border-white/10">
-                <h3 className="font-bold text-white text-base">
-                  30th National Banking &amp; Ethics Conference — Teaser &amp; Highlights
-                </h3>
-                <button
-                  onClick={() => setVideoModalOpen(false)}
-                  className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="relative aspect-video w-full bg-black">
-                <iframe
-                  className="w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
-                  title="Conference Teaser"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 };

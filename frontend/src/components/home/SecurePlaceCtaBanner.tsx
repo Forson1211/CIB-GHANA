@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 interface SecurePlaceCtaBannerProps {
@@ -50,7 +50,7 @@ export const SecurePlaceCtaBanner: React.FC<SecurePlaceCtaBannerProps> = ({
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
 
       {/* Content Container */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 lg:gap-10">
           {/* Left Text Block */}
           <motion.div
@@ -61,8 +61,7 @@ export const SecurePlaceCtaBanner: React.FC<SecurePlaceCtaBannerProps> = ({
             className="text-left space-y-2 max-w-3xl"
           >
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-[#FFE500]">
-                <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-black uppercase tracking-widest text-[#FFE500]">
                 30th National Banking &amp; Ethics Conference 2026
               </span>
             </div>

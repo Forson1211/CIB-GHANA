@@ -22,7 +22,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     position: 'Chief Executive Officer',
     organization: 'Chartered Institute of Bankers, Ghana',
     country: 'Ghana',
-    photo_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    photo_url: '/robert-dzato.png',
     biography: 'Robert Dzato is the CEO of the Chartered Institute of Bankers, Ghana. A transformative leader, he oversees professional certification, ethical standardization, and continuous learning curriculum for all Ghanaian banking practitioners.',
     expertise: ['Executive Leadership', 'Ethics in Banking', 'Professional Standards', 'Corporate Strategy'],
     is_keynote: true,

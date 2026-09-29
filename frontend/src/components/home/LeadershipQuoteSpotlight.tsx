@@ -7,15 +7,14 @@ interface LeadershipQuoteSpotlightProps {
   onSelectSpeaker?: (speaker: any) => void;
 }
 
-const DEFAULT_DZATO_PHOTO =
-  'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/speakers/spk-2-1790526048744.jpg';
+const DEFAULT_DZATO_PHOTO = '/robert-dzato.png';
 
 export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> = ({
   onSelectSpeaker,
 }) => {
   const { speakers } = useApp();
 
-  // Find Robert Dzato from the live speakers context, with fallback to default photo
+  // Find Robert Dzato from the live speakers context, using the user's authentic high-resolution portrait
   const dzato = React.useMemo(() => {
     const found = (speakers || []).find((s) =>
       s.name?.toLowerCase().includes('dzato')
@@ -24,7 +23,7 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
       name: found?.name || 'Robert Dzato (FCIB)',
       position: found?.position || 'Chief Executive Officer',
       organization: found?.organization || 'Chartered Institute of Bankers (CIB), Ghana',
-      photo_url: found?.photo_url?.trim() || DEFAULT_DZATO_PHOTO,
+      photo_url: '/robert-dzato.png',
       rawSpeaker: found,
     };
   }, [speakers]);
@@ -35,19 +34,19 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
       <div className="absolute -bottom-20 -left-20 w-[420px] h-[420px] bg-gradient-to-tr from-amber-500/15 via-amber-400/5 to-transparent rounded-full blur-3xl pointer-events-none" />
       <div className="absolute -top-24 right-1/4 w-[360px] h-[360px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-          {/* Left Column: Rectangular Podium/Stage Photograph */}
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center">
+          {/* Left Column: Natural Portrait Photograph (Bigger & tighter spacing) */}
           <motion.div
             initial={{ opacity: 0, x: -24 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-            className="lg:col-span-6 xl:col-span-6"
+            className="lg:col-span-5 flex justify-center lg:justify-start"
           >
             <div
               onClick={() => dzato.rawSpeaker && onSelectSpeaker?.(dzato.rawSpeaker)}
-              className="relative w-full aspect-[4/3] sm:aspect-[16/11] bg-slate-950 border border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
+              className="relative w-full max-w-[480px] aspect-[4/5] bg-slate-950 border border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
             >
               {dzato.photo_url ? (
                 <img
@@ -74,11 +73,11 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 1, 0.5, 1] }}
-            className="lg:col-span-6 xl:col-span-6 text-left"
+            className="lg:col-span-7 text-left"
           >
-            <div className="border-l-[3px] border-[#FFE500] pl-6 sm:pl-8 lg:pl-10 space-y-6 sm:space-y-8">
+            <div className="border-l-[3px] border-[#FFE500] pl-5 sm:pl-6 space-y-6 sm:space-y-8">
               {/* Quote text matching layout & tone */}
-              <p className="text-white/90 text-base sm:text-lg lg:text-[19px] font-normal leading-relaxed">
+              <p className="text-white/90 text-base sm:text-lg lg:text-[19px] font-normal leading-relaxed text-justify">
                 Our expanding banking and financial technology ecosystem has brought
                 innovative solutions, greater convenience, and wider access to retail and
                 corporate institutions across Ghana. The National Banking and Ethics Conference

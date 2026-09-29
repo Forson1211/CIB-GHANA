@@ -302,83 +302,121 @@ export const Navbar: React.FC = () => {
           {/* Mobile Hamburger Button (Gold/Yellow with sharp corners) */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer"
-              aria-label="Toggle Navigation Menu"
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className={`p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer ${
+                mobileMenuOpen ? 'opacity-0 pointer-events-none' : ''
+              }`}
+              aria-label="Open Navigation Menu"
             >
-              <AnimatePresence mode="wait" initial={false}>
-                {mobileMenuOpen ? (
-                  <motion.div
-                    key="close-icon"
-                    initial={{ rotate: -90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="menu-icon"
-                    initial={{ rotate: 90, opacity: 0 }}
-                    animate={{ rotate: 0, opacity: 1 }}
-                    exit={{ rotate: 90, opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                  >
-                    <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer Overlay (Solid brand background, no glass, no round edges) */}
+      {/* Mobile Menu Drawer Overlay (Swipes in from left, covers screen partially but not full screen) */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            key="mobile-menu-drawer"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute top-full left-0 right-0 z-50 bg-[#0D3A21] border-t border-b border-white/15 shadow-2xl px-4 sm:px-6 pt-4 pb-6 space-y-4 lg:hidden text-white max-h-[calc(100dvh-75px)] overflow-y-auto rounded-none"
-          >
-            {navDropdowns.map((menu) => (
-              <div key={menu.title} className="border-b border-white/10 pb-3">
-                <div className="text-xs uppercase font-extrabold tracking-wider text-[#FFE500] px-3 py-1">
-                  {menu.title}
-                </div>
-                <div className="space-y-1 mt-1">
-                  {menu.links.map((link) => (
-                    <Link
-                      key={link.label}
-                      to={link.path}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block px-3 py-2 rounded-none text-sm font-medium text-white/90 hover:text-[#FFE500] hover:bg-[#144f2e] transition-colors"
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <>
+            {/* Darkened backdrop overlay for right side */}
+            <motion.div
+              key="mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 z-50 lg:hidden"
+            />
 
-            <div className="pt-2">
-              <Link
-                to={
-                  registeredUserEmail
-                    ? '/my-portal'
-                    : '/events/30th-national-banking-ethics-conference-2026/register'
-                }
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center justify-center w-full py-3 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-extrabold text-sm uppercase tracking-wider shadow-lg transition-all"
-              >
-                <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
-              </Link>
-            </div>
-          </motion.div>
+            {/* Side Drawer sliding from left - ultra fast and smooth */}
+            <motion.div
+              key="mobile-drawer"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[360px] bg-[#0D3A21] border-r border-white/15 shadow-2xl flex flex-col justify-between text-white lg:hidden overflow-hidden select-none will-change-transform transform-gpu"
+            >
+              {/* Top Header matching reference */}
+              <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 shrink-0 bg-[#0D3A21]">
+                <Link
+                  to="/"
+                  onClick={handleHomeNavigation}
+                  className="flex items-center gap-2 group select-none"
+                >
+                  <div className="flex flex-col text-left font-black tracking-tight leading-none uppercase">
+                    <span className="text-[#FFE500] text-[11px] font-black tracking-wider">
+                      CIB GHANA
+                    </span>
+                    <span className="text-white text-[13px] font-black tracking-wider leading-none mt-0.5">
+                      BANKING &amp; ETHICS
+                    </span>
+                    <span className="text-white text-[11px] font-black tracking-wider leading-none mt-0.5">
+                      CONFERENCE
+                    </span>
+                  </div>
+
+                  <div className="self-stretch w-[1.5px] bg-white/40 mx-0.5 my-0.5" />
+
+                  <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
+                    <span className="text-[11px] tracking-tight">8-10</span>
+                    <span className="text-[11px] tracking-tight mt-0.5">NOV</span>
+                    <span className="text-[11px] tracking-tight mt-0.5">2026</span>
+                  </div>
+                </Link>
+
+                {/* Yellow Square Close Button matching screenshot */}
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-10 h-10 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 text-slate-950 flex items-center justify-center rounded-none shadow-md cursor-pointer shrink-0"
+                  aria-label="Close Navigation Menu"
+                >
+                  <X className="w-6 h-6 stroke-[2.5]" />
+                </button>
+              </div>
+
+              {/* Scrollable Navigation Categories */}
+              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+                {navDropdowns.map((menu) => (
+                  <div key={menu.title} className="border-b border-white/10 pb-3">
+                    <div className="text-xs uppercase font-black tracking-wider text-[#FFE500] px-2 py-1">
+                      {menu.title}
+                    </div>
+                    <div className="space-y-0.5 mt-1">
+                      {menu.links.map((link) => (
+                        <Link
+                          key={link.label}
+                          to={link.path}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block px-2 py-1.5 text-sm font-semibold text-white/90 hover:text-[#FFE500] hover:bg-white/[0.04] transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom Sticky Action Banner matching screenshot */}
+              <div className="p-3 border-t border-white/10 shrink-0 bg-[#0D3A21]">
+                <Link
+                  to={
+                    registeredUserEmail
+                      ? '/my-portal'
+                      : '/events/30th-national-banking-ethics-conference-2026/register'
+                  }
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-lg transition-all"
+                >
+                  <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
+                </Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>

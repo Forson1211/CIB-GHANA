@@ -45,11 +45,41 @@ export const Home: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.defaultMuted = true;
-      videoRef.current.muted = true;
-      videoRef.current.play().catch(() => {});
-    }
+    const v = videoRef.current;
+    if (!v) return;
+
+    // Critical for iOS Safari & Android Chrome autoplay:
+    v.defaultMuted = true;
+    v.muted = true;
+    v.setAttribute('muted', '');
+    v.setAttribute('playsinline', '');
+    v.setAttribute('webkit-playsinline', 'true');
+    v.setAttribute('x5-playsinline', 'true');
+
+    const startPlayback = () => {
+      if (v.paused) {
+        v.play().catch(() => {});
+      }
+    };
+
+    startPlayback();
+
+    // Unlock playback on first touch/interaction (handles iOS Low Power Mode and strict browser battery savers)
+    const unlockEvents = ['touchstart', 'touchend', 'click', 'scroll', 'pointerdown'];
+    const handleFirstInteraction = () => {
+      startPlayback();
+      unlockEvents.forEach((evt) => window.removeEventListener(evt, handleFirstInteraction));
+    };
+
+    unlockEvents.forEach((evt) => {
+      window.addEventListener(evt, handleFirstInteraction, { passive: true, once: true });
+    });
+
+    return () => {
+      unlockEvents.forEach((evt) => {
+        window.removeEventListener(evt, handleFirstInteraction);
+      });
+    };
   }, []);
 
   // Only featured/keynote speakers appear on the homepage slider
@@ -127,6 +157,8 @@ export const Home: React.FC = () => {
             loop
             muted
             playsInline
+            disablePictureInPicture
+            disableRemotePlayback
             preload="auto"
             poster="/hero-video-poster.jpg"
             style={{
@@ -142,6 +174,7 @@ export const Home: React.FC = () => {
               objectPosition: 'center center',
             }}
           >
+            <source media="(max-width: 768px)" src="/hero-video-mobile.mp4" type="video/mp4" />
             <source src="/hero-video.mp4" type="video/mp4" />
             <source src="/hero-video.webm" type="video/webm" />
             <source src="/hero-video.mov" type="video/quicktime" />

@@ -42,19 +42,10 @@
             history.scrollRestoration = 'manual';
           }
         });
-        function normalizeDpiScale() {
-          try {
-            var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            var isDesktop = !isMobile && (window.screen.width >= 1024 || window.innerWidth >= 1024);
-            if (isDesktop && window.devicePixelRatio && window.devicePixelRatio > 1) {
-              document.body.style.zoom = (1 / window.devicePixelRatio);
-            } else if (document.body) {
-              document.body.style.zoom = '1';
-            }
-          } catch (e) {}
+        // Reset zoom to 100% natural scale
+        if (document.body) {
+          document.body.style.zoom = '1';
         }
-        normalizeDpiScale();
-        window.addEventListener('resize', normalizeDpiScale);
       })();
     </script>
     <div id="root"></div>

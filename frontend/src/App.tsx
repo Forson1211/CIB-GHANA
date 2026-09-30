@@ -39,33 +39,13 @@ import { ScrollProgressBar } from './components/ui/ScrollProgressBar';
 import { WhatsAppWidget } from './components/chat/WhatsAppWidget';
 import { ChatbotWidget } from './components/chat/ChatbotWidget';
 
-// Ensures desktop screens maintain the 100% scale regardless of Windows DPI (125%, 150%, 175%)
+// Ensures all screens render at full natural scale (100%)
 function DpiScaleManager() {
-  const location = useLocation();
-
   useEffect(() => {
-    const handleScale = () => {
-      if (location.pathname.startsWith('/admin')) {
-        if (document.body) {
-          (document.body.style as any).zoom = '1';
-        }
-        return;
-      }
-
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isDesktop = !isMobile && window.innerWidth >= 1024;
-
-      if (isDesktop && window.devicePixelRatio && window.devicePixelRatio > 1) {
-        (document.body.style as any).zoom = (1 / window.devicePixelRatio).toString();
-      } else if (document.body) {
-        (document.body.style as any).zoom = '1';
-      }
-    };
-
-    handleScale();
-    window.addEventListener('resize', handleScale);
-    return () => window.removeEventListener('resize', handleScale);
-  }, [location.pathname]);
+    if (document.body) {
+      (document.body.style as any).zoom = '1';
+    }
+  }, []);
 
   return null;
 }

@@ -13,6 +13,7 @@
 
   html {
     scroll-behavior: smooth;
+    font-size: 16px;
   }
 
   /* Prevent mobile browsers (iOS Safari, Android Chrome) from auto-zooming into inputs when focused */
@@ -33,6 +34,8 @@
 
   body {
     @apply bg-white text-cib-charcoal antialiased overflow-x-hidden;
+    font-size: 1rem;
+    line-height: 1.6;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 

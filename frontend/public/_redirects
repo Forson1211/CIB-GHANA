@@ -1,4 +1,6 @@
-# Netlify SPA redirect rule
-# Ensures all routes (including /admin, /admin/dashboard, /events, /my-portal)
-# are served by index.html so React Router can handle them without 404s
-/*    /index.html   200
+# Netlify API & Serverless Function routing
+# Proxies /api/* calls to Netlify Serverless Function with force rule (200!)
+/api/*    /.netlify/functions/api/:splat   200!
+
+# SPA Fallback: All page routes served by index.html for React Router
+/*        /index.html                      200

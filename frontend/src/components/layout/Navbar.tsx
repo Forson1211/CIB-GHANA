@@ -295,7 +295,7 @@ export const Navbar: React.FC = () => {
               }
               className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 shadow-md"
             >
-              <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
+              <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>
             </Link>
           </div>
 
@@ -412,7 +412,7 @@ export const Navbar: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-lg transition-all"
                 >
-                  <span>{registeredUserEmail ? 'ACCESS PASS' : 'GET YOUR PASS NOW'}</span>
+                  <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>
                 </Link>
               </div>
             </motion.div>

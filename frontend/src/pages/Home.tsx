@@ -247,7 +247,7 @@ export const Home: React.FC = () => {
               }
               className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#008129] hover:bg-[#006e22] active:scale-95 text-white font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
-              {registeredUserEmail ? 'ACCESS EVENT PASS' : 'GET YOUR PASS NOW'}
+              {registeredUserEmail ? 'ACCESS EVENT PASS' : 'REGISTER NOW'}
             </Link>
 
             {/* Second Button: Full Yellow */}

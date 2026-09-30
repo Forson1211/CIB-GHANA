@@ -921,44 +921,7 @@ export class DataService {
 
         const { data, error } = await query;
         if (!error && Array.isArray(data)) {
-          let mapped: Registration[] = data.map((r: any) => {
-            const typeName = r.registration_types?.name || 'Standard Delegate Pass';
-            const eventTitle = r.events?.title || '30th National Banking & Ethics Conference 2026';
-            const memId = (r.cib_member_id || '').toUpperCase();
-            let cat = 'Non-Member';
-            if (memId.startsWith('FCIB') || typeName.toLowerCase().includes('fellow')) cat = 'FCIB';
-            else if (memId.startsWith('ACIB') || typeName.toLowerCase().includes('associate') || typeName.toLowerCase().includes('chartered') || typeName.toLowerCase().includes('member')) cat = 'ACIB';
-            else if (memId.startsWith('STU') || typeName.toLowerCase().includes('student')) cat = 'Student';
-
-            return {
-              id: r.id,
-              event_id: r.event_id,
-              event_title: eventTitle,
-              registration_number: r.registration_number,
-              registration_type_id: r.registration_type_id,
-              registration_type_name: typeName,
-              first_name: r.first_name,
-              last_name: r.last_name,
-              email: r.email,
-              phone: r.phone,
-              organization: r.organization,
-              job_title: r.job_title,
-              country: r.country || 'Ghana',
-              cib_member_id: r.cib_member_id,
-              membership_category: cat,
-              attendance_type: r.attendance_type || 'PHYSICAL',
-              dietary_requirements: r.dietary_requirements,
-              special_assistance: r.special_assistance,
-              total_amount: Number(r.total_amount) || 0,
-              currency: r.currency || 'GHS',
-              payment_status: r.payment_status || 'PENDING',
-              payment_reference: r.payment_reference,
-              payment_method: r.payment_method,
-              check_in_status: r.check_in_status || 'REGISTERED',
-              check_in_time: r.check_in_time,
-              created_at: r.created_at,
-            } as Registration;
-          });
+          let mapped: Registration[] = data.map((r: any) => DataService.mapDbRegistration(r));
 
           if (filters?.membershipCategory && filters.membershipCategory !== 'ALL') {
             mapped = mapped.filter((r) => r.membership_category === filters.membershipCategory);
@@ -1171,14 +1134,93 @@ export class DataService {
     return { registration, ticket };
   }
 
+  static mapDbRegistration(r: any): Registration {
+    const typeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+    const eventTitle = r.events?.title || r.event_title || '30th National Banking & Ethics Conference 2026';
+    const memId = (r.cib_member_id || '').toUpperCase();
+    let cat = r.membership_category || 'Non-Member';
+    if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
+      if (memId.startsWith('FCIB') || typeName.toLowerCase().includes('fellow')) cat = 'FCIB';
+      else if (memId.startsWith('ACIB') || typeName.toLowerCase().includes('associate') || typeName.toLowerCase().includes('chartered') || typeName.toLowerCase().includes('member')) cat = 'ACIB';
+      else if (memId.startsWith('STU') || typeName.toLowerCase().includes('student')) cat = 'Student';
+    }
+
+    return {
+      id: r.id,
+      event_id: r.event_id,
+      event_title: eventTitle,
+      registration_number: r.registration_number,
+      registration_type_id: r.registration_type_id,
+      registration_type_name: typeName,
+      first_name: r.first_name,
+      last_name: r.last_name,
+      email: r.email,
+      phone: r.phone || '',
+      organization: r.organization || '',
+      job_title: r.job_title || 'Delegate',
+      country: r.country || 'Ghana',
+      cib_member_id: r.cib_member_id,
+      membership_category: cat,
+      attendance_type: r.attendance_type || 'PHYSICAL',
+      dietary_requirements: r.dietary_requirements,
+      special_assistance: r.special_assistance,
+      total_amount: Number(r.total_amount) || 0,
+      currency: r.currency || 'GHS',
+      payment_status: r.payment_status || 'PENDING',
+      payment_reference: r.payment_reference,
+      payment_method: r.payment_method,
+      check_in_status: r.check_in_status || 'REGISTERED',
+      check_in_time: r.check_in_time,
+      created_at: r.created_at || new Date().toISOString(),
+    } as Registration;
+  }
+
   static async getRegistrationById(id: string): Promise<Registration | null> {
-    return registrationsStore.get(id) || null;
+    const memory = registrationsStore.get(id);
+    if (memory) return memory;
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('registrations')
+          .select('*, registration_types(name), events(title)')
+          .eq('id', id)
+          .maybeSingle();
+        if (!error && data) {
+          const reg = DataService.mapDbRegistration(data);
+          registrationsStore.set(reg.id, reg);
+          registrationsStore.set(reg.registration_number, reg);
+          return reg;
+        }
+      } catch (err) {
+        console.warn('Supabase getRegistrationById query error:', err);
+      }
+    }
+    return null;
   }
 
   static async getRegistrationByNumber(regNumber: string): Promise<Registration | null> {
     for (const reg of registrationsStore.values()) {
       if (reg.registration_number.toLowerCase() === regNumber.toLowerCase()) {
         return reg;
+      }
+    }
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('registrations')
+          .select('*, registration_types(name), events(title)')
+          .ilike('registration_number', regNumber.trim())
+          .maybeSingle();
+        if (!error && data) {
+          const reg = DataService.mapDbRegistration(data);
+          registrationsStore.set(reg.id, reg);
+          registrationsStore.set(reg.registration_number, reg);
+          return reg;
+        }
+      } catch (err) {
+        console.warn('Supabase getRegistrationByNumber query error:', err);
       }
     }
     return null;
@@ -1188,6 +1230,24 @@ export class DataService {
     for (const reg of registrationsStore.values()) {
       if (reg.payment_reference && reg.payment_reference.toLowerCase() === reference.toLowerCase()) {
         return reg;
+      }
+    }
+    const supabase = getSupabase();
+    if (supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('registrations')
+          .select('*, registration_types(name), events(title)')
+          .ilike('payment_reference', reference.trim())
+          .maybeSingle();
+        if (!error && data) {
+          const reg = DataService.mapDbRegistration(data);
+          registrationsStore.set(reg.id, reg);
+          registrationsStore.set(reg.registration_number, reg);
+          return reg;
+        }
+      } catch (err) {
+        console.warn('Supabase getRegistrationByPaymentReference query error:', err);
       }
     }
     return null;
@@ -1251,6 +1311,17 @@ export class DataService {
         const ticket = ticketsStore.get(reg.registration_number) || ticketsStore.get(reg.id);
         if (ticket) return ticket;
       }
+    }
+    // Reconstruct ticket dynamically from registration record
+    const reg = (await this.getRegistrationByNumber(identifier)) ||
+                (await this.getRegistrationById(identifier)) ||
+                (await this.getRegistrationByPaymentReference(identifier));
+    if (reg) {
+      const event = await this.getEventBySlugOrId(reg.event_id);
+      const ticket = await TicketService.issueDigitalTicket(reg, event || undefined);
+      ticketsStore.set(ticket.registration_number, ticket);
+      ticketsStore.set(ticket.registration_id, ticket);
+      return ticket;
     }
     return null;
   }

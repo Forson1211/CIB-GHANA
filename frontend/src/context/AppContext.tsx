@@ -833,6 +833,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.log('[AppContext] Backend registration sync notice:', err);
     });
 
+    // Direct Supabase PostgreSQL persistence (ensures registrations are saved on all deployments)
+    if (supabaseAdmin) {
+      const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+      const dbId = isUuid(newReg.id) ? newReg.id : undefined;
+      let dbEventId = isUuid(newReg.event_id) ? newReg.event_id : undefined;
+      if (!dbEventId) {
+        dbEventId = 'e1111111-1111-1111-1111-111111111111';
+      }
+      let dbRegTypeId = 'd1111111-1111-1111-1111-111111111111';
+      if (newReg.registration_type_id?.includes('double')) {
+        dbRegTypeId = 'd2222222-2222-2222-2222-222222222222';
+      }
+
+      const insertPayload: any = {
+        registration_number: newReg.registration_number,
+        first_name: newReg.first_name,
+        last_name: newReg.last_name,
+        email: newReg.email,
+        phone: newReg.phone,
+        organization: newReg.organization,
+        job_title: newReg.job_title,
+        country: newReg.country || 'Ghana',
+        cib_member_id: newReg.cib_member_id,
+        attendance_type: newReg.attendance_type,
+        dietary_requirements: newReg.dietary_requirements,
+        special_assistance: newReg.special_assistance,
+        total_amount: newReg.total_amount,
+        currency: newReg.currency,
+        payment_status: newReg.payment_status,
+        payment_reference: newReg.payment_reference,
+        payment_method: newReg.payment_method,
+        check_in_status: newReg.check_in_status,
+        event_id: dbEventId,
+        registration_type_id: dbRegTypeId,
+        created_at: newReg.created_at,
+      };
+      if (dbId) insertPayload.id = dbId;
+
+      (async () => {
+        try {
+          const { data: dbReg, error: dbErr } = await supabaseAdmin
+            .from('registrations')
+            .insert(insertPayload)
+            .select()
+            .maybeSingle();
+
+          if (dbErr) {
+            console.warn('[AppContext] Supabase direct registration insert notice:', dbErr);
+          } else if (dbReg) {
+            try {
+              await supabaseAdmin.from('tickets').insert({
+                registration_id: dbReg.id,
+                ticket_code: 'TCK-' + newReg.registration_number,
+                qr_code_data: JSON.stringify({ reg: newReg.registration_number }),
+                security_hash: 'hash_' + Date.now(),
+                status: newReg.check_in_status || 'REGISTERED',
+              });
+            } catch (tErr) {
+              console.warn('[AppContext] Supabase ticket insert notice:', tErr);
+            }
+          }
+        } catch (e) {
+          console.warn('[AppContext] Supabase registration direct insert error:', e);
+        }
+      })();
+    }
+
     // increment event registered count
     setEvents((prev) =>
       prev.map((evt) => {

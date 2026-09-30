@@ -343,7 +343,8 @@ Address: Okponglo-East Legon, Trinity Avenue, Accra, Ghana
     if (smtpTransporter) {
       try {
         const info = await smtpTransporter.sendMail({
-          from: config.email.smtp.from || config.email.fromEmail,
+          from: config.email.smtp.from || 'Chartered Institute of Bankers, Ghana <events@cibgh.org>',
+          replyTo: config.email.replyTo || 'events@cibgh.org',
           to: recipient,
           subject,
           text: plainText,
@@ -396,9 +397,16 @@ Address: Okponglo-East Legon, Trinity Avenue, Accra, Ghana
             method: 'RESEND',
             recipient,
           };
-        } else if (resendRes.status === 403 && resendData?.message?.includes('own email address')) {
+        } else if (resendRes.status === 403 && (resendData?.message?.includes('own email address') || resendData?.message?.includes('verify a domain'))) {
           const testRecipient = process.env.RESEND_TEST_RECIPIENT || 'forsonodonkor1211@gmail.com';
           console.log(`[EmailService] Resend sandbox mode: Forwarding confirmation email to verified account (${testRecipient}) for attendee ${recipient}`);
+          const fallbackSubject = `[ATTENDEE PASS: ${recipient}] ${subject}`;
+          const sandboxNoticeHtml = `
+            <div style="background-color: #FEF9C3; border: 1px solid #FDE047; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #854D0E; font-family: sans-serif; line-height: 1.5;">
+              <strong>Sandbox Testing Notice:</strong> This official accreditation pass &amp; receipt was generated for delegate <strong>${recipient}</strong>. Delivered to registered developer address (<strong>${testRecipient}</strong>) because custom domain verification is pending at <a href="https://resend.com/domains" style="color: #854D0E; font-weight: bold;">resend.com/domains</a>.
+            </div>
+          `;
+          const fallbackHtml = sandboxNoticeHtml + htmlContent;
           const fallbackRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -409,9 +417,9 @@ Address: Okponglo-East Legon, Trinity Avenue, Accra, Ghana
               from: fromAddress,
               reply_to: replyToAddress,
               to: testRecipient,
-              subject,
-              text: plainText,
-              html: htmlContent,
+              subject: fallbackSubject,
+              text: `[Originally for ${recipient}]\n\n` + plainText,
+              html: fallbackHtml,
             }),
           });
           const fallbackData: any = await fallbackRes.json();
@@ -423,6 +431,8 @@ Address: Okponglo-East Legon, Trinity Avenue, Accra, Ghana
               method: 'RESEND',
               recipient: testRecipient,
             };
+          } else {
+            console.warn('[EmailService] Fallback Resend dispatch error:', fallbackData);
           }
         } else {
           console.warn('[EmailService] Resend API responded with error:', resendData);

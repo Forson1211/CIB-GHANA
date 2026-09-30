@@ -49,8 +49,15 @@ export class TicketService {
    */
   static async issueDigitalTicket(
     registration: Registration,
-    event: EventItem
+    event?: EventItem
   ): Promise<DigitalTicket> {
+    const eventTitle = event?.title || registration.event_title || '30th National Banking & Ethics Conference 2026';
+    const eventVenue = event?.venue || event?.location || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
+    const eventDate = event?.start_date
+      ? (event.end_date && event.end_date !== event.start_date ? `${event.start_date} to ${event.end_date}` : event.start_date)
+      : 'November 9 - 10, 2026';
+    const eventId = event?.id || registration.event_id || 'evt-1';
+
     const securityHash = this.generateSecurityHash(
       registration.registration_number,
       registration.email
@@ -59,7 +66,7 @@ export class TicketService {
     const qrPayload = {
       reg_num: registration.registration_number,
       reg_id: registration.id,
-      event_id: event.id,
+      event_id: eventId,
       attendee: `${registration.first_name} ${registration.last_name}`,
       org: registration.organization,
       tier: registration.registration_type_name,
@@ -73,10 +80,10 @@ export class TicketService {
       id: `tkt-${registration.id}`,
       registration_id: registration.id,
       registration_number: registration.registration_number,
-      event_id: event.id,
-      event_title: event.title,
-      event_date: `${event.start_date} to ${event.end_date}`,
-      event_venue: event.venue || event.location,
+      event_id: eventId,
+      event_title: eventTitle,
+      event_date: eventDate,
+      event_venue: eventVenue,
       attendee_name: `${registration.first_name} ${registration.last_name}`,
       attendee_email: registration.email,
       organization: registration.organization,

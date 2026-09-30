@@ -137,7 +137,7 @@ export const CoreConferenceThemes: React.FC = () => {
             Core Conference Themes &bull; 30th National Banking &amp; Ethics Conference
           </p>
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white leading-tight">
-            New Risks. New Rules. New Growth.
+            Trust, Technology and Transformation
           </h2>
         </div>
 

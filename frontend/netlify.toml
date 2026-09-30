@@ -3,6 +3,16 @@
   publish = "dist"
   command = "npm run build"
 
+[functions]
+  directory = "netlify/functions"
+
+# API Redirect: Route /api/* requests to Netlify serverless functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+  force = true
+
 # SPA Fallback: Direct all routes to index.html with HTTP 200 so React Router handles admin & all subpages
 [[redirects]]
   from = "/*"

@@ -105,18 +105,43 @@ export function generateEmailTemplate(type: EmailPayload['template'], data: Reco
   }
 }
 
-export async function sendEmailNotification(payload: EmailPayload): Promise<{ success: boolean; message: string }> {
+export async function sendEmailNotification(payload: EmailPayload): Promise<{ success: boolean; message: string; data?: any }> {
   const template = generateEmailTemplate(payload.template, payload.data);
   console.log(`[CIB Email Service] Dispatched "${template.subject}" to ${payload.to}`);
 
-  // Dispatches through backend API if registration reference is provided
   const regNumber = payload.data.registrationNumber || payload.data.registration_number;
+
+  // 1. Try direct /send-email endpoint first
+  try {
+    const res = await ApiClient.sendEmail({
+      to: payload.to,
+      subject: template.subject,
+      template: payload.template,
+      data: {
+        ...payload.data,
+        html: template.html,
+      },
+    });
+    console.log('[CIB Email Service] Direct server dispatch confirmed:', res);
+    return res;
+  } catch (err) {
+    console.warn('[CIB Email Service] Direct /send-email endpoint notice:', err);
+  }
+
+  // 2. Try resendConfirmationEmail endpoint with full payload fallback
   if (regNumber) {
     try {
-      await ApiClient.resendConfirmationEmail(regNumber);
-      console.log(`[CIB Email Service] Server dispatch confirmed for pass ${regNumber}`);
+      const res = await ApiClient.resendConfirmationEmail(regNumber, {
+        to: payload.to,
+        email: payload.to,
+        subject: template.subject,
+        ...payload.data,
+        html: template.html,
+      });
+      console.log(`[CIB Email Service] Server dispatch confirmed for pass ${regNumber}:`, res);
+      return res;
     } catch (err) {
-      console.log('[CIB Email Service] Client-side fallback queued, backend sync notice:', err);
+      console.warn('[CIB Email Service] Resend confirmation attempt notice:', err);
     }
   }
 

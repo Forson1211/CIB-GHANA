@@ -292,7 +292,7 @@ export const EventDetails: React.FC = () => {
                       Core Conference Themes
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-300">
-                      New Risks. New Rules. New Growth &bull; 30th National Banking &amp; Ethics Conference
+                      Trust, Technology and Transformation &bull; 30th National Banking &amp; Ethics Conference
                     </p>
                   </div>
 

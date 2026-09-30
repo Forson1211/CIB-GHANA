@@ -116,13 +116,26 @@ export class ApiClient {
     return this.request(`/registrations/${encodeURIComponent(identifier)}`);
   }
 
-  static async resendConfirmationEmail(identifier: string): Promise<{
+  static async sendEmail(payload: {
+    to: string;
+    subject?: string;
+    template?: string;
+    data: Record<string, any>;
+  }): Promise<{ success: boolean; message: string; data?: any }> {
+    return this.request('/send-email', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async resendConfirmationEmail(identifier: string, payload?: Record<string, any>): Promise<{
     success: boolean;
     message: string;
     data?: any;
   }> {
     return this.request(`/registrations/${encodeURIComponent(identifier)}/resend-confirmation`, {
       method: 'POST',
+      body: JSON.stringify(payload || {}),
     });
   }
 

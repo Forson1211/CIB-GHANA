@@ -60,16 +60,11 @@ export const SecurePlaceCtaBanner: React.FC<SecurePlaceCtaBannerProps> = ({
             transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
             className="text-left space-y-2 max-w-3xl"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-widest text-[#FFE500]">
-                30th National Banking &amp; Ethics Conference 2026
-              </span>
-            </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black font-display text-white tracking-tight leading-tight">
-              Secure your Place at CIB Ghana 2026
+              Secure your Place at 2026 Conference
             </h2>
             <p className="text-white/85 text-sm sm:text-base lg:text-lg font-normal leading-relaxed">
-              Grab your delegate pass at only{' '}
+              Register now at only{' '}
               <strong className="text-white font-bold">GHS 4,000</strong> by{' '}
               <span className="text-[#FFE500] font-bold">30 September 2026</span>.
             </p>

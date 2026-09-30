@@ -366,8 +366,6 @@ interface MarqueeRowProps {
   banks: BankLogo[];
   direction?: 'left' | 'right';
   speedSeconds?: number;
-  leftBadgeLabel?: string;
-  rightBadgeLabel?: string;
   leftShape?: 'badge-dark' | 'accent-red' | 'none';
   rightShape?: 'badge-dark' | 'accent-gold' | 'none';
 }
@@ -376,8 +374,6 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
   banks,
   direction = 'right',
   speedSeconds = 34,
-  leftBadgeLabel,
-  rightBadgeLabel,
   leftShape = 'none',
   rightShape = 'none',
 }) => {
@@ -391,17 +387,13 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         <div className="absolute left-0 top-0 bottom-0 z-30 flex items-center pointer-events-none drop-shadow-2xl">
           {/* Main Dark Polygon Badge */}
           <div
-            className="relative h-full flex items-center pl-6 sm:pl-10 lg:pl-14 pr-12 sm:pr-16 lg:pr-20 font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest"
+            className="relative h-full flex items-center"
             style={{
               clipPath: 'polygon(0 0, calc(100% - 55px) 0, 100% 100%, 0 100%)',
               width: 'clamp(150px, 20vw, 290px)',
               background: '#0D3B22',
             }}
-          >
-            <span className="font-display font-black text-white tracking-widest drop-shadow-lg">
-              {leftBadgeLabel}
-            </span>
-          </div>
+          />
         </div>
       )}
 
@@ -441,17 +433,13 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         <div className="absolute right-0 top-0 bottom-0 z-30 flex items-center justify-end pointer-events-none drop-shadow-2xl">
           {/* Main Dark Polygon Badge on Right */}
           <div
-            className="relative h-full flex items-center justify-end pr-6 sm:pr-10 lg:pr-14 pl-12 sm:pl-16 lg:pl-20 font-black text-sm sm:text-lg lg:text-2xl uppercase tracking-widest"
+            className="relative h-full flex items-center justify-end"
             style={{
               clipPath: 'polygon(55px 0, 100% 0, 100% 100%, 0 100%)',
               width: 'clamp(160px, 22vw, 320px)',
               background: '#0D3B22',
             }}
-          >
-            <span className="font-display font-black text-white tracking-widest drop-shadow-lg">
-              {rightBadgeLabel}
-            </span>
-          </div>
+          />
         </div>
       )}
 
@@ -489,42 +477,39 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
       {/* Header Aligned in Line with Site Logo on Mobile & Desktop */}
       <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-left space-y-1.5">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
-          2026 Sponsors
+          Corporate Members
         </h2>
         <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-3xl">
-          Official commercial banks in Ghana, central bank regulators, and payment infrastructure sponsors.
+          Official commercial banks in Ghana, central bank regulators, and financial institutions.
         </p>
       </div>
 
       {/* Edge-to-Edge 3-Tier Marquee Rows with Big Cards & Crisp Vector Logos */}
       <div className="w-full space-y-5 sm:space-y-7 lg:space-y-9">
-        {/* Row 1: GRAND badge on left (dark polygon), yellow accent on right */}
+        {/* Row 1: Dark polygon shape on left, yellow accent on right */}
         <MarqueeRow
           banks={GHANA_BANKS_ROW_1}
           direction="right"
           speedSeconds={36}
           leftShape="badge-dark"
-          leftBadgeLabel="GRAND"
           rightShape="accent-gold"
         />
 
-        {/* Row 2: Red accent on left, PLATINUM badge on right (dark polygon) */}
+        {/* Row 2: Red accent on left, dark polygon shape on right */}
         <MarqueeRow
           banks={GHANA_BANKS_ROW_2}
           direction="right"
           speedSeconds={40}
           leftShape="accent-red"
           rightShape="badge-dark"
-          rightBadgeLabel="PLATINUM"
         />
 
-        {/* Row 3: GOLD badge on left (dark polygon), yellow accent on right */}
+        {/* Row 3: Dark polygon shape on left, yellow accent on right */}
         <MarqueeRow
           banks={GHANA_BANKS_ROW_3}
           direction="right"
           speedSeconds={34}
           leftShape="badge-dark"
-          leftBadgeLabel="GOLD"
           rightShape="accent-gold"
         />
       </div>

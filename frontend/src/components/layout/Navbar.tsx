@@ -219,7 +219,7 @@ export const Navbar: React.FC = () => {
 
             {/* Stacked Date */}
             <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
-              <span className="text-[13px] sm:text-[15px] tracking-tight">8-10</span>
+              <span className="text-[13px] sm:text-[15px] tracking-tight">9-10</span>
               <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">NOV</span>
               <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">2026</span>
             </div>
@@ -361,7 +361,7 @@ export const Navbar: React.FC = () => {
                   <div className="self-stretch w-[1.5px] bg-white/40 mx-0.5 my-0.5" />
 
                   <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
-                    <span className="text-[11px] tracking-tight">8-10</span>
+                    <span className="text-[11px] tracking-tight">9-10</span>
                     <span className="text-[11px] tracking-tight mt-0.5">NOV</span>
                     <span className="text-[11px] tracking-tight mt-0.5">2026</span>
                   </div>

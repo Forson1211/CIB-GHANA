@@ -47,15 +47,15 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_KEY_EVENTS = 'cib_ghana_events_v6';
+const STORAGE_KEY_EVENTS = 'cib_ghana_events_v7';
 const STORAGE_KEY_REGS = 'cib_ghana_registrations_v1';
 const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-// v9: Supabase-synced photos; service-role upload; no duplicates
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v9';
-const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v9';
+// v10: Background-removed executive photos; photos-first sorting
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v10';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v10';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v2';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
@@ -142,7 +142,14 @@ export const deduplicateSpeakers = (list: Speaker[]): Speaker[] => {
       };
     }
   }
-  return result;
+  // Ensure speakers with photos always show first
+  return result.sort((a, b) => {
+    const aHas = Boolean(a.photo_url && a.photo_url.trim() !== '');
+    const bHas = Boolean(b.photo_url && b.photo_url.trim() !== '');
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    return 0;
+  });
 };
 
 export const normalizeRegistration = (r: Registration): Registration => {
@@ -177,6 +184,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'cib_ghana_speakers_v5',
         'cib_ghana_deleted_spk_ids_v8',
         'cib_ghana_deleted_spk_ids_v7',
+        'cib_ghana_events_v6',
         'cib_ghana_events_v5',
       ].forEach((key) => localStorage.removeItem(key));
     } catch {
@@ -191,14 +199,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map((evt) => {
-            if (evt.id === 'evt-1') {
+            const isConference = evt.id === 'evt-1' || evt.id === 'e1111111-1111-1111-1111-111111111111' || evt.slug === '30th-national-banking-ethics-conference-2026';
+            const fee = evt.registration_fee === 1200 ? 6000 : (evt.registration_fee || 6000);
+            const types = evt.registration_types?.map((rt: any) => ({
+              ...rt,
+              price: rt.price === 1200 ? 6000 : rt.price,
+            }));
+            if (isConference) {
               return {
                 ...evt,
+                start_date: evt.start_date === '2026-11-08' ? '2026-11-09' : (evt.start_date || '2026-11-09'),
+                registration_fee: fee,
+                registration_types: types || evt.registration_types,
                 speakers: MOCK_SPEAKERS.filter((s) => !isPurgedMockSpeaker(s)),
                 agenda: MOCK_EVENTS[0].agenda,
               };
             }
-            return evt;
+            return {
+              ...evt,
+              registration_fee: fee,
+              registration_types: types || evt.registration_types,
+            };
           });
         }
       } catch (e) {
@@ -462,8 +483,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ? be.agenda
               : ((_locAgenda && isUpToDate(_locAgenda)) ? _locAgenda : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
             return {
-              ...be,
               ...restLocal,
+              ...be,
               agenda: finalAgenda,
               resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
               speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
@@ -506,8 +527,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 ? be.agenda
                 : ((_locAgenda && isUpToDate(_locAgenda)) ? _locAgenda : defaultAgenda.map((s) => ({ ...s, id: `${s.id}-${be.id}`, event_id: be.id })));
               return {
-                ...be,
                 ...restLocal,
+                ...be,
                 agenda: finalAgenda,
                 resources: (local.resources && local.resources.length > 0) ? local.resources : (be.resources || []),
                 speakers: (local.speakers && local.speakers.length > 0) ? local.speakers : (be.speakers || []),
@@ -890,13 +911,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateEvent = async (id: string, updates: Partial<EventItem>) => {
-    setEvents((prev) =>
-      prev.map((e) => (e.id === id ? { ...e, ...updates, updated_at: new Date().toISOString() } : e))
-    );
+    // 1. Update React state immediately
+    setEvents((prev) => {
+      const updated = prev.map((e) => {
+        if (
+          e.id === id ||
+          (updates.slug && e.slug === updates.slug) ||
+          (id === 'evt-1' && e.slug === '30th-national-banking-ethics-conference-2026') ||
+          (e.id === 'e1111111-1111-1111-1111-111111111111' && id === 'evt-1')
+        ) {
+          return { ...e, ...updates, updated_at: new Date().toISOString() };
+        }
+        return e;
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY_EVENTS, JSON.stringify(updated));
+      } catch (err) {
+        console.error(err);
+      }
+      return updated;
+    });
+
+    // 2. Call backend update
     try {
       await ApiClient.updateEvent(id, updates);
     } catch (err) {
       console.warn('Backend update event failed:', err);
+    }
+
+    // 3. Directly update Supabase database so date changes persist across all devices!
+    if (supabase) {
+      try {
+        const dbUpdates: any = { ...updates, updated_at: new Date().toISOString() };
+        delete dbUpdates.registration_types;
+        delete dbUpdates.speakers;
+        delete dbUpdates.sponsors;
+        delete dbUpdates.agenda;
+        delete dbUpdates.resources;
+
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        let q = supabase.from('events').update(dbUpdates);
+        if (isUuid) {
+          q = q.eq('id', id);
+        } else if (updates.slug) {
+          q = q.eq('slug', updates.slug);
+        } else {
+          q = q.eq('slug', '30th-national-banking-ethics-conference-2026');
+        }
+        await q;
+      } catch (sbErr) {
+        console.warn('Direct Supabase event update failed:', sbErr);
+      }
     }
   };
 

@@ -58,7 +58,7 @@ serve(async (req: Request) => {
     const regNumber = reg.registration_number || "CIB-CONF-2026";
     const eventTitle = payload.event_title || "30th National Banking & Ethics Conference 2026";
     const eventVenue = payload.event_venue || "Aqua Safari Resort, Ada Foah";
-    const eventDate = payload.event_date || "November 8 - 10, 2026";
+    const eventDate = payload.event_date || "November 9 - 10, 2026";
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(regNumber)}`;
     const ticketUrl = payload.ticket_url || `https://cibghana-events.com/events/30th-national-banking-ethics-conference-2026/ticket/${regNumber}`;
 

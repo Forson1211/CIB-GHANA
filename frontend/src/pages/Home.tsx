@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, Variants, AnimatePresence } from 'framer-motion';
 import {
@@ -43,6 +43,15 @@ export const Home: React.FC = () => {
     }
   }, [refreshSpeakers]);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      videoRef.current.play().catch(() => {});
+    }
+  }, []);
+
   // Only featured/keynote speakers appear on the homepage slider
   const featuredSpeakers = useMemo(() => {
     const valid = speakers.filter((s) => !isPurgedMockSpeaker(s));
@@ -50,40 +59,7 @@ export const Home: React.FC = () => {
     return keynotes.length > 0 ? keynotes : valid;
   }, [speakers]);
 
-  // Background photos for cinematic hero with smooth zoom & lag-free crossfade (venue images first)
-  const heroBackgrounds = [
-    '/aqua-safari-night.jpg',
-    '/aqua-safari-deck.jpg',
-    '/cib-conference-hall.jpg',
-    '/cib-conference-hall-2.jpg',
-  ];
-  const [bgIndex, setBgIndex] = useState(0);
-  const [prevBgIndex, setPrevBgIndex] = useState<number | null>(null);
-  const [animKeys, setAnimKeys] = useState<number[]>([1, 0, 0, 0]);
 
-  // Preload all hero backgrounds into browser cache immediately so no decode pauses or blank gaps occur
-  useEffect(() => {
-    heroBackgrounds.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setBgIndex((current) => {
-        const next = (current + 1) % heroBackgrounds.length;
-        setPrevBgIndex(current);
-        setAnimKeys((keys) => {
-          const updated = [...keys];
-          updated[next] = Date.now();
-          return updated;
-        });
-        return next;
-      });
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [heroBackgrounds.length]);
 
   // Primary featured event
   const featuredEvent = events.find((e) => e.is_featured && !e.is_past) || events[0];
@@ -131,50 +107,46 @@ export const Home: React.FC = () => {
   return (
     <div className="flex flex-col">
       {/* 1. CINEMATIC HERO SECTION (In Official CIB Ghana Green #0D3A21) */}
-      <section id="hero-section" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden bg-[#072113] text-white pt-24 sm:pt-28 pb-16 px-4">
-        {/* Full-width authentic photos with smooth Ken Burns zoom & rich brand green overlay */}
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          {heroBackgrounds.map((src, index) => {
-            const isActive = index === bgIndex;
-            return (
-              <motion.div
-                key={src}
-                className="absolute inset-0 w-full h-full"
-                initial={false}
-                animate={{
-                  opacity: isActive ? 1 : 0,
-                  zIndex: isActive ? 2 : 1,
-                }}
-                transition={{
-                  opacity: { duration: 1.8, ease: 'easeInOut' },
-                }}
-              >
-                <motion.img
-                  src={src}
-                  alt="Conference Hall & Venue"
-                  initial={false}
-                  animate={{
-                    scale: isActive ? 1.15 : 1.05,
-                  }}
-                  transition={{
-                    scale: { duration: 8.0, ease: 'easeOut' },
-                  }}
-                  className="w-full h-full object-cover object-center brightness-[0.70] contrast-105"
-                />
-              </motion.div>
-            );
-          })}
+      <section id="hero-section" className="relative h-screen min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#072113] text-white pt-24 sm:pt-28 pb-16 px-4">
+        {/* Full-width Ambient Background Video (Auto-looping, Muted, 100% Full Section Cover) */}
+        {/* Full 100% section video — vmax trick ensures no gap regardless of aspect ratio */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{ background: '#072113', overflow: 'hidden', width: '100%', height: '100%' }}
+        >
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '110vw',
+              height: '110vh',
+              minWidth: '100%',
+              minHeight: '100%',
+              objectFit: 'cover',
+              objectPosition: 'center center',
+              filter: 'brightness(0.75) contrast(1.05)',
+            }}
+          >
+            <source src="/hero-video.mp4" type="video/mp4" />
+            <source src="/hero-video.webm" type="video/webm" />
+            <source src="/hero-video.mov" type="video/quicktime" />
+            <source src="/aqua-safari-video.mp4" type="video/mp4" />
+          </video>
         </div>
 
-        {/* Smooth, subtle brand green (#0D3A21) overlay letting the venue background show through */}
+        {/* Subtle dark overlay so text remains legible */}
         <div
           className="absolute inset-0 z-[1] pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(circle at 50% 45%, rgba(13, 58, 33, 0.35) 0%, rgba(7, 33, 19, 0.58) 60%, rgba(7, 33, 19, 0.78) 100%)',
-          }}
+          style={{ background: 'rgba(7, 33, 19, 0.45)' }}
         />
-        <div className="absolute inset-0 z-[1] bg-[#072113]/25 pointer-events-none" />
 
         {/* Hero Content: Centered in the middle on mobile matching reference, clean on desktop */}
         <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col items-center md:items-start justify-center space-y-6 sm:space-y-7 w-full my-auto">
@@ -197,7 +169,7 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
             className="text-lg sm:text-xl md:text-2xl text-white/95 font-semibold tracking-wide text-center md:text-left drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] mx-auto md:mx-0"
           >
-            8 - 10 November 2026 | Aqua Safari Resort, Ada
+            9 - 10 November 2026 | Aqua Safari Resort, Ada
           </motion.p>
 
           {/* Golden Theme & Early Bird Highlight */}
@@ -244,14 +216,14 @@ export const Home: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Subtle Countdown Bar at Bottom of Hero */}
-        <div className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 mt-8 pt-4 border-t border-emerald-500/20 flex flex-col sm:flex-row items-center justify-center md:justify-between gap-3 text-xs text-white/80 text-center sm:text-left">
+        {/* Countdown Bar pinned to the very bottom of the hero — inside the video area */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-4 sm:px-6 lg:px-8 pb-5 pt-4 border-t border-emerald-500/20 flex flex-col sm:flex-row items-center justify-center md:justify-between gap-3 text-xs text-white/80 text-center sm:text-left max-w-[1380px] mx-auto" style={{ left: '50%', transform: 'translateX(-50%)', width: '100%' }}>
           <div className="flex items-center justify-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#FFE500] animate-pulse" />
             <span className="uppercase tracking-widest font-bold text-[#FFE500]">Official Event Countdown</span>
           </div>
           <CountdownTimer
-            targetDateStr={featuredEvent?.start_date || '2026-11-08T08:30:00Z'}
+            targetDateStr={featuredEvent?.start_date || '2026-11-09T08:30:00Z'}
             endDateStr={featuredEvent?.end_date || '2026-11-10T17:30:00Z'}
             variant="gold"
             className="scale-90 sm:scale-95 origin-center sm:origin-right"

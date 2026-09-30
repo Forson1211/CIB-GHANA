@@ -640,7 +640,7 @@ export const ChatbotWidget: React.FC = () => {
     return {
       id: `bot-${Date.now()}`,
       sender: 'bot',
-      text: "Thank you for reaching out to the CIB Ghana Assistant! I can help you with:\n\n• **Conference Info**: 8–10 Nov 2026 at Aqua Safari Resort, Ada.\n• **Packages & Pricing**: Single (GHS 5,600) & Double (GHS 4,000) occupancy.\n• **Accreditation**: 16 CIB CPD Credits under Act 991.\n• **Registration & Payments**: Instant checkout with MoMo or Bank Card via Paystack.\n• **Secretariat Support**: WhatsApp at **0506339248** or phone **0302 541 308**.\n\nWhat would you like to explore next?",
+      text: "Thank you for reaching out to the CIB Ghana Assistant! I can help you with:\n\n• **Conference Info**: 9–10 Nov 2026 at Aqua Safari Resort, Ada.\n• **Packages & Pricing**: Single (GHS 5,600) & Double (GHS 4,000) occupancy.\n• **Accreditation**: 16 CIB CPD Credits under Act 991.\n• **Registration & Payments**: Instant checkout with MoMo or Bank Card via Paystack.\n• **Secretariat Support**: WhatsApp at **0506339248** or phone **0302 541 308**.\n\nWhat would you like to explore next?",
       time: getCurrentTime(),
       actionLinks: [
         { label: 'Register for 30th Conference →', url: '/events/30th-national-banking-ethics-conference-2026/register' },

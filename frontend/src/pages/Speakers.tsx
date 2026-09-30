@@ -52,9 +52,9 @@ export const Speakers: React.FC = () => {
     return ['ALL', ...Array.from(set)];
   }, [speakers]);
 
-  // Filter speakers
+  // Filter and sort speakers
   const filteredSpeakers = useMemo(() => {
-    return speakers.filter((spk) => {
+    const list = speakers.filter((spk) => {
       // Role filter from dropdown links (?type=keynote or ?type=faculty)
       if (typeFilter === 'keynote' && !spk.is_keynote) return false;
       if (typeFilter === 'faculty' && spk.is_keynote) return false;
@@ -72,6 +72,15 @@ export const Speakers: React.FC = () => {
 
       return matchesExpertise && matchesQuery;
     });
+
+    // Make sure those with pictures show first!
+    return list.slice().sort((a, b) => {
+      const aHasPhoto = Boolean(a.photo_url && a.photo_url.trim() !== '');
+      const bHasPhoto = Boolean(b.photo_url && b.photo_url.trim() !== '');
+      if (aHasPhoto && !bHasPhoto) return -1;
+      if (!aHasPhoto && bHasPhoto) return 1;
+      return 0;
+    });
   }, [speakers, typeFilter, selectedExpertise, searchQuery]);
 
   return (
@@ -82,7 +91,7 @@ export const Speakers: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+          className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
         >
           <div className="text-left max-w-3xl space-y-2 sm:space-y-3">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white uppercase">
@@ -95,8 +104,8 @@ export const Speakers: React.FC = () => {
         </motion.div>
       </section>
 
-      {/* Main Page Content */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+      {/* Main Page Content - aligned flush with site max-w-[1380px] */}
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Category Tabs & Search Bar (Crisp White Card controls) */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
           <div className="inline-flex rounded-none border border-slate-200 bg-white p-1 shadow-sm overflow-x-auto">

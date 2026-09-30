@@ -141,7 +141,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
               </div>
 
               {/* Center Active Photo (Square Image sliding to left) */}
-              <div className="relative z-10 w-[72%] max-w-[280px] aspect-square shrink-0 overflow-hidden shadow-2xl border border-white/20 rounded-none bg-slate-900 flex items-center justify-center">
+              <div className="relative z-10 w-[72%] max-w-[280px] aspect-square shrink-0 overflow-hidden shadow-2xl border border-white/20 rounded-none bg-white flex items-center justify-center">
                 <AnimatePresence mode="popLayout" custom={direction}>
                   <motion.div
                     key={currentSpeaker.id}
@@ -328,7 +328,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                       style={{
                         width: 'calc((100% - 2 * 1.25rem) / 3)',
                       }}
-                      className={`h-full shrink-0 relative bg-slate-900 rounded-none overflow-hidden cursor-pointer select-none transition-all duration-500 ${
+                      className={`h-full shrink-0 relative bg-white rounded-none overflow-hidden cursor-pointer select-none transition-all duration-500 ${
                         isActive
                           ? 'brightness-100 contrast-105 shadow-2xl z-10'
                           : 'brightness-[0.38] grayscale hover:brightness-85 hover:grayscale-0 shadow-md'

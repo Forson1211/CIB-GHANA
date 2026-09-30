@@ -87,7 +87,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, featured = false })
         country: 'Ghana',
         membership_category: 'Delegate',
         attendance_type: 'PHYSICAL',
-        total_amount: event.registration_fee || 1200,
+        total_amount: event.registration_fee || 6000,
         currency: 'GHS',
         payment_status: 'SUCCESSFUL',
         payment_reference: `REF-${Date.now()}`,

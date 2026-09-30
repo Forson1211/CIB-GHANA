@@ -236,7 +236,7 @@ router.post('/', async (req: Request, res: Response) => {
     } else if (q.includes('cib') || q.includes('act 991') || q.includes('mandate') || q.includes('motto')) {
       reply = "🏛️ **About the Chartered Institute of Bankers, Ghana (CIB Ghana)**:\n\n• **Legal Mandate**: Established by an Act of Parliament — **Chartered Institute of Bankers Ghana Act, 2019 (Act 991)**.\n• **Role**: The statutory regulatory and certification body for banking professionals in Ghana, upholding international ethical benchmarks and financial competence.\n• **Motto**: *'Honesty and Integrity'*\n• **Leadership**: Governed by the CIB Governing Council and led by CEO **Robert Dzato (FCIB)**.\n• **Secretariat**: Trinity Avenue, Okponglo - East Legon, Accra.";
     } else {
-      reply = `Thank you for your question! As the CIB Ghana AI Concierge, I can assist you with all information regarding the **30th National Banking & Ethics Conference 2026** (8–10 Nov 2026 at Aqua Safari Resort, Ada), delegate packages (Single GHS 5,600 / Double GHS 4,000), 16 accredited CPD hours, speaker faculty, and online registration via Paystack.\n\nYou can also contact the event secretariat on WhatsApp at **+233 50 633 9248** for direct personalized assistance!`;
+      reply = `Thank you for your question! As the CIB Ghana AI Concierge, I can assist you with all information regarding the **30th National Banking & Ethics Conference 2026** (9–10 Nov 2026 at Aqua Safari Resort, Ada), delegate packages (Single GHS 5,600 / Double GHS 4,000), 16 accredited CPD hours, speaker faculty, and online registration via Paystack.\n\nYou can also contact the event secretariat on WhatsApp at **+233 50 633 9248** for direct personalized assistance!`;
     }
 
     return res.json({

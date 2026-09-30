@@ -12,7 +12,7 @@ export function generateEmailTemplate(type: EmailPayload['template'], data: Reco
   const attendeeName = data.attendeeName || 'Esteemed Delegate';
   const regNumber = data.registrationNumber || 'CIB-CONF-2026';
   const eventVenue = data.eventVenue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
-  const eventDate = data.eventDate || 'November 8 - 10, 2026';
+  const eventDate = data.eventDate || 'November 9 - 10, 2026';
   const ticketUrl = data.ticketUrl || `https://cibghana.org/ticket/${regNumber}`;
   const amount = data.amount !== undefined ? Number(data.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '5,600.00';
   const reference = data.reference || `PAY_${Date.now()}`;

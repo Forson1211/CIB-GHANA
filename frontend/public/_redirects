@@ -1,1 +1,4 @@
-/* /index.html 200
+# Netlify SPA redirect rule
+# Ensures all routes (including /admin, /admin/dashboard, /events, /my-portal)
+# are served by index.html so React Router can handle them without 404s
+/*    /index.html   200

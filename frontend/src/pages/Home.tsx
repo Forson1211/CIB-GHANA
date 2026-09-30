@@ -112,7 +112,14 @@ export const Home: React.FC = () => {
         {/* Full 100% section video — vmax trick ensures no gap regardless of aspect ratio */}
         <div
           className="absolute inset-0 z-0 pointer-events-none"
-          style={{ background: '#072113', overflow: 'hidden', width: '100%', height: '100%' }}
+          style={{
+            backgroundImage: 'url(/hero-video-poster.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            overflow: 'hidden',
+            width: '100%',
+            height: '100%',
+          }}
         >
           <video
             ref={videoRef}
@@ -121,18 +128,18 @@ export const Home: React.FC = () => {
             muted
             playsInline
             preload="auto"
+            poster="/hero-video-poster.jpg"
             style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: '110vw',
-              height: '110vh',
+              width: '100.5%',
+              height: '100.5%',
               minWidth: '100%',
               minHeight: '100%',
               objectFit: 'cover',
               objectPosition: 'center center',
-              filter: 'brightness(0.75) contrast(1.05)',
             }}
           >
             <source src="/hero-video.mp4" type="video/mp4" />
@@ -142,10 +149,13 @@ export const Home: React.FC = () => {
           </video>
         </div>
 
-        {/* Subtle dark overlay so text remains legible */}
+        {/* Brand green overlay: rich green presence across the entire background */}
         <div
           className="absolute inset-0 z-[1] pointer-events-none"
-          style={{ background: 'rgba(7, 33, 19, 0.45)' }}
+          style={{
+            background:
+              'linear-gradient(to right, rgba(7, 33, 19, 0.72) 0%, rgba(13, 58, 33, 0.55) 45%, rgba(13, 58, 33, 0.48) 100%)',
+          }}
         />
 
         {/* Hero Content: Centered in the middle on mobile matching reference, clean on desktop */}
@@ -157,7 +167,7 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="space-y-2 text-center md:text-left mx-auto md:mx-0 max-w-4xl"
           >
-            <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center md:text-left font-display drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)]">
+            <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center md:text-left font-display">
               30th National Banking &amp; Ethics Conference
             </h1>
           </motion.div>
@@ -167,7 +177,7 @@ export const Home: React.FC = () => {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            className="text-lg sm:text-xl md:text-2xl text-white/95 font-semibold tracking-wide text-center md:text-left drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] mx-auto md:mx-0"
+            className="text-lg sm:text-xl md:text-2xl text-white/95 font-semibold tracking-wide text-center md:text-left mx-auto md:mx-0"
           >
             9 - 10 November 2026 | Aqua Safari Resort, Ada
           </motion.p>
@@ -177,12 +187,13 @@ export const Home: React.FC = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-            className="space-y-1.5 text-center md:text-left drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)] max-w-2xl mx-auto md:mx-0"
+            className="space-y-1.5 text-center md:text-left max-w-2xl mx-auto md:mx-0"
           >
-            <p className="text-base sm:text-lg md:text-xl text-[#FFE500] font-extrabold tracking-wide leading-snug">
-              Theme: Banking on the Future — Trust, Technology and Transformation
+            <p className="text-base sm:text-lg md:text-xl font-normal tracking-wide leading-snug">
+              <span className="text-white">Theme: </span>
+              <span className="text-[#FFE500]">Banking on the Future — Trust, Technology and Transformation</span>
             </p>
-            <p className="text-sm sm:text-base text-slate-100 font-semibold">
+            <p className="text-sm sm:text-base text-slate-100 font-normal">
               Early Bird Delegate &amp; Corporate Passes Available
             </p>
           </motion.div>

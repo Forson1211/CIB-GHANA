@@ -1,0 +1,11 @@
+# Netlify Configuration for frontend directory
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# SPA Fallback: Direct all routes to index.html with HTTP 200 so React Router handles admin & all subpages
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false

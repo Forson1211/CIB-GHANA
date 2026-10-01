@@ -255,7 +255,7 @@ export const Home: React.FC = () => {
               to="/contact"
               className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
-              SPONSOR OR EXHIBIT
+              BECOME A SPONSOR
             </Link>
           </motion.div>
         </div>
@@ -276,25 +276,33 @@ export const Home: React.FC = () => {
       </section>
 
       {/* CORE CONFERENCE THEMES (Matching Reference Design Image 2 with 5 Themes from Image 1) */}
-      <CoreConferenceThemes />
+      <div id="themes" className="scroll-mt-24">
+        <CoreConferenceThemes />
+      </div>
 
       {/* 6. FEATURED SPEAKERS SECTION (Matching User Reference Layout in Brand Colors) */}
-      <FeaturedSpeakersSlider
-        speakers={featuredSpeakers}
-        onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
-      />
+      <div id="speakers" className="scroll-mt-24">
+        <FeaturedSpeakersSlider
+          speakers={featuredSpeakers}
+          onSelectSpeaker={(spk) => setSelectedSpeaker(spk)}
+        />
+      </div>
 
       {/* 2026 SPONSORS - GHANA COMMERCIAL BANKS MARQUEE */}
       <GhanaBanksSponsorsMarquee />
 
       {/* LEADERSHIP KEYNOTE QUOTE SPOTLIGHT (Robert Dzato) */}
-      <LeadershipQuoteSpotlight onSelectSpeaker={(spk) => setSelectedSpeaker(spk)} />
+      <div id="leadership" className="scroll-mt-24">
+        <LeadershipQuoteSpotlight onSelectSpeaker={(spk) => setSelectedSpeaker(spk)} />
+      </div>
 
       {/* SECURE YOUR PLACE CTA BANNER (With Brand Green & Vibrant Yellow Button) */}
-      <SecurePlaceCtaBanner />
+      <div id="register-cta" className="scroll-mt-24">
+        <SecurePlaceCtaBanner />
+      </div>
 
       {/* 5. WHY ATTEND SECTION (Requirement #11 - Updated to Brand Green #0D3A21) */}
-      <section className="bg-[#0D3A21] py-16 sm:py-20 text-white overflow-hidden relative border-b border-white/10">
+      <section id="why-attend" className="bg-[#0D3A21] py-16 sm:py-20 text-white overflow-hidden relative border-b border-white/10 scroll-mt-24">
         {/* Subtle ambient lighting */}
         <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -381,7 +389,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 8. VENUE HIGHLIGHTS & PHOTO STREAM (3-Row Infinite Marquee - Brand Green #0D3A21) */}
-      <section className="w-full bg-[#0D3A21] text-white overflow-hidden space-y-6 sm:space-y-8 py-16 sm:py-20 relative border-b border-white/10">
+      <section id="venue-highlights" className="w-full bg-[#0D3A21] text-white overflow-hidden space-y-6 sm:space-y-8 py-16 sm:py-20 relative border-b border-white/10 scroll-mt-24">
         {/* Subtle ambient lighting */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -417,7 +425,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 9. THE VENUE: AQUA SAFARI, ADA (Brand Green #0D3A21) */}
-      <section className="w-full bg-[#0D3A21] text-white py-16 sm:py-20 relative overflow-hidden border-b border-white/10">
+      <section id="the-venue" className="w-full bg-[#0D3A21] text-white py-16 sm:py-20 relative overflow-hidden border-b border-white/10 scroll-mt-24">
         {/* Subtle ambient lighting */}
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -475,7 +483,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* 10. EARLY BIRD PACKAGE (Book Early & Save) */}
-      <section className="w-full bg-[#008129] py-16 sm:py-20 text-white">
+      <section id="early-bird" className="w-full bg-[#008129] py-16 sm:py-20 text-white scroll-mt-24">
         <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Column: Heading, Description, and Amounts */}

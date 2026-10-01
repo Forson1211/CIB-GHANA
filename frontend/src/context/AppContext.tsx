@@ -56,7 +56,7 @@ const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 // v10: Background-removed executive photos; photos-first sorting
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v10';
 const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v10';
-const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v2';
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v3';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
   'spk-1',
@@ -289,9 +289,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((s) => ({
+            ...s,
+            type: (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
+            tier: (s.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
+          }));
+        }
       } catch (e) { console.error(e); }
     }
+
+    // Migration from old v2 storage if available
+    const oldV2 = localStorage.getItem('cib_ghana_sponsors_v2');
+    if (oldV2) {
+      try {
+        const parsed = JSON.parse(oldV2);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const migrated = parsed.map((s: any) => ({
+            ...s,
+            type: s.type === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
+            tier: s.tier === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
+          }));
+          const existingIds = new Set(migrated.map((m: any) => m.id));
+          const newMocks = MOCK_SPONSORS.filter((m) => !existingIds.has(m.id));
+          return [...migrated, ...newMocks];
+        }
+      } catch (e) { console.error(e); }
+    }
+
     return MOCK_SPONSORS;
   });
 
@@ -435,14 +460,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addSponsor = (sponsor: Partial<Sponsor>) => {
+    const isMember = sponsor.type === 'CORPORATE_MEMBER' || (sponsor.type as any) === 'PARTNER';
     const newSponsor: Sponsor = {
       id: sponsor.id || `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       name: sponsor.name || 'New Entity',
       logo_url: sponsor.logo_url || '',
       website_url: sponsor.website_url || '',
-      type: sponsor.type === 'PARTNER' ? 'PARTNER' : 'SPONSOR',
-      tier: sponsor.type === 'PARTNER' ? 'PARTNER' : 'SPONSOR',
-      categoryOrRole: sponsor.categoryOrRole || (sponsor.type === 'PARTNER' ? 'Strategic Partner' : 'Corporate Sponsor'),
+      type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+      tier: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+      categoryOrRole: sponsor.categoryOrRole || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
       description: sponsor.description || '',
     };
     setSponsors((prev) => [newSponsor, ...prev]);
@@ -450,7 +476,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateSponsor = (id: string, updates: Partial<Sponsor>) => {
     setSponsors((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates, tier: (updates.type || s.type) } : s))
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const newType = updates.type || s.type;
+        const normalizedType = (newType as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : newType;
+        return {
+          ...s,
+          ...updates,
+          type: normalizedType,
+          tier: normalizedType,
+        };
+      })
     );
   };
 

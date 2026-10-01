@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   ExternalLink,
-  ShieldCheck,
-  ArrowRight,
   PhoneCall
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -345,33 +343,10 @@ export const renderBrandLogo = (id: string, name: string) => {
 };
 
 export const PartnersSponsors: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  // Tab state synced with URL: /partners vs /sponsors
-  const [activeTab, setActiveTab] = useState<'PARTNERS' | 'SPONSORS'>(() => {
-    return location.pathname.includes('sponsor') ? 'SPONSORS' : 'PARTNERS';
-  });
-
-  useEffect(() => {
-    if (location.pathname.includes('sponsor')) {
-      setActiveTab('SPONSORS');
-    } else {
-      setActiveTab('PARTNERS');
-    }
-  }, [location.pathname]);
-
-  const handleTabChange = (tab: 'PARTNERS' | 'SPONSORS') => {
-    setActiveTab(tab);
-    navigate(tab === 'PARTNERS' ? '/partners' : '/sponsors');
-  };
-
   const { sponsors } = useApp();
 
-  const listToRender =
-    activeTab === 'PARTNERS'
-      ? sponsors.filter((s) => s.type === 'PARTNER')
-      : sponsors.filter((s) => s.type === 'SPONSOR');
+  // Strictly filter corporate sponsors
+  const sponsorsList = sponsors.filter((s) => s.type === 'SPONSOR');
 
   return (
     <div className="min-h-screen bg-[#0D3A21] pb-24 text-white">
@@ -396,7 +371,7 @@ export const PartnersSponsors: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.08 }}
             className="text-4xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white uppercase"
           >
-            {activeTab === 'PARTNERS' ? 'Institutional Partners' : 'Corporate Sponsors'}
+            Corporate Sponsors
           </motion.h1>
 
           <motion.p
@@ -405,38 +380,8 @@ export const PartnersSponsors: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.16 }}
             className="text-white/95 text-sm sm:text-base md:text-lg max-w-2xl mx-auto font-medium leading-relaxed"
           >
-            {activeTab === 'PARTNERS'
-              ? 'Distinguished statutory regulators, professional associations, and academic bodies partnering with CIB Ghana.'
-              : 'Leading commercial banks, multinational financial institutions, and fintech pioneers powering the conference.'}
+            Leading commercial banks, multinational financial institutions, and fintech pioneers powering the conference.
           </motion.p>
-
-          {/* Interactive Tab Switcher with Vibrant Yellow & White Highlighting */}
-          <div className="pt-4 flex justify-center">
-            <div className="inline-flex p-1.5 bg-black/30 backdrop-blur-md rounded-none border border-white/20 shadow-lg">
-              <button
-                type="button"
-                onClick={() => handleTabChange('PARTNERS')}
-                className={`px-7 sm:px-9 py-3 rounded-none text-sm font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  activeTab === 'PARTNERS'
-                    ? 'bg-[#FFE500] text-slate-900 shadow-md scale-100'
-                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                Partners
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTabChange('SPONSORS')}
-                className={`px-7 sm:px-9 py-3 rounded-none text-sm font-black uppercase tracking-wider transition-all cursor-pointer ${
-                  activeTab === 'SPONSORS'
-                    ? 'bg-[#FFE500] text-slate-900 shadow-md scale-100'
-                    : 'text-white/90 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                Sponsors
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Bottom Curved Wave Transition */}
@@ -459,73 +404,58 @@ export const PartnersSponsors: React.FC = () => {
         <div className="bg-white p-6 sm:p-7 rounded-none border border-slate-200 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">
             <span className="text-xs font-bold uppercase tracking-widest text-[#008129] block">
-              {activeTab === 'PARTNERS' ? 'OFFICIAL PARTNERS' : 'OFFICIAL SPONSORS'}
+              OFFICIAL SPONSORS
             </span>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 font-display">
-              {activeTab === 'PARTNERS'
-                ? 'Distinguished Institutional & Regulatory Partners'
-                : 'Distinguished Corporate Banking Sponsors'}
+              Distinguished Corporate Banking Sponsors
             </h2>
           </div>
           <Link
             to="/contact"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-none bg-[#1B7E3E] hover:bg-[#166632] text-white font-bold text-xs sm:text-sm uppercase tracking-wider transition-all shadow-sm active:scale-95 shrink-0 whitespace-nowrap cursor-pointer"
           >
-            {activeTab === 'PARTNERS' ? (
-              <>
-                <span>Become a Partner</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            ) : (
-              <>
-                <PhoneCall className="w-4 h-4" />
-                <span>Sponsorship Inquiries</span>
-              </>
-            )}
+            <PhoneCall className="w-4 h-4" />
+            <span>Sponsorship Inquiries</span>
           </Link>
         </div>
 
         {/* Clean Logo Grid: Big prominent logos, clean card design */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"
-          >
-            {listToRender.map((item) => (
-              <a
-                key={item.id}
-                href={item.website_url || (item as any).website || '#'}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-white px-6 py-8 sm:px-8 sm:py-10 rounded-none border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#1B7E3E] transition-all duration-200 flex items-center justify-center text-center group h-36 sm:h-44 relative cursor-pointer"
-                title={item.name}
-                aria-label={item.name}
-              >
-                {/* Subtle external link icon on hover */}
-                <div className="absolute top-2.5 right-2.5 text-slate-300 group-hover:text-[#1B7E3E] transition-colors p-1 opacity-0 group-hover:opacity-100">
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </div>
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-8"
+        >
+          {sponsorsList.map((item) => (
+            <a
+              key={item.id}
+              href={item.website_url || (item as any).website || '#'}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-white px-6 py-8 sm:px-8 sm:py-10 rounded-none border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#1B7E3E] transition-all duration-200 flex items-center justify-center text-center group h-36 sm:h-44 relative cursor-pointer"
+              title={item.name}
+              aria-label={item.name}
+            >
+              {/* Subtle external link icon on hover */}
+              <div className="absolute top-2.5 right-2.5 text-slate-300 group-hover:text-[#1B7E3E] transition-colors p-1 opacity-0 group-hover:opacity-100">
+                <ExternalLink className="w-3.5 h-3.5" />
+              </div>
 
-                {/* Big prominent logo display */}
-                <div className="w-full h-full flex items-center justify-center p-2 transition-transform duration-200 group-hover:scale-105">
-                  {item.logo_url && item.logo_url.trim() ? (
-                    <img
-                      src={item.logo_url}
-                      alt={item.name}
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ) : (
-                    renderBrandLogo(item.id, item.name)
-                  )}
-                </div>
-              </a>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+              {/* Big prominent logo display */}
+              <div className="w-full h-full flex items-center justify-center p-2 transition-transform duration-200 group-hover:scale-105">
+                {item.logo_url && item.logo_url.trim() ? (
+                  <img
+                    src={item.logo_url}
+                    alt={item.name}
+                    className="max-h-full max-w-full object-contain"
+                  />
+                ) : (
+                  renderBrandLogo(item.id, item.name)
+                )}
+              </div>
+            </a>
+          ))}
+        </motion.div>
       </div>
     </div>
   );

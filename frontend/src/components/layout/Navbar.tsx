@@ -102,11 +102,23 @@ export const Navbar: React.FC = () => {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       document.body.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      try {
+        sessionStorage.removeItem('cib_home_section');
+        sessionStorage.removeItem('cib_active_section');
+        sessionStorage.removeItem('cib_last_home_scroll');
+        sessionStorage.removeItem('last_home_section');
+        sessionStorage.removeItem('last_home_scroll');
+      } catch { /* ignore */ }
     } else {
-      navigate('/');
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      document.body.scrollTop = 0;
+      const lastSection =
+        sessionStorage.getItem('cib_home_section') ||
+        sessionStorage.getItem('cib_active_section') ||
+        sessionStorage.getItem('last_home_section');
+      if (lastSection === 'corporate-members') {
+        navigate('/#corporate-members');
+      } else {
+        navigate('/');
+      }
     }
   };
 
@@ -150,15 +162,19 @@ export const Navbar: React.FC = () => {
       ],
     },
     {
-      title: 'Exhibition & Sponsors',
+      title: 'Sponsors',
       links: [
         {
-          label: 'Partners',
-          path: '/partners',
+          label: 'Corporate Members',
+          path: '/#corporate-members',
         },
         {
-          label: 'Sponsors',
+          label: 'Corporate Sponsors',
           path: '/sponsors',
+        },
+        {
+          label: 'Become a Sponsor',
+          path: '/contact',
         },
       ],
     },
@@ -271,7 +287,15 @@ export const Navbar: React.FC = () => {
                           <Link
                             key={link.label}
                             to={link.path}
-                            onClick={() => setActiveDropdown(null)}
+                            onClick={() => {
+                              setActiveDropdown(null);
+                              if (link.path.includes('#corporate-members')) {
+                                const el = document.getElementById('corporate-members');
+                                if (el) {
+                                  el.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }
+                            }}
                             className="block px-4 py-2.5 rounded-none text-[13.5px] font-semibold text-white/95 hover:text-[#FFE500] hover:bg-[#144f2e] transition-colors whitespace-nowrap cursor-pointer"
                           >
                             {link.label}
@@ -390,7 +414,15 @@ export const Navbar: React.FC = () => {
                         <Link
                           key={link.label}
                           to={link.path}
-                          onClick={() => setMobileMenuOpen(false)}
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            if (link.path.includes('#corporate-members')) {
+                              const el = document.getElementById('corporate-members');
+                              if (el) {
+                                el.scrollIntoView({ behavior: 'smooth' });
+                              }
+                            }
+                          }}
                           className="block px-2 py-1.5 text-sm font-semibold text-white/90 hover:text-[#FFE500] hover:bg-white/[0.04] transition-colors"
                         >
                           {link.label}

@@ -223,8 +223,9 @@ export const Footer: React.FC = () => {
                 <li><Link to="/speakers" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Keynote Speakers</Link></li>
                 <li><Link to="/events/30th-national-banking-ethics-conference-2026#agenda" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Agendas &amp; Schedules</Link></li>
                 <li><Link to="/resources" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Conference Resources</Link></li>
-                <li><Link to="/partners" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Sponsors &amp; Partners</Link></li>
-                <li><Link to="/sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Exhibitor Inquiries</Link></li>
+                <li><Link to="/#corporate-members" className="hover:text-white transition-colors block py-0.5">Corporate Members</Link></li>
+                <li><Link to="/sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Corporate Sponsors</Link></li>
+                <li><Link to="/contact" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Become a Sponsor</Link></li>
               </ul>
             )}
           </div>
@@ -376,13 +377,18 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/partners" onClick={handleLinkClick} className="hover:text-white transition-colors">
-                  Sponsors &amp; Partners
+                <Link to="/#corporate-members" className="hover:text-white transition-colors">
+                  Corporate Members
                 </Link>
               </li>
               <li>
                 <Link to="/sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors">
-                  Exhibitor Inquiries
+                  Corporate Sponsors
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" onClick={handleLinkClick} className="hover:text-white transition-colors">
+                  Become a Sponsor
                 </Link>
               </li>
             </ul>

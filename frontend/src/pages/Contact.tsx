@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Phone, Mail, Send, CheckCircle2, ExternalLink } from 'lucide-react';
+import { MapPin, Phone, Mail, Send, CheckCircle2, ExternalLink, ArrowLeft } from 'lucide-react';
 
 export const Contact: React.FC = () => {
+  const navigate = useNavigate();
   const [submitted, setSubmitted] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
@@ -21,6 +23,37 @@ export const Contact: React.FC = () => {
     if (mapSectionRef.current) observer.observe(mapSectionRef.current);
     return () => observer.disconnect();
   }, []);
+
+  const [returnLabel, setReturnLabel] = useState('Return to Previous Section');
+
+  useEffect(() => {
+    try {
+      const prevSection =
+        sessionStorage.getItem('cib_home_section') ||
+        sessionStorage.getItem('cib_active_section');
+      if (prevSection === 'corporate-members') {
+        setReturnLabel('Return to Corporate Members');
+      } else if (prevSection && prevSection !== 'hero-section') {
+        setReturnLabel(`Return to ${prevSection.replace(/-/g, ' ')}`);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleReturn = () => {
+    const prevSection =
+      sessionStorage.getItem('cib_home_section') ||
+      sessionStorage.getItem('cib_active_section');
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else if (prevSection === 'corporate-members') {
+      navigate('/#corporate-members');
+    } else {
+      navigate('/');
+    }
+  };
+
   const [formData, setFormData] = useState({
     name: '',
     company: '',
@@ -99,6 +132,16 @@ export const Contact: React.FC = () => {
 
       {/* 2. FLOATING TWO-COLUMN CONTACT CARD */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-20 -mt-28 sm:-mt-36 md:-mt-40 mb-16 sm:mb-20">
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={handleReturn}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer shadow-md active:scale-95"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#FFE500]" />
+            <span>{returnLabel}</span>
+          </button>
+        </div>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

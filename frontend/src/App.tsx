@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
@@ -50,59 +50,244 @@ function DpiScaleManager() {
   return null;
 }
 
-// Disable browser automatic scroll restoration so page transitions and refreshes always start from the top
-if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
-  window.history.scrollRestoration = 'manual';
+// Memory cache of scroll positions by location key
+const scrollHistory = new Map<string, number>();
+
+// Reusable multi-attempt scroll to an element with navbar offset
+function scrollToElementWithRetry(
+  targetId: string,
+  options: { smooth?: boolean; maxTries?: number; offset?: number } = {}
+) {
+  const { smooth = false, maxTries = 15, offset = 80 } = options;
+  let tries = 0;
+
+  const attempt = () => {
+    const el = document.getElementById(targetId);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const targetY = Math.max(0, window.scrollY + rect.top - offset);
+      const diff = Math.abs(rect.top - offset);
+
+      window.scrollTo({
+        top: targetY,
+        behavior: tries === 0 ? 'instant' : (smooth ? 'smooth' : 'instant'),
+      });
+
+      tries++;
+      if (tries < maxTries && diff > 15) {
+        setTimeout(attempt, 80);
+      }
+    } else {
+      tries++;
+      if (tries < maxTries) {
+        setTimeout(attempt, 60);
+      }
+    }
+  };
+
+  attempt();
 }
 
-// Helper component to ensure page transitions scroll to top, or smoothly to hash anchor when present
-function ScrollToTop() {
-  const { pathname, hash } = useLocation();
+// Reusable multi-attempt scroll to a numeric Y offset (retries as document height grows)
+function scrollToYWithRetry(targetY: number, maxTries = 12) {
+  let tries = 0;
 
-  React.useLayoutEffect(() => {
-    if (hash) {
-      const targetId = hash.replace('#', '');
-      const scrollToHashElement = () => {
-        const el = document.getElementById(targetId);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-          return true;
+  const attempt = () => {
+    const maxScroll = Math.max(
+      document.documentElement.scrollHeight - window.innerHeight,
+      0
+    );
+    const scrollVal = Math.min(targetY, maxScroll);
+    window.scrollTo({ top: scrollVal, behavior: 'instant' });
+
+    tries++;
+    if (tries < maxTries && maxScroll < targetY - 50) {
+      setTimeout(attempt, 80);
+    }
+  };
+
+  attempt();
+}
+
+// Intelligent ScrollManager that preserves and restores section positions
+function ScrollManager() {
+  const location = useLocation();
+  const navType = useNavigationType();
+
+  // 1. Observe active sections and track scroll position continuously
+  useEffect(() => {
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const y = window.scrollY;
+          scrollHistory.set(location.key, y);
+          try {
+            sessionStorage.setItem('cib_scroll_' + location.key, String(y));
+            sessionStorage.setItem('cib_scroll_path_' + location.pathname, String(y));
+
+            // If on homepage, track if corporate-members or other sections are in view
+            if (location.pathname === '/') {
+              sessionStorage.setItem('cib_last_home_scroll', String(y));
+
+              const corpEl = document.getElementById('corporate-members');
+              if (corpEl) {
+                const rect = corpEl.getBoundingClientRect();
+                // If any significant part of corporate-members is visible in the viewport
+                if (rect.top <= window.innerHeight * 0.85 && rect.bottom >= 80) {
+                  sessionStorage.setItem('cib_home_section', 'corporate-members');
+                  sessionStorage.setItem('cib_active_section', 'corporate-members');
+                } else if (y < 250) {
+                  sessionStorage.removeItem('cib_home_section');
+                  sessionStorage.removeItem('cib_active_section');
+                }
+              }
+            }
+          } catch {
+            // Ignore potential storage quota errors
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Track visible sections using IntersectionObserver for high precision
+    let observer: IntersectionObserver | null = null;
+    const observedSectionIds = [
+      'corporate-members',
+      'hero-section',
+      'themes',
+      'speakers',
+      'leadership',
+      'why-attend',
+      'venue-highlights',
+      'the-venue',
+      'early-bird',
+    ];
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+              const secId = entry.target.id;
+              if (secId) {
+                try {
+                  sessionStorage.setItem('cib_active_section', secId);
+                  if (location.pathname === '/') {
+                    sessionStorage.setItem('cib_home_section', secId);
+                  }
+                } catch { /* ignore */ }
+              }
+            }
+          });
+        },
+        {
+          rootMargin: '-10% 0px -20% 0px',
+          threshold: [0.25, 0.5, 0.75],
         }
-        return false;
-      };
+      );
 
-      if (!scrollToHashElement()) {
-        const timer = setTimeout(scrollToHashElement, 150);
-        return () => clearTimeout(timer);
+      observedSectionIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el && observer) {
+          observer.observe(el);
+        }
+      });
+    }
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (observer) {
+        observer.disconnect();
+      }
+    };
+  }, [location.key, location.pathname]);
+
+  // 2. Handle Navigation and Scroll Restoration
+  React.useLayoutEffect(() => {
+    // A. Explicit hash is present in URL (e.g. /#corporate-members, /corporate-members redirected)
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '');
+      scrollToElementWithRetry(targetId, { smooth: true, offset: 80 });
+      return;
+    }
+
+    // B. Returning via browser Back / Forward (POP navigation) or navigate(-1)
+    if (navType === 'POP') {
+      // If returning to Home ('/') and user left while at corporate-members
+      if (location.pathname === '/') {
+        const savedSection =
+          sessionStorage.getItem('cib_home_section') ||
+          sessionStorage.getItem('cib_active_section');
+
+        if (savedSection === 'corporate-members') {
+          scrollToElementWithRetry('corporate-members', { smooth: false, offset: 80 });
+          return;
+        }
+
+        const savedHomeY =
+          sessionStorage.getItem('cib_last_home_scroll') ||
+          sessionStorage.getItem('cib_scroll_' + location.key);
+
+        if (savedHomeY && Number(savedHomeY) > 200) {
+          scrollToYWithRetry(Number(savedHomeY));
+          return;
+        }
+      }
+
+      // If returning to any other route, restore saved scroll position
+      const savedKeyY =
+        scrollHistory.get(location.key) ??
+        (sessionStorage.getItem('cib_scroll_' + location.key)
+          ? Number(sessionStorage.getItem('cib_scroll_' + location.key))
+          : null);
+
+      if (savedKeyY != null && !isNaN(savedKeyY) && savedKeyY > 50) {
+        scrollToYWithRetry(savedKeyY);
+        return;
+      }
+
+      const savedPathY = sessionStorage.getItem('cib_scroll_path_' + location.pathname);
+      if (savedPathY && Number(savedPathY) > 50) {
+        scrollToYWithRetry(Number(savedPathY));
+        return;
       }
       return;
     }
 
-    // Immediately set scroll to top before browser paint
-    const originalBehavior = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = 'auto';
+    // C. Returning to Home ('/') from another page via link / button (PUSH navigation)
+    if (location.pathname === '/') {
+      const savedSection =
+        sessionStorage.getItem('cib_home_section') ||
+        sessionStorage.getItem('cib_active_section');
 
+      if (savedSection === 'corporate-members') {
+        scrollToElementWithRetry('corporate-members', { smooth: true, offset: 80 });
+        return;
+      }
+
+      const savedHomeY = sessionStorage.getItem('cib_last_home_scroll');
+      if (savedHomeY && Number(savedHomeY) > 250) {
+        scrollToYWithRetry(Number(savedHomeY));
+        return;
+      }
+    }
+
+    // D. Fresh page navigation (e.g. user clicks /contact or /events for first time): start at top
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
 
-    // Reset scroll on any internal scrollable panels
     const scrollContainers = document.querySelectorAll('.overflow-y-auto, [data-scroll-container]');
     scrollContainers.forEach((el) => {
       el.scrollTop = 0;
     });
-
-    const rafId = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      setTimeout(() => {
-        document.documentElement.style.scrollBehavior = originalBehavior;
-      }, 50);
-    });
-
-    return () => cancelAnimationFrame(rafId);
-  }, [pathname, hash]);
+  }, [location.pathname, location.hash, location.key, navType]);
 
   return null;
 }
@@ -137,18 +322,19 @@ export function App() {
     <AppProvider>
       <Router>
         <DpiScaleManager />
-        <ScrollToTop />
+        <ScrollManager />
         <LayoutWrapper>
           <Routes>
             {/* Public Pages */}
             <Route path="/" element={<Home />} />
+            <Route path="/corporate-members" element={<Navigate to="/#corporate-members" replace />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:slug" element={<EventDetails />} />
             <Route path="/events/:slug/register" element={<Register />} />
             <Route path="/events/:slug/ticket/:id" element={<Ticket />} />
             <Route path="/ticket/:id" element={<Ticket />} />
             <Route path="/speakers" element={<Speakers />} />
-            <Route path="/partners" element={<PartnersSponsors />} />
+            <Route path="/partners" element={<Navigate to="/sponsors" replace />} />
             <Route path="/sponsors" element={<PartnersSponsors />} />
 
             <Route path="/past-events" element={<PastEvents />} />

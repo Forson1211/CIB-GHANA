@@ -15,8 +15,8 @@ export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCESSFUL' | 'FAILED' |
 
 export type CheckInStatus = 'REGISTERED' | 'CHECKED_IN' | 'CANCELLED';
 
-export type SponsorType = 'SPONSOR' | 'PARTNER';
-export type SponsorTier = 'SPONSOR' | 'PARTNER' | 'PLATINUM' | 'GOLD' | 'SILVER' | 'ACADEMIC';
+export type SponsorType = 'SPONSOR' | 'CORPORATE_MEMBER' | 'PARTNER';
+export type SponsorTier = 'SPONSOR' | 'CORPORATE_MEMBER' | 'PARTNER' | 'PLATINUM' | 'GOLD' | 'SILVER' | 'ACADEMIC';
 
 export interface UserProfile {
   id: string;

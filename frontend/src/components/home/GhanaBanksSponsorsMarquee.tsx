@@ -1,4 +1,7 @@
 import React from 'react';
+import { useApp } from '../../context/AppContext';
+import { Building } from 'lucide-react';
+import { Sponsor } from '../../types';
 
 interface BankLogo {
   id: string;
@@ -421,9 +424,11 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         {loopItems.map((b, idx) => (
           <div
             key={`${b.id}-${idx}`}
-            className="bg-white rounded-xl sm:rounded-2xl px-5 sm:px-8 py-3.5 sm:py-5 h-[80px] sm:h-[98px] lg:h-[112px] min-w-[240px] sm:min-w-[290px] lg:min-w-[340px] flex items-center justify-center shadow-lg border border-slate-200/90 hover:shadow-2xl hover:scale-[1.03] transition-all duration-200 shrink-0 cursor-default"
+            className="bg-white rounded-xl sm:rounded-2xl px-5 sm:px-7 py-2.5 sm:py-3 h-[84px] sm:h-[98px] lg:h-[110px] min-w-[240px] sm:min-w-[290px] lg:min-w-[340px] flex items-center justify-center shadow-lg border border-slate-200/90 hover:shadow-2xl transition-all duration-200 shrink-0 cursor-default"
           >
-            {b.renderLogo()}
+            <div className="flex items-center justify-center max-w-full max-h-full">
+              {b.renderLogo()}
+            </div>
           </div>
         ))}
       </div>
@@ -459,9 +464,110 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
   );
 };
 
-export const GhanaBanksSponsorsMarquee: React.FC = () => {
+// Map of built-in bank logos by key/slug
+const BUILTIN_BANK_RENDERERS: Record<string, () => React.ReactNode> = {
+  bog: GHANA_BANKS_ROW_1[0].renderLogo,
+  gcb: GHANA_BANKS_ROW_1[1].renderLogo,
+  ecobank: GHANA_BANKS_ROW_1[2].renderLogo,
+  scb: GHANA_BANKS_ROW_1[3].renderLogo,
+  absa: GHANA_BANKS_ROW_1[4].renderLogo,
+  stanbic: GHANA_BANKS_ROW_1[5].renderLogo,
+  fidelity: GHANA_BANKS_ROW_1[6].renderLogo,
+
+  zenith: GHANA_BANKS_ROW_2[0].renderLogo,
+  access: GHANA_BANKS_ROW_2[1].renderLogo,
+  calbank: GHANA_BANKS_ROW_2[2].renderLogo,
+  ghipss: GHANA_BANKS_ROW_2[3].renderLogo,
+  republic: GHANA_BANKS_ROW_2[4].renderLogo,
+  adb: GHANA_BANKS_ROW_2[5].renderLogo,
+  umb: GHANA_BANKS_ROW_2[6].renderLogo,
+
+  fnb: GHANA_BANKS_ROW_3[0].renderLogo,
+  sg: GHANA_BANKS_ROW_3[1].renderLogo,
+  cbg: GHANA_BANKS_ROW_3[2].renderLogo,
+  prudential: GHANA_BANKS_ROW_3[3].renderLogo,
+  fbnbank: GHANA_BANKS_ROW_3[4].renderLogo,
+  omnibsic: GHANA_BANKS_ROW_3[5].renderLogo,
+  arb: GHANA_BANKS_ROW_3[6].renderLogo,
+};
+
+const renderCorporateMemberLogo = (cm: Sponsor): React.ReactNode => {
+  if (cm.logo_url && cm.logo_url.trim()) {
+    return (
+      <div className="flex items-center justify-center h-full max-w-[260px] px-2">
+        <img
+          src={cm.logo_url}
+          alt={cm.name}
+          className="h-auto w-auto max-h-[52px] sm:max-h-[62px] lg:max-h-[68px] max-w-full object-contain filter drop-shadow-xs"
+        />
+      </div>
+    );
+  }
+
+  const cleanId = cm.id.toLowerCase().replace(/_cm|_sp/g, '');
+  if (BUILTIN_BANK_RENDERERS[cleanId]) {
+    return BUILTIN_BANK_RENDERERS[cleanId]();
+  }
+
+  const nameLower = cm.name.toLowerCase();
+  for (const [key, renderFn] of Object.entries(BUILTIN_BANK_RENDERERS)) {
+    if (nameLower.includes(key)) {
+      return renderFn();
+    }
+  }
+
+  // Fallback card for newly added corporate members without uploaded image
   return (
-    <section className="w-full bg-[#0D3A21] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl">
+    <div className="flex items-center gap-3.5">
+      <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base border border-cib-green-200">
+        <Building className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
+      </div>
+      <div className="text-left leading-tight">
+        <span className="block text-[18px] sm:text-[22px] lg:text-[24px] font-black tracking-tight text-cib-charcoal-900 font-display line-clamp-1">
+          {cm.name}
+        </span>
+        <span className="block text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-cib-green-700 uppercase tracking-wider line-clamp-1">
+          {cm.categoryOrRole || 'Corporate Member'}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+export const GhanaBanksSponsorsMarquee: React.FC = () => {
+  const { sponsors } = useApp();
+
+  const corporateMembers = sponsors.filter(
+    (s) => s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER'
+  );
+
+  const dynamicLogos: BankLogo[] = corporateMembers.map((cm) => ({
+    id: cm.id,
+    name: cm.name,
+    renderLogo: () => renderCorporateMemberLogo(cm),
+  }));
+
+  const allLogos =
+    dynamicLogos.length > 0
+      ? dynamicLogos
+      : [...GHANA_BANKS_ROW_1, ...GHANA_BANKS_ROW_2, ...GHANA_BANKS_ROW_3];
+
+  const row1 = allLogos.filter((_, idx) => idx % 3 === 0);
+  const row2 = allLogos.filter((_, idx) => idx % 3 === 1);
+  const row3 = allLogos.filter((_, idx) => idx % 3 === 2);
+
+  const padRow = (items: BankLogo[]): BankLogo[] => {
+    if (items.length === 0) return allLogos;
+    if (items.length < 5) return [...items, ...items, ...items];
+    return items;
+  };
+
+  const finalRow1 = padRow(row1);
+  const finalRow2 = padRow(row2);
+  const finalRow3 = padRow(row3);
+
+  return (
+    <section id="corporate-members" className="w-full bg-[#0D3A21] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl scroll-mt-24">
       {/* Dynamic Keyframes for smooth continuous hardware-accelerated movement to the RIGHT */}
       <style>{`
         @keyframes cibMarqueeRight {
@@ -484,11 +590,11 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
         </p>
       </div>
 
-      {/* Edge-to-Edge 3-Tier Marquee Rows with Big Cards & Crisp Vector Logos */}
+      {/* Edge-to-Edge 3-Tier Marquee Rows with Big Cards & Crisp Vector Logos moving RIGHT */}
       <div className="w-full space-y-5 sm:space-y-7 lg:space-y-9">
         {/* Row 1: Dark polygon shape on left, yellow accent on right */}
         <MarqueeRow
-          banks={GHANA_BANKS_ROW_1}
+          banks={finalRow1}
           direction="right"
           speedSeconds={36}
           leftShape="badge-dark"
@@ -497,7 +603,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
 
         {/* Row 2: Red accent on left, dark polygon shape on right */}
         <MarqueeRow
-          banks={GHANA_BANKS_ROW_2}
+          banks={finalRow2}
           direction="right"
           speedSeconds={40}
           leftShape="accent-red"
@@ -506,7 +612,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
 
         {/* Row 3: Dark polygon shape on left, yellow accent on right */}
         <MarqueeRow
-          banks={GHANA_BANKS_ROW_3}
+          banks={finalRow3}
           direction="right"
           speedSeconds={34}
           leftShape="badge-dark"

@@ -583,9 +583,10 @@ export const ChatbotWidget: React.FC = () => {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "🤝 **Sponsorship & Exhibition Opportunities**:\n\nPartner with CIB Ghana to showcase financial technology and services to 650+ banking executives:\n\n• **Platinum Key Partner**: Exclusive keynote session, brand spotlight, and VIP lounge host.\n• **Gold Partner**: 10 delegate passes & executive exhibition foyer booth.\n• **Silver & Partner**: Dedicated digital branding & delegate pack inclusion.\n\n*Key Partners include Bank of Ghana, StanChart, Ecobank, GCB Bank, and GhIPSS.*",
+        text: "🤝 **Sponsorship Opportunities**:\n\nPartner with CIB Ghana as a corporate sponsor to gain premier visibility before 650+ banking executives, regulators, and industry leaders.\n\nKey Sponsors include Standard Chartered, Bank of Ghana, Ecobank, GCB Bank, Absa, and Stanbic Bank.",
         time: getCurrentTime(),
         actionLinks: [
+          { label: 'View Corporate Sponsors →', url: '/sponsors' },
           { label: 'Sponsorship Inquiries (Contact Form) →', url: '/contact' },
         ],
       };

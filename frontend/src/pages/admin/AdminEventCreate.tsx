@@ -825,7 +825,7 @@ export const AdminEventCreate: React.FC = () => {
           {currentStep === 6 && (
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-cib-charcoal-900 font-display">
-                6. Attached Sponsors & Partners
+                6. Attached Sponsors & Corporate Members
               </h3>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

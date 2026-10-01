@@ -12,19 +12,18 @@ import {
   CheckCircle2,
   X,
   Building,
-  Handshake,
   Award,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
-import { Badge } from '../../components/ui/Badge';
 import { Sponsor, SponsorType } from '../../types';
 import { renderBrandLogo } from '../PartnersSponsors';
 
 export const AdminSponsors: React.FC = () => {
   const { sponsors, addSponsor, updateSponsor, deleteSponsor } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'ALL' | 'SPONSOR' | 'PARTNER'>('ALL');
+  const [activeTab, setActiveTab] = useState<'ALL' | 'CORPORATE_MEMBER' | 'SPONSOR'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
@@ -33,7 +32,7 @@ export const AdminSponsors: React.FC = () => {
 
   // Form Fields
   const [name, setName] = useState('');
-  const [type, setType] = useState<SponsorType>('SPONSOR');
+  const [type, setType] = useState<SponsorType>('CORPORATE_MEMBER');
   const [categoryOrRole, setCategoryOrRole] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -43,11 +42,17 @@ export const AdminSponsors: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const corporateMembersCount = sponsors.filter(
+    (s) => s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER'
+  ).length;
   const sponsorsCount = sponsors.filter((s) => s.type === 'SPONSOR').length;
-  const partnersCount = sponsors.filter((s) => s.type === 'PARTNER').length;
 
   const filtered = sponsors.filter((s) => {
-    const matchesTab = activeTab === 'ALL' || s.type === activeTab;
+    const isMember = s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER';
+    const matchesTab =
+      activeTab === 'ALL' ||
+      (activeTab === 'CORPORATE_MEMBER' ? isMember : s.type === 'SPONSOR');
+
     const q = searchQuery.toLowerCase().trim();
     const matchesQuery =
       searchQuery === '' ||
@@ -60,7 +65,7 @@ export const AdminSponsors: React.FC = () => {
   const handleOpenAddModal = (defaultType?: SponsorType) => {
     setEditingId(null);
     setName('');
-    setType(defaultType || (activeTab === 'PARTNER' ? 'PARTNER' : 'SPONSOR'));
+    setType(defaultType || (activeTab === 'SPONSOR' ? 'SPONSOR' : 'CORPORATE_MEMBER'));
     setCategoryOrRole('');
     setLogoUrl('');
     setWebsiteUrl('');
@@ -70,9 +75,10 @@ export const AdminSponsors: React.FC = () => {
   };
 
   const handleOpenEditModal = (sp: Sponsor) => {
+    const isMember = sp.type === 'CORPORATE_MEMBER' || (sp.type as any) === 'PARTNER';
     setEditingId(sp.id);
     setName(sp.name);
-    setType(sp.type || 'SPONSOR');
+    setType(isMember ? 'CORPORATE_MEMBER' : 'SPONSOR');
     setCategoryOrRole(sp.categoryOrRole || sp.description || '');
     setLogoUrl(sp.logo_url || '');
     setWebsiteUrl(sp.website_url || '');
@@ -102,7 +108,9 @@ export const AdminSponsors: React.FC = () => {
     const payload: Partial<Sponsor> = {
       name: name.trim(),
       type,
-      categoryOrRole: categoryOrRole.trim() || (type === 'PARTNER' ? 'Institutional Partner' : 'Corporate Sponsor'),
+      categoryOrRole:
+        categoryOrRole.trim() ||
+        (type === 'CORPORATE_MEMBER' ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
       logo_url: logoUrl.trim(),
       website_url: websiteUrl.trim(),
       description: description.trim(),
@@ -113,7 +121,11 @@ export const AdminSponsors: React.FC = () => {
       setSuccessNotice(`Updated "${name}" successfully.`);
     } else {
       addSponsor(payload);
-      setSuccessNotice(`Added "${name}" to ${type === 'PARTNER' ? 'Partners' : 'Sponsors'}!`);
+      setSuccessNotice(
+        type === 'CORPORATE_MEMBER'
+          ? `Added "${name}" to Corporate Members (will show in homepage moving marquee)!`
+          : `Added "${name}" to Corporate Sponsors (will show on Sponsors page)!`
+      );
     }
 
     setIsModalOpen(false);
@@ -121,7 +133,7 @@ export const AdminSponsors: React.FC = () => {
   };
 
   const handleDelete = (id: string, entityName: string) => {
-    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the public site.`)) {
+    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the site.`)) {
       deleteSponsor(id);
       setSuccessNotice(`Removed "${entityName}".`);
       setTimeout(() => setSuccessNotice(null), 3000);
@@ -143,18 +155,27 @@ export const AdminSponsors: React.FC = () => {
 
   return (
     <AdminLayout
-      title="Sponsors & Institutional Partners"
-      subtitle="Manage corporate financial sponsors and statutory institutional partners displayed on the public site."
+      title="Corporate Members & Sponsors"
+      subtitle="Manage corporate members (commercial banks displayed on the homepage moving marquee) and official sponsors (displayed on the sponsors page)."
       actions={
         <div className="flex items-center gap-2">
           <Link
-            to="/partners"
+            to="/sponsors"
             target="_blank"
             className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">View Public Page</span>
-            <span className="sm:hidden">Public</span>
+            <span className="hidden sm:inline">View Sponsors Page</span>
+            <span className="sm:hidden">Sponsors</span>
+          </Link>
+          <Link
+            to="/"
+            target="_blank"
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">View Homepage Marquee</span>
+            <span className="sm:hidden">Home</span>
           </Link>
           <Button
             variant="primary"
@@ -188,12 +209,12 @@ export const AdminSponsors: React.FC = () => {
 
         {/* Tab & Search Bar */}
         <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
-          {/* Sponsors & Partners Tabs */}
+          {/* Corporate Members & Sponsors Tabs */}
           <div className="flex flex-wrap sm:inline-flex p-1 bg-slate-100 rounded-xl w-full sm:w-auto gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('ALL')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'ALL'
                   ? 'bg-white text-cib-charcoal-900 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -204,28 +225,28 @@ export const AdminSponsors: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => setActiveTab('SPONSOR')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'SPONSOR'
-                  ? 'bg-cib-green-700 text-white shadow-xs'
+              onClick={() => setActiveTab('CORPORATE_MEMBER')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'CORPORATE_MEMBER'
+                  ? 'bg-[#1B7E3E] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Building className="w-3.5 h-3.5" />
-              <span>Sponsors ({sponsorsCount})</span>
+              <span>Corporate Members ({corporateMembersCount})</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab('PARTNER')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                activeTab === 'PARTNER'
-                  ? 'bg-cib-green-700 text-white shadow-xs'
+              onClick={() => setActiveTab('SPONSOR')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'SPONSOR'
+                  ? 'bg-amber-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Handshake className="w-3.5 h-3.5" />
-              <span>Partners ({partnersCount})</span>
+              <Award className="w-3.5 h-3.5" />
+              <span>Sponsors ({sponsorsCount})</span>
             </button>
           </div>
 
@@ -234,7 +255,7 @@ export const AdminSponsors: React.FC = () => {
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search name or role..."
+              placeholder="Search name, bank or role..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:border-cib-green-600 focus:outline-none"
@@ -242,7 +263,27 @@ export const AdminSponsors: React.FC = () => {
           </div>
         </div>
 
-        {/* Sponsors & Partners Grid */}
+        {/* Informative Guidance Banner */}
+        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#1B7E3E] shrink-0" />
+            <span>
+              <strong>Corporate Members</strong> appear on the <strong>Homepage Moving Marquee</strong> (sliding to the right). <strong>Sponsors</strong> appear on the <strong>Sponsors Page</strong>.
+            </span>
+          </div>
+          <div className="flex items-center gap-3 font-semibold shrink-0">
+            <span className="inline-flex items-center gap-1 text-[#1B7E3E]">
+              <span className="w-2 h-2 rounded-full bg-[#1B7E3E]" />
+              {corporateMembersCount} on Home Marquee
+            </span>
+            <span className="inline-flex items-center gap-1 text-amber-600">
+              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              {sponsorsCount} on Sponsors Page
+            </span>
+          </div>
+        </div>
+
+        {/* Entities Grid */}
         {filtered.length === 0 ? (
           <div className="py-16 px-6 text-center bg-white rounded-2xl border border-slate-200 space-y-4">
             <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
@@ -251,7 +292,7 @@ export const AdminSponsors: React.FC = () => {
             <div className="space-y-1">
               <h3 className="text-base font-bold text-slate-800">No Entities Found</h3>
               <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                No sponsors or partners match your current filter. Click below to add one.
+                No corporate members or sponsors match your current filter. Click below to add one.
               </p>
             </div>
             <Button
@@ -266,7 +307,7 @@ export const AdminSponsors: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map((sp) => {
-              const isPartner = sp.type === 'PARTNER';
+              const isMember = sp.type === 'CORPORATE_MEMBER' || (sp.type as any) === 'PARTNER';
 
               return (
                 <div
@@ -276,25 +317,30 @@ export const AdminSponsors: React.FC = () => {
                   <div className="space-y-3">
                     {/* Badge & External Link Header */}
                     <div className="flex items-center justify-between">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 ${
-                          isPartner
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                            : 'bg-amber-50 text-amber-900 border-amber-200'
-                        }`}
-                      >
-                        {isPartner ? (
-                          <>
-                            <Handshake className="w-3 h-3 text-emerald-600" />
-                            <span>PARTNER</span>
-                          </>
-                        ) : (
-                          <>
-                            <Building className="w-3 h-3 text-amber-700" />
-                            <span>SPONSOR</span>
-                          </>
-                        )}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 ${
+                            isMember
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-50 text-amber-900 border-amber-200'
+                          }`}
+                        >
+                          {isMember ? (
+                            <>
+                              <Building className="w-3 h-3 text-emerald-700" />
+                              <span>CORPORATE MEMBER</span>
+                            </>
+                          ) : (
+                            <>
+                              <Award className="w-3 h-3 text-amber-700" />
+                              <span>SPONSOR</span>
+                            </>
+                          )}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold hidden sm:inline">
+                          {isMember ? '• Home Marquee' : '• Sponsors Page'}
+                        </span>
+                      </div>
 
                       {sp.website_url && (
                         <a
@@ -320,7 +366,7 @@ export const AdminSponsors: React.FC = () => {
                         {sp.name}
                       </h4>
                       <p className="text-xs font-semibold text-cib-green-700 mt-0.5 line-clamp-1">
-                        {sp.categoryOrRole || (isPartner ? 'Institutional Partner' : 'Corporate Sponsor')}
+                        {sp.categoryOrRole || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor')}
                       </p>
                       {sp.description && sp.description !== sp.categoryOrRole && (
                         <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
@@ -335,7 +381,7 @@ export const AdminSponsors: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenEditModal(sp)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-cib-green-700 text-xs font-bold transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-cib-green-700 text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -344,7 +390,7 @@ export const AdminSponsors: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(sp.id, sp.name)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -368,20 +414,22 @@ export const AdminSponsors: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 rounded-xl bg-cib-green-50 text-cib-green-800">
-                  {type === 'PARTNER' ? <Handshake className="w-5 h-5" /> : <Building className="w-5 h-5" />}
+                  {type === 'CORPORATE_MEMBER' ? <Building className="w-5 h-5 text-[#1B7E3E]" /> : <Award className="w-5 h-5 text-amber-600" />}
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-cib-charcoal-900 font-display">
-                    {editingId ? 'Edit Sponsor / Partner' : 'Add Sponsor or Partner'}
+                    {editingId ? 'Edit Entity' : 'Add Entity'}
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Changes will immediately update the public /partners and /sponsors pages.
+                    {type === 'CORPORATE_MEMBER'
+                      ? 'Corporate Members appear in the moving marquee on the homepage.'
+                      : 'Corporate Sponsors appear on the public Sponsors page.'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -389,7 +437,7 @@ export const AdminSponsors: React.FC = () => {
 
             {/* Form */}
             <form onSubmit={handleSave} className="space-y-4">
-              {/* Type Switcher (Sponsor vs Partner - No Gold, No Platinum) */}
+              {/* Type Switcher: Corporate Member vs Sponsor */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   Entity Classification *
@@ -397,28 +445,38 @@ export const AdminSponsors: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setType('SPONSOR')}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      type === 'SPONSOR'
-                        ? 'border-amber-400 bg-amber-50 text-amber-900 ring-2 ring-amber-200 shadow-xs'
+                    onClick={() => setType('CORPORATE_MEMBER')}
+                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                      type === 'CORPORATE_MEMBER'
+                        ? 'border-[#1B7E3E] bg-emerald-50 text-emerald-950 ring-2 ring-emerald-300 shadow-xs'
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <Building className="w-4 h-4 text-amber-700" />
-                    <span>Corporate Sponsor</span>
+                    <div className="flex items-center gap-1.5 font-black text-sm text-[#1B7E3E]">
+                      <Building className="w-4 h-4" />
+                      <span>Corporate Member</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500">
+                      Shows in Homepage Marquee
+                    </span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setType('PARTNER')}
-                    className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all ${
-                      type === 'PARTNER'
-                        ? 'border-cib-green-600 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-200 shadow-xs'
+                    onClick={() => setType('SPONSOR')}
+                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                      type === 'SPONSOR'
+                        ? 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-300 shadow-xs'
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                     }`}
                   >
-                    <Handshake className="w-4 h-4 text-emerald-700" />
-                    <span>Institutional Partner</span>
+                    <div className="flex items-center gap-1.5 font-black text-sm text-amber-700">
+                      <Award className="w-4 h-4" />
+                      <span>Corporate Sponsor</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500">
+                      Shows on Sponsors Page
+                    </span>
                   </button>
                 </div>
               </div>
@@ -433,7 +491,7 @@ export const AdminSponsors: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Standard Chartered Bank or Bank of Ghana"
+                  placeholder="e.g. Stanbic Bank, Ecobank, or Bank of Ghana"
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
                 />
               </div>
@@ -448,9 +506,9 @@ export const AdminSponsors: React.FC = () => {
                   value={categoryOrRole}
                   onChange={(e) => setCategoryOrRole(e.target.value)}
                   placeholder={
-                    type === 'PARTNER'
-                      ? 'e.g. Statutory Regulator, National Payment Switch'
-                      : 'e.g. Leading Multinational Financial Institution, The Pan African Bank'
+                    type === 'CORPORATE_MEMBER'
+                      ? 'e.g. Licensed Commercial Bank, Central Bank Regulator'
+                      : 'e.g. Platinum Sponsor, Gold Sponsor, Fintech Partner'
                   }
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
                 />
@@ -459,7 +517,7 @@ export const AdminSponsors: React.FC = () => {
               {/* Logo Upload Box */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Brand Logo
+                  Brand Logo (PNG / SVG / JPEG)
                 </label>
                 <input
                   type="file"
@@ -536,8 +594,8 @@ export const AdminSponsors: React.FC = () => {
                   rows={2}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Additional institutional background or sponsorship note..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
+                  placeholder="Additional institutional background or notes..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
                 />
               </div>
 
@@ -557,7 +615,7 @@ export const AdminSponsors: React.FC = () => {
                   size="md"
                   leftIcon={<CheckCircle2 className="w-4 h-4" />}
                 >
-                  {editingId ? 'Save Changes' : 'Add Entity'}
+                  {editingId ? 'Save Changes' : (type === 'CORPORATE_MEMBER' ? 'Add Corporate Member' : 'Add Sponsor')}
                 </Button>
               </div>
             </form>

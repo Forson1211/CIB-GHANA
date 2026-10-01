@@ -197,15 +197,40 @@ export const AdminSponsors: React.FC = () => {
 
   const handleDelete = async (id: string, entityName: string) => {
     if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the live site.`)) {
+      // Capture logo URL before removing from local state
+      const sponsor = sponsors.find((s) => s.id === id);
+      const logoUrl = sponsor?.logo_url ?? '';
+
       deleteSponsor(id);
       setSuccessNotice(`Removed "${entityName}" from live database.`);
 
       const uuid = stringToUuid(id);
+
+      // 1. Delete DB row
       try {
         await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
       } catch (sbErr) {
         console.warn('Supabase sponsors delete failed:', sbErr);
       }
+
+      // 2. Delete logo from Supabase Storage (only cloud-hosted logos)
+      if (logoUrl && logoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
+        try {
+          const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
+          if (storagePath) {
+            const { error: storageError } = await supabaseAdmin.storage
+              .from('speaker-photos')
+              .remove([storagePath]);
+            if (storageError) {
+              console.warn('Storage logo delete error:', storageError);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to delete sponsor logo from storage:', e);
+        }
+      }
+
+      // 3. Fallback API delete
       try {
         await ApiClient.deleteSponsor(uuid);
       } catch {}

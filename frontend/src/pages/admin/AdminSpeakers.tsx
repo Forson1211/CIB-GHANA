@@ -484,13 +484,38 @@ export const AdminSpeakers: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('Remove this speaker?')) {
+      // Capture photo URL before removing from local state
+      const speaker = speakers.find((s) => s.id === id);
+      const photoUrl = speaker?.photo_url ?? '';
+
       deleteSpeaker(id);
       const uuid = stringToUuid(id);
+
+      // 1. Delete DB row
       try {
         await supabaseAdmin.from('speakers').delete().eq('id', uuid);
       } catch (e) {
         console.warn('Supabase DB delete error:', e);
       }
+
+      // 2. Delete image from Supabase Storage (only cloud-hosted photos)
+      if (photoUrl && photoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
+        try {
+          const storagePath = photoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
+          if (storagePath) {
+            const { error: storageError } = await supabaseAdmin.storage
+              .from('speaker-photos')
+              .remove([storagePath]);
+            if (storageError) {
+              console.warn('Storage image delete error:', storageError);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to delete speaker photo from storage:', e);
+        }
+      }
+
+      // 3. Fallback API delete
       try {
         await ApiClient.deleteSpeaker(uuid);
       } catch {

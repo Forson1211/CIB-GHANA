@@ -201,7 +201,8 @@ export const Home: React.FC = () => {
             className="space-y-2 text-center md:text-left mx-auto md:mx-0 max-w-4xl"
           >
             <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center md:text-left font-display">
-              30th National Banking &amp; Ethics Conference
+              30th National Banking <br className="hidden sm:block" />
+              &amp; Ethics Conference
             </h1>
           </motion.div>
 

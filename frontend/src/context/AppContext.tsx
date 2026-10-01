@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { EventItem, Registration, UserProfile, Speaker, Sponsor, EventResource } from '../types';
+import { EventItem, Registration, UserProfile, Speaker, SpeakerType, Sponsor, EventResource } from '../types';
 import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSORS } from '../data/mockData';
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
@@ -404,6 +404,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [sponsors]);
 
   const addSpeaker = (speaker: Partial<Speaker>) => {
+    const isKeynote = speaker.speaker_type === 'KEYNOTE' || Boolean(speaker.is_keynote);
+    const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
     const newSpeaker: Speaker = {
       id: speaker.id ?? `sp-${Date.now()}`,
       name: speaker.name ?? '',
@@ -414,7 +416,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       photo_url: speaker.photo_url ?? '',
       biography: speaker.biography ?? '',
       expertise: speaker.expertise ?? [],
-      is_keynote: speaker.is_keynote ?? false,
+      is_keynote: isKeynote,
+      speaker_type: speakerType,
       linkedin_url: speaker.linkedin_url,
       twitter_url: speaker.twitter_url,
       website_url: speaker.website_url,
@@ -441,7 +444,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateSpeaker = (id: string, updates: Partial<Speaker>) => {
     setSpeakers((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const merged = { ...s, ...updates };
+        if (updates.speaker_type !== undefined) {
+          merged.is_keynote = updates.speaker_type === 'KEYNOTE';
+        } else if (updates.is_keynote !== undefined) {
+          merged.speaker_type = updates.is_keynote ? 'KEYNOTE' : 'PANEL';
+        }
+        return merged;
+      })
     );
   };
 
@@ -670,7 +682,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setSpeakers((prev) => {
       // 1. Update existing speakers with cloud photo and latest info
-      const updated = prev.map((s) => {
+      const updated: Speaker[] = prev.map((s): Speaker => {
         const remote = remoteSpeakers.find((d: any) => isSameSpeaker(s, d));
         if (!remote) return s;
 
@@ -681,6 +693,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? remotePhoto
           : (localPhotoIsRemote ? s.photo_url : (remotePhoto || s.photo_url || ''));
 
+        const isKeynote = remote.is_keynote !== undefined ? Boolean(remote.is_keynote) : Boolean(s.is_keynote);
+        const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
         return {
           ...s,
           photo_url: photoToUse,
@@ -688,6 +702,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           position: remote.position || s.position || '',
           organization: remote.organization || s.organization || '',
           biography: remote.biography || s.biography || '',
+          is_keynote: isKeynote,
+          speaker_type: speakerType,
         };
       });
 
@@ -696,6 +712,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       for (const d of remoteSpeakers) {
         const alreadyExists = updated.some((p) => isSameSpeaker(p, d));
         if (!alreadyExists && !isPurgedMockSpeaker(d)) {
+          const isKeynote = Boolean(d.is_keynote);
+          const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
           toAdd.push({
             id: d.id,
             name: d.name ?? '',
@@ -706,7 +724,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             photo_url: d.photo_url ?? '',
             biography: d.biography ?? '',
             expertise: Array.isArray(d.expertise) ? d.expertise : [],
-            is_keynote: d.is_keynote ?? false,
+            is_keynote: isKeynote,
+            speaker_type: speakerType,
             linkedin_url: d.linkedin_url ?? '',
             twitter_url: d.twitter_url ?? '',
             website_url: d.website_url ?? '',

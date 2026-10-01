@@ -152,8 +152,8 @@ export const Navbar: React.FC = () => {
           path: '/speakers?type=keynote',
         },
         {
-          label: 'Panels & Faculty',
-          path: '/speakers?type=faculty',
+          label: 'Panels',
+          path: '/speakers?type=panel',
         },
         {
           label: 'All Speakers',

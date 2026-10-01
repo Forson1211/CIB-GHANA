@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import {
   Plus, Search, Building, Edit2, Trash2, X, Upload,
-  Camera, Star, Link2, Globe, AtSign, Save, User,
+  Camera, Star, Link2, Globe, AtSign, Save, User, Users,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Speaker } from '../../types';
@@ -34,6 +34,7 @@ const emptySpeaker = (): Partial<Speaker> => ({
   biography: '',
   expertise: [],
   is_keynote: false,
+  speaker_type: 'PANEL',
   linkedin_url: '',
   twitter_url: '',
   website_url: '',
@@ -232,19 +233,78 @@ const SpeakerModal: React.FC<{
             </div>
           </div>
 
-          {/* Keynote Toggle */}
-          <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
-            <Star className="w-5 h-5 text-amber-500 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-bold text-slate-800">Keynote Speaker</p>
-              <p className="text-xs text-slate-500">Mark this person as a keynote luminary</p>
+          {/* Speaker Category / Designation */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+              Speaker Category / Designation *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Option 1: Keynote Speaker */}
+              <button
+                type="button"
+                onClick={() => {
+                  set('is_keynote', true);
+                  set('speaker_type', 'KEYNOTE');
+                }}
+                className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                  (form.speaker_type === 'KEYNOTE' || form.is_keynote)
+                    ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/20 shadow-sm'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                  (form.speaker_type === 'KEYNOTE' || form.is_keynote)
+                    ? 'bg-amber-500 text-white shadow'
+                    : 'bg-slate-100 text-slate-400'
+                }`}>
+                  <Star className="w-5 h-5 fill-current" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-extrabold text-slate-900">Keynote Speaker</span>
+                    {(form.speaker_type === 'KEYNOTE' || form.is_keynote) && (
+                      <span className="text-[10px] font-black uppercase bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">Selected</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-snug">
+                    Featured luminary, plenary address &amp; distinguished keynote
+                  </p>
+                </div>
+              </button>
+
+              {/* Option 2: Panels */}
+              <button
+                type="button"
+                onClick={() => {
+                  set('is_keynote', false);
+                  set('speaker_type', 'PANEL');
+                }}
+                className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                  (form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE'))
+                    ? 'bg-emerald-50/90 border-[#008B2E] ring-2 ring-[#008B2E]/20 shadow-sm'
+                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                  (form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE'))
+                    ? 'bg-[#008B2E] text-white shadow'
+                    : 'bg-slate-100 text-slate-400'
+                }`}>
+                  <Users className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-sm font-extrabold text-slate-900">Panels</span>
+                    {(form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE')) && (
+                      <span className="text-[10px] font-black uppercase bg-emerald-200 text-[#006B22] px-2 py-0.5 rounded-full">Selected</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1 leading-snug">
+                    Panel moderator, panelist &amp; breakout session faculty
+                  </p>
+                </div>
+              </button>
             </div>
-            <button
-              onClick={() => set('is_keynote', !form.is_keynote)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${form.is_keynote ? 'bg-[#008B2E]' : 'bg-slate-200'}`}
-            >
-              <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${form.is_keynote ? 'translate-x-6' : ''}`} />
-            </button>
           </div>
 
           {/* Biography */}
@@ -327,41 +387,70 @@ const SpeakerModal: React.FC<{
 export const AdminSpeakers: React.FC = () => {
   const { speakers, addSpeaker, updateSpeaker, deleteSpeaker, refreshSpeakers } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'KEYNOTE' | 'PANEL'>('ALL');
   const [editTarget, setEditTarget] = useState<Partial<Speaker> | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
-  const filtered = speakers.filter(
-    (s) =>
-      (s.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.organization ?? '').toLowerCase().includes(searchQuery.toLowerCase())
+  const isKeynoteSpeaker = (s: Speaker) => s.speaker_type === 'KEYNOTE' || Boolean(s.is_keynote);
+
+  const keynoteCount = useMemo(
+    () => speakers.filter(isKeynoteSpeaker).length,
+    [speakers]
+  );
+  const panelCount = useMemo(
+    () => speakers.filter((s) => !isKeynoteSpeaker(s)).length,
+    [speakers]
   );
 
+  const filtered = useMemo(() => {
+    return speakers.filter((s) => {
+      const isKeynote = isKeynoteSpeaker(s);
+      if (categoryFilter === 'KEYNOTE' && !isKeynote) return false;
+      if (categoryFilter === 'PANEL' && isKeynote) return false;
+
+      const q = searchQuery.toLowerCase();
+      return (
+        (s.name ?? '').toLowerCase().includes(q) ||
+        (s.organization ?? '').toLowerCase().includes(q) ||
+        (s.position ?? '').toLowerCase().includes(q)
+      );
+    });
+  }, [speakers, categoryFilter, searchQuery]);
+
   const handleSave = async (updated: Partial<Speaker>) => {
-    const exists = speakers.find((s) => s.id === updated.id);
+    const isKeynote = updated.speaker_type === 'KEYNOTE' || Boolean(updated.is_keynote);
+    const speakerType: 'KEYNOTE' | 'PANEL' = isKeynote ? 'KEYNOTE' : 'PANEL';
+    const normalized: Partial<Speaker> = {
+      ...updated,
+      is_keynote: isKeynote,
+      speaker_type: speakerType,
+    };
+
+    const exists = speakers.find((s) => s.id === normalized.id);
     if (exists) {
-      updateSpeaker(updated.id!, updated);
+      updateSpeaker(normalized.id!, normalized);
     } else {
-      addSpeaker(updated);
+      addSpeaker(normalized);
     }
 
     // Persist to Supabase Database (both ApiClient and supabaseAdmin with service role)
-    if (updated.id) {
-      const uuid = stringToUuid(updated.id);
-      const cleanSlug = updated.slug || (updated.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    if (normalized.id) {
+      const uuid = stringToUuid(normalized.id);
+      const cleanSlug = normalized.slug || (normalized.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
       const payload = {
         id: uuid,
-        name: updated.name ?? '',
+        name: normalized.name ?? '',
         slug: cleanSlug,
-        position: updated.position ?? '',
-        organization: updated.organization ?? '',
-        country: updated.country ?? 'Ghana',
-        photo_url: updated.photo_url ?? '',
-        biography: updated.biography ?? '',
-        expertise: updated.expertise ?? [],
-        is_keynote: updated.is_keynote ?? false,
-        linkedin_url: updated.linkedin_url || null,
-        twitter_url: updated.twitter_url || null,
-        website_url: updated.website_url || null,
+        position: normalized.position ?? '',
+        organization: normalized.organization ?? '',
+        country: normalized.country ?? 'Ghana',
+        photo_url: normalized.photo_url ?? '',
+        biography: normalized.biography ?? '',
+        expertise: normalized.expertise ?? [],
+        is_keynote: isKeynote,
+        linkedin_url: normalized.linkedin_url || null,
+        twitter_url: normalized.twitter_url || null,
+        website_url: normalized.website_url || null,
       };
 
       // 1. Direct Supabase database upsert (service role bypasses RLS)
@@ -373,7 +462,7 @@ export const AdminSpeakers: React.FC = () => {
 
       // 2. Also notify backend API if running
       try {
-        await ApiClient.saveSpeaker({ ...updated, id: uuid, slug: cleanSlug });
+        await ApiClient.saveSpeaker({ ...normalized, id: uuid, slug: cleanSlug });
       } catch {
         // Backend offline / static build fallback
       }
@@ -381,6 +470,16 @@ export const AdminSpeakers: React.FC = () => {
       // Refresh from cloud so the new photo_url shows on all devices immediately
       setTimeout(() => refreshSpeakers(), 600);
     }
+  };
+
+  const handleToggleRole = (spk: Speaker) => {
+    const isKeynote = isKeynoteSpeaker(spk);
+    const nextKeynote = !isKeynote;
+    handleSave({
+      ...spk,
+      is_keynote: nextKeynote,
+      speaker_type: nextKeynote ? 'KEYNOTE' : 'PANEL',
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -411,108 +510,183 @@ export const AdminSpeakers: React.FC = () => {
       }
     >
       <div className="space-y-6">
-        {/* Search bar */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-          <div className="relative w-full sm:w-96">
+        {/* Category Filter Tabs & Search Controls */}
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            {/* Filter Tabs */}
+            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('ALL')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  categoryFilter === 'ALL'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                }`}
+              >
+                All Speakers ({speakers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('KEYNOTE')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  categoryFilter === 'KEYNOTE'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-amber-700 hover:text-amber-900 hover:bg-white/60'
+                }`}
+              >
+                <Star className="w-3.5 h-3.5 fill-current" />
+                Keynote Speakers ({keynoteCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setCategoryFilter('PANEL')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  categoryFilter === 'PANEL'
+                    ? 'bg-[#008B2E] text-white shadow-xs'
+                    : 'text-[#006B22] hover:text-[#005018] hover:bg-white/60'
+                }`}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Panels ({panelCount})
+              </button>
+            </div>
+
+            <span className="text-xs text-slate-500 font-semibold whitespace-nowrap">
+              Showing {filtered.length} of {speakers.length} Speakers
+            </span>
+          </div>
+
+          {/* Search bar */}
+          <div className="relative w-full">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search faculty name or institution..."
+              placeholder="Search by speaker name, job position, or organization..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
             />
           </div>
-          <span className="text-xs sm:text-sm text-slate-500 font-semibold whitespace-nowrap">
-            {filtered.length} Speakers Enrolled
-          </span>
         </div>
 
         {/* Speaker Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((spk) => {
             const photo = spk.photo_url;
+            const isKeynote = isKeynoteSpeaker(spk);
+
             return (
               <div
                 key={spk.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group"
+                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group flex flex-col justify-between"
               >
                 {/* Card Top */}
-                <div className="flex items-start gap-4 p-5 pb-3">
-                  {/* Avatar */}
-                  <div className="relative flex-shrink-0">
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt={spk.name}
-                        className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
-                        <User className="w-8 h-8 text-slate-400" />
-                      </div>
-                    )}
-                    {spk.is_keynote && (
-                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-400 rounded-full flex items-center justify-center shadow">
-                        <Star className="w-3 h-3 text-white fill-white" />
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <h4 className="text-sm font-black text-slate-900 truncate">{spk.name}</h4>
-                      {spk.is_keynote && (
-                        <span className="text-[9px] font-black uppercase bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded-full leading-none">
-                          Keynote
+                <div className="p-5 pb-3">
+                  <div className="flex items-start gap-4">
+                    {/* Avatar */}
+                    <div className="relative flex-shrink-0">
+                      {photo ? (
+                        <img
+                          src={photo}
+                          alt={spk.name}
+                          className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                          <User className="w-8 h-8 text-slate-400" />
+                        </div>
+                      )}
+                      {isKeynote ? (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow"
+                          title="Keynote Speaker"
+                        >
+                          <Star className="w-3 h-3 text-white fill-white" />
+                        </span>
+                      ) : (
+                        <span
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#008B2E] rounded-full flex items-center justify-center shadow"
+                          title="Panels"
+                        >
+                          <Users className="w-3 h-3 text-white" />
                         </span>
                       )}
                     </div>
-                    <p className="text-xs font-bold text-[#008B2E] truncate mt-0.5">{spk.position}</p>
-                    <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
-                      <Building className="w-3 h-3 flex-shrink-0" /> {spk.organization}
-                    </p>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <h4 className="text-sm font-black text-slate-900 truncate">{spk.name}</h4>
+                        {isKeynote ? (
+                          <span className="text-[9px] font-extrabold uppercase bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-full leading-none inline-flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-current text-amber-600" />
+                            Keynote Speaker
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-extrabold uppercase bg-emerald-100 border border-emerald-300 text-[#006B22] px-2 py-0.5 rounded-full leading-none inline-flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5 text-[#008B2E]" />
+                            Panels
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-bold text-[#008B2E] truncate mt-0.5">{spk.position}</p>
+                      <p className="text-xs text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                        <Building className="w-3 h-3 flex-shrink-0" /> {spk.organization}
+                      </p>
+                    </div>
                   </div>
+
+                  {/* Expertise Tags */}
+                  {spk.expertise && spk.expertise.length > 0 && (
+                    <div className="pt-3 flex flex-wrap gap-1.5">
+                      {spk.expertise.slice(0, 3).map((exp, idx) => (
+                        <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+                          {exp}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {/* Expertise Tags */}
-                {spk.expertise && spk.expertise.length > 0 && (
-                  <div className="px-5 pb-3 flex flex-wrap gap-1.5">
-                    {spk.expertise.slice(0, 3).map((exp, idx) => (
-                      <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
-                        {exp}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
                 {/* Card Footer Actions */}
-                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/60 rounded-b-2xl">
-                  <div className="flex items-center gap-2">
-                    {spk.linkedin_url && (
-                      <a href={spk.linkedin_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-blue-600 transition-colors">
-                        <Link2 className="w-4 h-4" />
-                      </a>
+                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/70 rounded-b-2xl">
+                  {/* 1-Click Role Switcher */}
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRole(spk)}
+                    title={`Click to switch designation to ${isKeynote ? 'Panels' : 'Keynote Speaker'}`}
+                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                      isKeynote
+                        ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                        : 'bg-emerald-50 text-[#006B22] border-emerald-300 hover:bg-emerald-100'
+                    }`}
+                  >
+                    {isKeynote ? (
+                      <>
+                        <Star className="w-3 h-3 fill-current text-amber-500" />
+                        <span>Keynote Speaker</span>
+                      </>
+                    ) : (
+                      <>
+                        <Users className="w-3 h-3 text-[#008B2E]" />
+                        <span>Panels</span>
+                      </>
                     )}
-                    {spk.website_url && (
-                      <a href={spk.website_url} target="_blank" rel="noreferrer" className="text-slate-400 hover:text-slate-700 transition-colors">
-                        <Globe className="w-4 h-4" />
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                  </button>
+
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => setEditTarget(spk)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:border-[#008B2E] hover:text-[#008B2E] transition-all shadow-sm"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:border-[#008B2E] hover:text-[#008B2E] transition-all shadow-xs"
                     >
-                      <Edit2 className="w-3.5 h-3.5" /> Edit
+                      <Edit2 className="w-3 h-3" /> Edit
                     </button>
                     <button
                       onClick={() => handleDelete(spk.id!)}
-                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-red-400 hover:border-red-300 hover:bg-red-50 transition-all shadow-sm"
+                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-red-400 hover:border-red-300 hover:bg-red-50 transition-all shadow-xs"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 </div>
@@ -526,8 +700,8 @@ export const AdminSpeakers: React.FC = () => {
               <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
                 <User className="w-8 h-8 text-slate-300" />
               </div>
-              <p className="text-base font-bold text-slate-400">No speakers found</p>
-              <p className="text-sm text-slate-400 mt-1">Add a speaker or adjust your search</p>
+              <p className="text-base font-bold text-slate-700">No speakers found</p>
+              <p className="text-sm text-slate-400 mt-1">Add a speaker or adjust your search filter</p>
             </div>
           )}
         </div>

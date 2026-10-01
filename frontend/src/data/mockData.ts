@@ -26,6 +26,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Robert Dzato is the CEO of the Chartered Institute of Bankers, Ghana. A transformative leader, he oversees professional certification, ethical standardization, and continuous learning curriculum for all Ghanaian banking practitioners.',
     expertise: ['Executive Leadership', 'Ethics in Banking', 'Professional Standards', 'Corporate Strategy'],
     is_keynote: true,
+    speaker_type: 'KEYNOTE',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -39,6 +40,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Dr. Johnson Pandit Asiama is an eminent Ghanaian central banker and economist serving as Governor of the Bank of Ghana.',
     expertise: ['Central Banking', 'Monetary Stability', 'Financial Regulation'],
     is_keynote: true,
+    speaker_type: 'KEYNOTE',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -52,6 +54,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Hon. Samuel Nartey George leads policy initiatives on national telecommunications, AI infrastructure, and digital innovation in Ghana.',
     expertise: ['Digital Innovation', 'Telecommunications', 'Cyber Policy'],
     is_keynote: true,
+    speaker_type: 'KEYNOTE',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -65,6 +68,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Hon. Haruna Iddrisu champions educational modernization, vocational training, and tertiary banking curriculum accreditation.',
     expertise: ['Education Policy', 'Human Capital', 'Governance'],
     is_keynote: true,
+    speaker_type: 'KEYNOTE',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -78,6 +82,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Dr. Stephane Nwolley is a leading specialist in blockchain tokenization, central bank digital currencies, and stablecoin architectures.',
     expertise: ['Stablecoins', 'Virtual Assets', 'Fintech Architecture'],
     is_keynote: true,
+    speaker_type: 'KEYNOTE',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -91,6 +96,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Dr. Albert Antwi-Bosiako is an internationally accredited cybersecurity strategist advising corporate banking boards on threat mitigation.',
     expertise: ['Cybersecurity', 'Fraud Mitigation', 'Digital Forensics'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -104,6 +110,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Clifford Duke Mettle, FCIB has decades of executive banking leadership with deep mastery in trade finance and AI anti-fraud systems.',
     expertise: ['Trade Finance', 'AI Fraud Systems', 'Corporate Banking'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -117,6 +124,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Rita Elumelu, FCIB specializes in international trade compliance, AML surveillance, and AI-enabled transactional monitoring.',
     expertise: ['AML/CFT', 'Trade Finance', 'Risk Engineering'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -130,6 +138,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Doris Ahiati, FCIB is an accomplished corporate executive, seasoned moderator, and advisor on ethics and institutional integrity.',
     expertise: ['Corporate Governance', 'Ethics', 'Boardroom Strategy'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -143,6 +152,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Farihan Alhassan oversees supervisory frameworks, macroprudential risk directives, and regulatory compliance for commercial banks.',
     expertise: ['Banking Supervision', 'Prudential Compliance', 'Risk Management'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -156,6 +166,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Dr. Marcel Lukas is an internationally acclaimed researcher at the University of St Andrews specializing in applied AI for banking.',
     expertise: ['AI in Banking', 'Machine Learning', 'Behavioral Finance'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -169,6 +180,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'John Awuah is the CEO of the Ghana Association of Banks and former MD of Universal Merchant Bank.',
     expertise: ['Commercial Banking', 'Advocacy', 'Financial Regulation'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -182,6 +194,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Emelia Sackey, FCIB is an authority in banking ethics, fiduciary duty, and institutional fraud prevention.',
     expertise: ['Banking Ethics', 'Whistleblowing', 'Internal Controls'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -195,6 +208,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Frank Tawiah is a digital assets researcher exploring tokenization of securities and decentralized liquidity protocols.',
     expertise: ['Tokenization', 'Megatrends', 'Decentralized Finance'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -208,6 +222,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Philip Twum, ACIB advises commercial banks and digital credit providers on scalable product architecture.',
     expertise: ['Fintech Partnerships', 'Digital Credit', 'Product Innovation'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -221,6 +236,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Philip Kwaw Sebuabe leads virtual asset regulatory sandboxes and cross-border digital settlement research.',
     expertise: ['Virtual Assets', 'Payment Rails', 'Fintech Law'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -234,6 +250,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Paul Baah Sackey, FCIB is an esteemed banking fellow with over three decades of institutional leadership.',
     expertise: ['Executive Mentorship', 'Retail Banking', 'Leadership'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   },
   {
@@ -247,6 +264,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     biography: 'Charles Ofori Acquah, FCIB brings deep treasury and commercial credit acumen as a senior CIB Ghana Fellow.',
     expertise: ['Treasury Management', 'Ethics in Banking', 'Corporate Strategy'],
     is_keynote: false,
+    speaker_type: 'PANEL',
     linkedin_url: 'https://linkedin.com',
   }
 ];

@@ -33,6 +33,8 @@ export interface UserProfile {
   created_at: string;
 }
 
+export type SpeakerType = 'KEYNOTE' | 'PANEL';
+
 export interface Speaker {
   id: string;
   name: string;
@@ -44,6 +46,7 @@ export interface Speaker {
   biography: string;
   expertise: string[];
   is_keynote?: boolean;
+  speaker_type?: SpeakerType;
   linkedin_url?: string;
   twitter_url?: string;
   website_url?: string;

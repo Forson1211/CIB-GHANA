@@ -47,10 +47,19 @@ export const SpeakerModal: React.FC<SpeakerModalProps> = ({
           </div>
 
           <div className="text-center sm:text-left space-y-1.5 flex-1">
-            <div className="flex items-center justify-center sm:justify-start gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
               <h3 className="text-xl sm:text-2xl font-black text-cib-charcoal-900 font-display">
                 {speaker.name}
               </h3>
+              {(speaker.speaker_type === 'KEYNOTE' || speaker.is_keynote) ? (
+                <span className="text-[10px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  ★ Keynote Speaker
+                </span>
+              ) : (
+                <span className="text-[10px] font-extrabold uppercase bg-emerald-100 text-[#006B22] border border-emerald-300 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  Panels
+                </span>
+              )}
             </div>
             <p className="text-sm font-bold text-cib-green-800">
               {speaker.position}

@@ -45,6 +45,13 @@ export const Speakers: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedExpertise, setSelectedExpertise] = useState('ALL');
 
+  // Helper classification functions
+  const isKeynoteSpeaker = (s: Speaker) => s.speaker_type === 'KEYNOTE' || Boolean(s.is_keynote);
+  const isPanelSpeaker = (s: Speaker) => s.speaker_type === 'PANEL' || (!s.is_keynote && s.speaker_type !== 'KEYNOTE');
+
+  const keynoteCount = useMemo(() => speakers.filter(isKeynoteSpeaker).length, [speakers]);
+  const panelCount = useMemo(() => speakers.filter(isPanelSpeaker).length, [speakers]);
+
   // Extract all unique expertise tags
   const allExpertise = useMemo(() => {
     const set = new Set<string>();
@@ -55,9 +62,9 @@ export const Speakers: React.FC = () => {
   // Filter and sort speakers
   const filteredSpeakers = useMemo(() => {
     const list = speakers.filter((spk) => {
-      // Role filter from dropdown links (?type=keynote or ?type=faculty)
-      if (typeFilter === 'keynote' && !spk.is_keynote) return false;
-      if (typeFilter === 'faculty' && spk.is_keynote) return false;
+      // Role filter (?type=keynote or ?type=panel or legacy ?type=faculty)
+      if (typeFilter === 'keynote' && !isKeynoteSpeaker(spk)) return false;
+      if ((typeFilter === 'panel' || typeFilter === 'faculty') && !isPanelSpeaker(spk)) return false;
 
       const matchesExpertise =
         selectedExpertise === 'ALL' || spk.expertise?.includes(selectedExpertise);
@@ -113,12 +120,12 @@ export const Speakers: React.FC = () => {
               type="button"
               onClick={() => setSearchParams({})}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer whitespace-nowrap ${
-                typeFilter === 'all'
+                typeFilter === 'all' || !typeFilter
                   ? 'bg-[#008129] text-white font-bold shadow-xs'
                   : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              All Speakers ({speakers.length})
+              ALL SPEAKERS ({speakers.length})
             </button>
             <button
               type="button"
@@ -129,18 +136,18 @@ export const Speakers: React.FC = () => {
                   : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              Keynotes &amp; Distinguished ({speakers.filter((s) => s.is_keynote).length})
+              KEYNOTE SPEAKERS ({keynoteCount})
             </button>
             <button
               type="button"
-              onClick={() => setSearchParams({ type: 'faculty' })}
+              onClick={() => setSearchParams({ type: 'panel' })}
               className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-none transition-all cursor-pointer whitespace-nowrap ${
-                typeFilter === 'faculty'
+                typeFilter === 'panel' || typeFilter === 'faculty'
                   ? 'bg-[#008129] text-white font-bold shadow-xs'
                   : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              Panels &amp; Faculty ({speakers.filter((s) => !s.is_keynote).length})
+              PANELS ({panelCount})
             </button>
           </div>
 

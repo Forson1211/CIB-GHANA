@@ -231,7 +231,7 @@ export const Navbar: React.FC = () => {
             <img
               src="/cib-official-logo.png"
               alt="Chartered Institute of Bankers, Ghana"
-              className="h-12 sm:h-14 md:h-16 lg:h-[68px] w-auto max-h-[72px] object-contain hover:brightness-105 transition-all"
+              className="h-16 sm:h-16 md:h-16 lg:h-[68px] w-auto max-h-[72px] object-contain hover:brightness-105 transition-all"
             />
           </Link>
 
@@ -321,114 +321,112 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className={`p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer ${
-                mobileMenuOpen ? 'opacity-0 pointer-events-none' : ''
-              }`}
-              aria-label="Open Navigation Menu"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              className="p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer"
+              aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             >
-              <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+              {mobileMenuOpen
+                ? <X className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                : <Menu className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer Overlay (Swipes in from left, covers screen partially but not full screen) */}
+      {/* Mobile Dropdown Menu — drops down from navbar top */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <>
-            {/* Darkened backdrop overlay for right side */}
-            <motion.div
-              key="mobile-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.18, ease: 'easeOut' }}
-              onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-black/60 z-50 lg:hidden"
-            />
+          <motion.div
+            key="mobile-dropdown"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
+            className="lg:hidden w-full text-white select-none"
+            style={{
+              backgroundColor: 'rgba(13, 58, 33, 0.97)',
+              backdropFilter: 'blur(20px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(160%)',
+              borderTop: '1px solid rgba(255,255,255,0.10)',
+              borderBottom: '1px solid rgba(255,255,255,0.10)',
+            }}
+          >
+            {/* Nav items */}
+            <div className="px-4 pt-2 pb-1">
+              {/* Home link */}
+              <Link
+                to="/"
+                onClick={handleHomeNavigation}
+                className="flex items-center justify-between py-3 border-b border-white/10 text-[#FFE500] font-bold text-[15px]"
+              >
+                Home
+              </Link>
 
-            {/* Side Drawer sliding from left - ultra fast and smooth */}
-            <motion.div
-              key="mobile-drawer"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="fixed inset-y-0 left-0 z-50 w-[84vw] max-w-[360px] bg-[#0D3A21] border-r border-white/15 shadow-2xl flex flex-col justify-between text-white lg:hidden overflow-hidden select-none will-change-transform transform-gpu"
-            >
-              {/* Top Header matching reference */}
-              <div className="flex items-center justify-between px-4 py-3.5 border-b border-white/10 shrink-0 bg-[#0D3A21]">
-                <Link
-                  to="/"
-                  onClick={handleHomeNavigation}
-                  className="flex items-center group select-none py-1"
-                >
-                  <img
-                    src="/cib-official-logo.png"
-                    alt="Chartered Institute of Bankers, Ghana"
-                    className="h-12 sm:h-13 w-auto max-h-[56px] object-contain"
-                  />
-                </Link>
+              {/* Dropdown sections with accordion */}
+              {navDropdowns.map((menu) => (
+                <div key={menu.title} className="border-b border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleClick(menu.title)}
+                    className="flex items-center justify-between w-full py-3 text-left text-white font-semibold text-[15px] cursor-pointer"
+                  >
+                    <span>{menu.title}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 opacity-60 ${
+                        activeDropdown === menu.title ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {activeDropdown === menu.title && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="overflow-hidden"
+                      >
+                        <div className="pb-2 pl-3 space-y-0.5">
+                          {menu.links.map((link) => (
+                            <Link
+                              key={link.label}
+                              to={link.path}
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                setActiveDropdown(null);
+                                if (link.path.includes('#corporate-members')) {
+                                  const el = document.getElementById('corporate-members');
+                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                                }
+                              }}
+                              className="block py-2 text-[14px] text-white/75 hover:text-[#FFE500] transition-colors"
+                            >
+                              {link.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
 
-                {/* Yellow Square Close Button matching screenshot */}
-                <button
-                  type="button"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="w-10 h-10 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 text-slate-950 flex items-center justify-center rounded-none shadow-md cursor-pointer shrink-0"
-                  aria-label="Close Navigation Menu"
-                >
-                  <X className="w-6 h-6 stroke-[2.5]" />
-                </button>
-              </div>
-
-              {/* Scrollable Navigation Categories */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                {navDropdowns.map((menu) => (
-                  <div key={menu.title} className="border-b border-white/10 pb-3">
-                    <div className="text-xs uppercase font-black tracking-wider text-[#FFE500] px-2 py-1">
-                      {menu.title}
-                    </div>
-                    <div className="space-y-0.5 mt-1">
-                      {menu.links.map((link) => (
-                        <Link
-                          key={link.label}
-                          to={link.path}
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            if (link.path.includes('#corporate-members')) {
-                              const el = document.getElementById('corporate-members');
-                              if (el) {
-                                el.scrollIntoView({ behavior: 'smooth' });
-                              }
-                            }
-                          }}
-                          className="block px-2 py-1.5 text-sm font-semibold text-white/90 hover:text-[#FFE500] hover:bg-white/[0.04] transition-colors"
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Bottom Sticky Action Banner matching screenshot */}
-              <div className="p-3 border-t border-white/10 shrink-0 bg-[#0D3A21]">
-                <Link
-                  to={
-                    registeredUserEmail
-                      ? '/my-portal'
-                      : '/events/30th-national-banking-ethics-conference-2026/register'
-                  }
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center w-full py-3.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-lg transition-all"
-                >
-                  <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>
-                </Link>
-              </div>
-            </motion.div>
-          </>
+            {/* Register CTA */}
+            <div className="px-4 py-3">
+              <Link
+                to={
+                  registeredUserEmail
+                    ? '/my-portal'
+                    : '/events/30th-national-banking-ethics-conference-2026/register'
+                }
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-md transition-all"
+              >
+                <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>
+              </Link>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </header>

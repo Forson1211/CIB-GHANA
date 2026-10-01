@@ -13,7 +13,11 @@ export const isSupabaseConfigured = Boolean(
 );
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        storageKey: 'sb-cib-anon-auth-token',
+      },
+    })
   : null;
 
 export const supabaseServiceKey =
@@ -25,6 +29,7 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     persistSession: false,
     autoRefreshToken: false,
+    storageKey: 'sb-cib-admin-auth-token',
   },
 });
 

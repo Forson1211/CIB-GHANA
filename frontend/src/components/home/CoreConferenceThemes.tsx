@@ -134,9 +134,9 @@ export const CoreConferenceThemes: React.FC = () => {
         {/* Top Header Left-Aligned with Navbar & Hero Left Margin */}
         <div className="text-left space-y-2 mb-12 sm:mb-16">
           <p className="text-xs sm:text-sm uppercase tracking-widest font-black text-[#FFE500]">
-            Core Conference Themes &bull; 30th National Banking &amp; Ethics Conference
+            Banking on the Future
           </p>
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white leading-tight">
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-light font-display tracking-tight text-white leading-tight">
             Trust, Technology and Transformation
           </h2>
         </div>

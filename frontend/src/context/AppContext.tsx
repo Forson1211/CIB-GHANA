@@ -547,9 +547,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     // Direct Supabase fallback
-    if (supabase) {
+    const eventClient = supabaseAdmin || supabase;
+    if (eventClient) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await eventClient
           .from('events')
           .select('*, registration_types(*)')
           .order('start_date', { ascending: true });
@@ -605,9 +606,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // Backend temporarily offline; check direct Supabase fallback below
     }
 
-    if (!synced && supabase) {
+    const regClient = supabaseAdmin || supabase;
+    if (!synced && regClient) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await regClient
           .from('registrations')
           .select('*, registration_types(name), events(title)')
           .order('created_at', { ascending: false });
@@ -664,9 +666,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // ApiClient offline
     }
 
-    if (remoteSpeakers.length === 0 && supabase) {
+    const spkClient = supabaseAdmin || supabase;
+    if (remoteSpeakers.length === 0 && spkClient) {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await spkClient
           .from('speakers')
           .select('*')
           .order('name', { ascending: true });

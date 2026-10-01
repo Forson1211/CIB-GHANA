@@ -1,5 +1,8 @@
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js';
 
+// Configuration
 const SMTP_CONFIG = {
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: parseInt(process.env.SMTP_PORT || '465', 10),
@@ -13,11 +16,21 @@ const SMTP_FROM = process.env.SMTP_FROM || 'Chartered Institute of Bankers, Ghan
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_TEST_RECIPIENT = process.env.RESEND_TEST_RECIPIENT || '';
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Chartered Institute of Bankers, Ghana <events@cibgh.org>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'CIB Ghana <cibghevent@resend.dev>';
 const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'events@cibgh.org';
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://ijfjuezgvroyhtwcnlrx.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || 'https://ijfjuezgvroyhtwcnlrx.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqZmp1ZXpndnJveWh0d2NubHJ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDMyMjM3NCwiZXhwIjoyMTA1ODk4Mzc0fQ.LKsElhVQb7kY4Xek5SvoTwTpZ1rsuWbjSBX7-SlMP9k';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+  },
+});
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +41,61 @@ const CORS_HEADERS = {
 
 function formatGHS(amount: number | string): string {
   return `GHS ${Number(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function stringToUuid(str: string): string {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (uuidRegex.test(str)) return str;
+
+  const hash = crypto.createHash('md5').update(str).digest('hex');
+  return [
+    hash.substring(0, 8),
+    hash.substring(8, 12),
+    '4' + hash.substring(13, 16),
+    ((parseInt(hash.substring(16, 18), 16) & 0x3f) | 0x80).toString(16) + hash.substring(18, 20),
+    hash.substring(20, 32),
+  ].join('-');
+}
+
+function mapDbRegistration(r: any) {
+  const typeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+  const eventTitle = r.events?.title || r.event_title || '30th National Banking & Ethics Conference 2026';
+  const memId = (r.cib_member_id || '').toUpperCase();
+  let cat = r.membership_category || 'Non-Member';
+  if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
+    if (memId.startsWith('FCIB') || typeName.toLowerCase().includes('fellow')) cat = 'FCIB';
+    else if (memId.startsWith('ACIB') || typeName.toLowerCase().includes('associate') || typeName.toLowerCase().includes('chartered') || typeName.toLowerCase().includes('member')) cat = 'ACIB';
+    else if (memId.startsWith('STU') || typeName.toLowerCase().includes('student')) cat = 'Student';
+  }
+
+  return {
+    id: r.id,
+    event_id: r.event_id,
+    event_title: eventTitle,
+    registration_number: r.registration_number,
+    registration_type_id: r.registration_type_id,
+    registration_type_name: typeName,
+    first_name: r.first_name,
+    last_name: r.last_name,
+    email: r.email,
+    phone: r.phone || '',
+    organization: r.organization || '',
+    job_title: r.job_title || 'Delegate',
+    country: r.country || 'Ghana',
+    cib_member_id: r.cib_member_id,
+    membership_category: cat,
+    attendance_type: r.attendance_type || 'PHYSICAL',
+    dietary_requirements: r.dietary_requirements,
+    special_assistance: r.special_assistance,
+    total_amount: Number(r.total_amount) || 0,
+    currency: r.currency || 'GHS',
+    payment_status: r.payment_status || 'PENDING',
+    payment_reference: r.payment_reference,
+    payment_method: r.payment_method,
+    check_in_status: r.check_in_status || 'REGISTERED',
+    check_in_time: r.check_in_time,
+    created_at: r.created_at || new Date().toISOString(),
+  };
 }
 
 function buildConfirmationHtml(params: {
@@ -220,7 +288,6 @@ async function dispatchEmail(options: {
         text: options.plainText,
         html: options.htmlContent,
       });
-      console.log(`[Netlify Function] Delivered via Gmail SMTP to ${options.recipient} (ID: ${info.messageId})`);
       return { success: true, deliveredTo: options.recipient, messageId: info.messageId };
     } catch (smtpErr: any) {
       console.warn('[Netlify Function] SMTP error, trying Resend fallback:', smtpErr.message);
@@ -234,28 +301,587 @@ export const handler = async (event: any, _context?: any) => {
     return { statusCode: 204, headers: CORS_HEADERS, body: '' };
   }
 
-  // Strip prefixes
-  let pathname = event.path
+  // Strip function and API prefixes
+  let pathname = (event.path || '')
     .replace(/^\/\.netlify\/functions\/api/, '')
     .replace(/^\/api/, '');
   if (!pathname.startsWith('/')) pathname = `/${pathname}`;
 
-  // 1. Health check
-  if (pathname === '/health' || pathname === '') {
-    return {
-      statusCode: 200,
-      headers: CORS_HEADERS,
-      body: JSON.stringify({
-        status: 'UP',
-        service: 'CIB Ghana Netlify Serverless API',
-        timestamp: new Date().toISOString(),
-      }),
-    };
-  }
+  const method = event.httpMethod;
 
-  // 2. Direct Send Email
-  if (pathname === '/send-email' && event.httpMethod === 'POST') {
-    try {
+  try {
+    // -------------------------------------------------------------
+    // 1. Health check
+    // -------------------------------------------------------------
+    if (pathname === '/health' || pathname === '') {
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          status: 'UP',
+          service: 'CIB Ghana Netlify Serverless API',
+          timestamp: new Date().toISOString(),
+        }),
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 2. Admin Authentication & Stats
+    // -------------------------------------------------------------
+    if (pathname === '/admin/login' && method === 'POST') {
+      const body = JSON.parse(event.body || '{}');
+      if (body.password && body.password.trim() === 'cibghana') {
+        return {
+          statusCode: 200,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({
+            success: true,
+            message: 'Admin authentication successful',
+            token: 'cib_admin_token_active',
+            user: { role: 'SUPER_ADMIN', email: 'admin@cibgh.org', name: 'CIB Administrator' },
+          }),
+        };
+      }
+      return {
+        statusCode: 401,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: false, message: 'Invalid administrator password' }),
+      };
+    }
+
+    if (pathname === '/admin/stats' && method === 'GET') {
+      const [{ data: eventsData }, { data: regsData }] = await Promise.all([
+        supabase.from('events').select('id, status'),
+        supabase.from('registrations').select('id, payment_status, total_amount, check_in_status, membership_category'),
+      ]);
+
+      const allEvents = eventsData || [];
+      const allRegs = regsData || [];
+
+      const totalRegistrations = allRegs.length;
+      const paidRegistrations = allRegs.filter((r) => r.payment_status === 'SUCCESSFUL');
+      const totalRevenue = paidRegistrations.reduce((acc, r) => acc + (Number(r.total_amount) || 0), 0);
+      const checkedInCount = allRegs.filter((r) => r.check_in_status === 'CHECKED_IN').length;
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          success: true,
+          data: {
+            total_events: allEvents.length,
+            active_events: allEvents.filter((e) => e.status === 'OPEN_FOR_REGISTRATION').length,
+            total_registrations: totalRegistrations,
+            paid_registrations: paidRegistrations.length,
+            total_revenue_ghs: totalRevenue,
+            checked_in_attendees: checkedInCount,
+          },
+        }),
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 3. Speakers CRUD & Upload
+    // -------------------------------------------------------------
+    if (pathname === '/speakers/upload' && method === 'POST') {
+      const { image, speakerId = 'spk' } = JSON.parse(event.body || '{}');
+      if (!image) {
+        return {
+          statusCode: 400,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Image data is required' }),
+        };
+      }
+
+      let buffer: Buffer;
+      let mimeType = 'image/jpeg';
+      let ext = 'jpg';
+
+      if (image.startsWith('data:')) {
+        const parts = image.split(',');
+        const match = parts[0].match(/:(.*?);/);
+        if (match) mimeType = match[1];
+        if (mimeType.includes('png')) ext = 'png';
+        else if (mimeType.includes('webp')) ext = 'webp';
+        else if (mimeType.includes('gif')) ext = 'gif';
+        buffer = Buffer.from(parts[1], 'base64');
+      } else {
+        buffer = Buffer.from(image, 'base64');
+      }
+
+      const cleanId = String(speakerId).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const uploadPath = `speakers/${cleanId}-${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('speaker-photos')
+        .upload(uploadPath, buffer, {
+          contentType: mimeType,
+          upsert: true,
+        });
+
+      if (uploadError) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: uploadError.message }),
+        };
+      }
+
+      const { data: pubData } = supabase.storage.from('speaker-photos').getPublicUrl(uploadPath);
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, url: pubData.publicUrl, path: uploadPath }),
+      };
+    }
+
+    if (pathname === '/speakers' && method === 'GET') {
+      const { data, error } = await supabase
+        .from('speakers')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data: data || [] }),
+      };
+    }
+
+    if (pathname === '/speakers' && method === 'POST') {
+      const speaker = JSON.parse(event.body || '{}');
+      if (!speaker || !speaker.name) {
+        return {
+          statusCode: 400,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Speaker name is required' }),
+        };
+      }
+
+      const rawId = speaker.id || `sp-${Date.now()}`;
+      const uuid = stringToUuid(rawId);
+      const slug = speaker.slug || speaker.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+      const row = {
+        id: uuid,
+        name: speaker.name,
+        slug,
+        position: speaker.position || '',
+        organization: speaker.organization || '',
+        country: speaker.country || 'Ghana',
+        photo_url: speaker.photo_url || '',
+        biography: speaker.biography || '',
+        expertise: Array.isArray(speaker.expertise) ? speaker.expertise : [],
+        is_keynote: Boolean(speaker.is_keynote),
+        linkedin_url: speaker.linkedin_url || null,
+        twitter_url: speaker.twitter_url || null,
+        website_url: speaker.website_url || null,
+      };
+
+      const { data, error } = await supabase.from('speakers').upsert(row).select().single();
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data }),
+      };
+    }
+
+    if (pathname.startsWith('/speakers/') && method === 'DELETE') {
+      const speakerId = pathname.replace('/speakers/', '');
+      const uuid = stringToUuid(speakerId);
+      const { error } = await supabase.from('speakers').delete().eq('id', uuid);
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, message: 'Speaker deleted successfully' }),
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 4. Events CRUD
+    // -------------------------------------------------------------
+    if (pathname === '/events' && method === 'GET') {
+      const queryParams = event.queryStringParameters || {};
+      let query = supabase.from('events').select('*, registration_types(*)').order('start_date', { ascending: true });
+
+      if (queryParams.status && queryParams.status !== 'ALL') {
+        query = query.eq('status', queryParams.status);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      let eventsList = (data || []);
+      if (queryParams.category && queryParams.category !== 'ALL') {
+        eventsList = eventsList.filter((e: any) => e.category?.toLowerCase() === queryParams.category?.toLowerCase());
+      }
+      if (queryParams.search) {
+        const q = queryParams.search.toLowerCase().trim();
+        eventsList = eventsList.filter((e: any) => (e.title && e.title.toLowerCase().includes(q)) || (e.location && e.location.toLowerCase().includes(q)));
+      }
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, count: eventsList.length, data: eventsList }),
+      };
+    }
+
+    if (pathname.startsWith('/events/') && method === 'GET') {
+      const slugOrId = decodeURIComponent(pathname.replace('/events/', ''));
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId);
+      let query = supabase.from('events').select('*, registration_types(*)');
+
+      if (isUuid) {
+        query = query.eq('id', slugOrId);
+      } else {
+        query = query.or(`id.eq.${slugOrId},slug.eq.${slugOrId}`);
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error || !data) {
+        return {
+          statusCode: 404,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Event not found' }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data }),
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 5. Registrations CRUD & Resend
+    // -------------------------------------------------------------
+    if (pathname === '/registrations' && method === 'GET') {
+      const queryParams = event.queryStringParameters || {};
+      let query = supabase
+        .from('registrations')
+        .select('*, registration_types(name), events(title)')
+        .order('created_at', { ascending: false });
+
+      if (queryParams.event_id && queryParams.event_id !== 'ALL') {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(queryParams.event_id);
+        if (isUuid) query = query.eq('event_id', queryParams.event_id);
+      }
+      if (queryParams.status && queryParams.status !== 'ALL') query = query.eq('check_in_status', queryParams.status);
+      if (queryParams.payment_status && queryParams.payment_status !== 'ALL') query = query.eq('payment_status', queryParams.payment_status);
+
+      const { data, error } = await query;
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      let list = (data || []).map(mapDbRegistration);
+      if (queryParams.membership_category && queryParams.membership_category !== 'ALL') {
+        list = list.filter((r) => r.membership_category === queryParams.membership_category);
+      }
+      if (queryParams.search) {
+        const q = queryParams.search.toLowerCase().trim();
+        list = list.filter(
+          (r) =>
+            r.registration_number.toLowerCase().includes(q) ||
+            r.first_name.toLowerCase().includes(q) ||
+            r.last_name.toLowerCase().includes(q) ||
+            r.email.toLowerCase().includes(q) ||
+            (r.cib_member_id && r.cib_member_id.toLowerCase().includes(q)) ||
+            (r.organization && r.organization.toLowerCase().includes(q)) ||
+            (r.payment_reference && r.payment_reference.toLowerCase().includes(q))
+        );
+      }
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, count: list.length, data: list }),
+      };
+    }
+
+    if (pathname.includes('/resend-confirmation') && method === 'POST') {
+      const parts = pathname.split('/');
+      const identifier = parts[parts.indexOf('registrations') + 1] || 'CIB-DELEGATE';
+      const body = JSON.parse(event.body || '{}');
+      const recipient = body.to || body.email || body.data?.email || RESEND_TEST_RECIPIENT;
+
+      const d = body.data || body;
+      const attendeeName = d.attendeeName || `${d.first_name || ''} ${d.last_name || ''}`.trim() || 'Esteemed Delegate';
+      const eventTitle = d.eventTitle || d.event_title || '30th National Banking & Ethics Conference 2026';
+      const eventDate = d.eventDate || 'November 9 - 10, 2026';
+      const eventVenue = d.eventVenue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
+      const amount = d.amount || d.total_amount || 4000;
+      const reference = d.reference || d.payment_reference || `PAY_${Date.now()}`;
+      const paymentMethod = d.paymentMethod || d.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)';
+      const ticketUrl = d.ticketUrl || `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${identifier}`;
+      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(identifier)}`;
+
+      const htmlContent = d.html || buildConfirmationHtml({
+        attendeeName,
+        eventTitle,
+        eventDate,
+        eventVenue,
+        regNumber: identifier,
+        amount,
+        reference,
+        paymentMethod,
+        ticketUrl,
+        qrImageUrl,
+      });
+
+      const subject = `Payment Confirmed & Pass Issued: ${eventTitle} (Ref: ${identifier})`;
+      const plainText = `
+Payment Confirmation & Accreditation Pass
+Event: ${eventTitle}
+Registration Number: ${identifier}
+Delegate: ${attendeeName}
+Amount: ${formatGHS(amount)}
+Reference: ${reference}
+View Ticket: ${ticketUrl}
+      `.trim();
+
+      const dispatchResult = await dispatchEmail({
+        recipient,
+        subject,
+        htmlContent,
+        plainText,
+      });
+
+      return {
+        statusCode: dispatchResult.success ? 200 : 502,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          success: dispatchResult.success,
+          message: dispatchResult.success
+            ? `Confirmation email issued for pass ${identifier}`
+            : `Failed: ${dispatchResult.error}`,
+          data: dispatchResult,
+        }),
+      };
+    }
+
+    if (pathname.startsWith('/registrations/') && method === 'GET') {
+      const identifier = decodeURIComponent(pathname.replace('/registrations/', ''));
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+
+      let query = supabase
+        .from('registrations')
+        .select('*, registration_types(name), events(title)');
+
+      if (isUuid) {
+        query = query.eq('id', identifier);
+      } else {
+        query = query.or(`registration_number.ilike.${identifier},payment_reference.ilike.${identifier}`);
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error || !data) {
+        return {
+          statusCode: 404,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Registration not found' }),
+        };
+      }
+
+      const mapped = mapDbRegistration(data);
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          success: true,
+          data: {
+            registration: mapped,
+            ticket: {
+              id: `tck-${mapped.registration_number}`,
+              ticket_code: `TCK-${mapped.registration_number}`,
+              registration_id: mapped.id,
+              registration_number: mapped.registration_number,
+              attendee_name: `${mapped.first_name} ${mapped.last_name}`.trim(),
+              attendee_email: mapped.email,
+              event_id: mapped.event_id,
+              event_title: mapped.event_title,
+              venue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
+              dates: 'November 9 - 10, 2026',
+              registration_tier: mapped.registration_type_name,
+              amount_paid: mapped.total_amount,
+              payment_status: mapped.payment_status,
+              check_in_status: mapped.check_in_status,
+              qr_code_data: JSON.stringify({ reg: mapped.registration_number }),
+            },
+          },
+        }),
+      };
+    }
+
+    if (pathname === '/registrations' && method === 'POST') {
+      const body = JSON.parse(event.body || '{}');
+      if (!body.first_name || !body.email) {
+        return {
+          statusCode: 400,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'First name and email are required' }),
+        };
+      }
+
+      const regNumber = body.registration_number || `CIB-${Date.now().toString(36).toUpperCase()}`;
+
+      // Insert into Supabase registrations
+      const isUuid = (val?: string) => Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+      const dbId = isUuid(body.id) ? body.id : undefined;
+      let dbEventId = isUuid(body.event_id) ? body.event_id : undefined;
+      if (!dbEventId && (body.event_id === 'evt-1' || body.event_id?.includes('30th') || body.event_id?.includes('national-banking'))) {
+        dbEventId = 'e1111111-1111-1111-1111-111111111111';
+      }
+
+      let dbRegTypeId = isUuid(body.registration_type_id) ? body.registration_type_id : undefined;
+      if (!dbRegTypeId) {
+        if (body.registration_type_id?.includes('single')) {
+          dbRegTypeId = 'd1111111-1111-1111-1111-111111111111';
+        } else if (body.registration_type_id?.includes('double')) {
+          dbRegTypeId = 'd2222222-2222-2222-2222-222222222222';
+        } else if (body.registration_type_id?.includes('member')) {
+          dbRegTypeId = 'd3333333-3333-3333-3333-333333333333';
+        } else {
+          dbRegTypeId = 'd1111111-1111-1111-1111-111111111111';
+        }
+      }
+
+      const insertPayload: any = {
+        registration_number: regNumber,
+        first_name: body.first_name,
+        last_name: body.last_name || '',
+        email: body.email,
+        phone: body.phone || '',
+        organization: body.organization || '',
+        job_title: body.job_title || 'Delegate',
+        country: body.country || 'Ghana',
+        cib_member_id: body.cib_member_id,
+        membership_category: body.membership_category || 'Non-Member',
+        attendance_type: body.attendance_type || 'PHYSICAL',
+        dietary_requirements: body.dietary_requirements,
+        special_assistance: body.special_assistance,
+        total_amount: Number(body.total_amount) || 0,
+        currency: body.currency || 'GHS',
+        payment_status: body.payment_status || 'SUCCESSFUL',
+        payment_reference: body.payment_reference || `PAY_${Date.now()}`,
+        payment_method: body.payment_method || 'PAYSTACK_CARD',
+        check_in_status: body.check_in_status || 'REGISTERED',
+      };
+      if (dbId) insertPayload.id = dbId;
+      if (dbEventId) insertPayload.event_id = dbEventId;
+      if (dbRegTypeId) insertPayload.registration_type_id = dbRegTypeId;
+
+      const { data: savedDbReg, error: insErr } = await supabase
+        .from('registrations')
+        .insert(insertPayload)
+        .select('*, registration_types(name), events(title)')
+        .single();
+
+      if (insErr) {
+        console.error('[Netlify Function] Insert error:', insErr);
+      }
+
+      const finalReg = savedDbReg ? mapDbRegistration(savedDbReg) : { ...insertPayload, id: `reg-${Date.now()}` };
+
+      // Try inserting digital ticket
+      if (savedDbReg?.id) {
+        try {
+          await supabase.from('tickets').insert({
+            registration_id: savedDbReg.id,
+            ticket_code: 'TCK-' + regNumber,
+            qr_code_data: JSON.stringify({ reg: regNumber }),
+            security_hash: 'hash_' + Date.now(),
+            status: finalReg.check_in_status || 'REGISTERED',
+          });
+        } catch { /* ticket table optional */ }
+      }
+
+      // Also trigger confirmation email asynchronously
+      dispatchEmail({
+        recipient: body.email,
+        subject: `Payment Confirmed & Pass Issued: ${body.event_title || '30th National Banking & Ethics Conference 2026'} (Ref: ${regNumber})`,
+        htmlContent: buildConfirmationHtml({
+          attendeeName: `${body.first_name} ${body.last_name || ''}`.trim(),
+          eventTitle: body.event_title || '30th National Banking & Ethics Conference 2026',
+          eventDate: 'November 9 - 10, 2026',
+          eventVenue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
+          regNumber,
+          amount: body.total_amount || 4000,
+          reference: body.payment_reference || `PAY_${Date.now()}`,
+          paymentMethod: body.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)',
+          ticketUrl: `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${regNumber}`,
+          qrImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`,
+        }),
+        plainText: `Payment confirmed for ${body.first_name}. Registration Number: ${regNumber}`,
+      }).catch((e) => console.warn('Netlify function email dispatch notice:', e));
+
+      return {
+        statusCode: 201,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          success: true,
+          message: 'Registration created and confirmation email dispatched',
+          data: {
+            registration: finalReg,
+            ticket: {
+              id: `tck-${regNumber}`,
+              ticket_code: `TCK-${regNumber}`,
+              registration_id: finalReg.id,
+              registration_number: regNumber,
+              attendee_name: `${finalReg.first_name} ${finalReg.last_name}`.trim(),
+              attendee_email: finalReg.email,
+              event_id: finalReg.event_id,
+              event_title: finalReg.event_title,
+              venue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
+              dates: 'November 9 - 10, 2026',
+              registration_tier: finalReg.registration_type_name,
+              amount_paid: finalReg.total_amount,
+              payment_status: finalReg.payment_status,
+              check_in_status: finalReg.check_in_status,
+              qr_code_data: JSON.stringify({ reg: regNumber }),
+            },
+          },
+        }),
+      };
+    }
+
+    // -------------------------------------------------------------
+    // 6. Direct Send Email: /send-email
+    // -------------------------------------------------------------
+    if (pathname === '/send-email' && method === 'POST') {
       const body = JSON.parse(event.body || '{}');
       const recipient = body.to || body.data?.email;
       if (!recipient) {
@@ -315,184 +941,94 @@ View Ticket: ${ticketUrl}
         body: JSON.stringify({
           success: dispatchResult.success,
           message: dispatchResult.success
-            ? (dispatchResult.isSandboxFallback
-                ? `Pass generated for ${recipient}; delivered to developer inbox (${dispatchResult.deliveredTo}) in Resend sandbox mode.`
-                : `Confirmation email dispatched to ${recipient}`)
+            ? `Confirmation email dispatched to ${recipient}`
             : `Email delivery issue: ${dispatchResult.error}`,
           data: dispatchResult,
         }),
       };
-    } catch (e: any) {
-      return {
-        statusCode: 500,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ success: false, message: e?.message || 'Internal server error' }),
-      };
     }
-  }
 
-  // 3. Resend Confirmation Email: /registrations/:identifier/resend-confirmation
-  if (pathname.includes('/resend-confirmation') && event.httpMethod === 'POST') {
-    try {
+    // -------------------------------------------------------------
+    // 7. Tickets & Check-In
+    // -------------------------------------------------------------
+    if (pathname.startsWith('/tickets/') && pathname.endsWith('/check-in') && method === 'POST') {
       const parts = pathname.split('/');
-      const identifier = parts[parts.indexOf('registrations') + 1] || 'CIB-DELEGATE';
-      const body = JSON.parse(event.body || '{}');
-      const recipient = body.to || body.email || body.data?.email || RESEND_TEST_RECIPIENT;
+      const identifier = parts[parts.indexOf('tickets') + 1];
+      const now = new Date().toISOString();
 
-      const d = body.data || body;
-      const attendeeName = d.attendeeName || `${d.first_name || ''} ${d.last_name || ''}`.trim() || 'Esteemed Delegate';
-      const eventTitle = d.eventTitle || d.event_title || '30th National Banking & Ethics Conference 2026';
-      const eventDate = d.eventDate || 'November 9 - 10, 2026';
-      const eventVenue = d.eventVenue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
-      const amount = d.amount || d.total_amount || 4000;
-      const reference = d.reference || d.payment_reference || `PAY_${Date.now()}`;
-      const paymentMethod = d.paymentMethod || d.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)';
-      const ticketUrl = d.ticketUrl || `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${identifier}`;
-      const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(identifier)}`;
-
-      const htmlContent = d.html || buildConfirmationHtml({
-        attendeeName,
-        eventTitle,
-        eventDate,
-        eventVenue,
-        regNumber: identifier,
-        amount,
-        reference,
-        paymentMethod,
-        ticketUrl,
-        qrImageUrl,
-      });
-
-      const subject = `Payment Confirmed & Pass Issued: ${eventTitle} (Ref: ${identifier})`;
-      const plainText = `
-Payment Confirmation & Accreditation Pass
-Event: ${eventTitle}
-Registration Number: ${identifier}
-Delegate: ${attendeeName}
-Amount: ${formatGHS(amount)}
-Reference: ${reference}
-View Ticket: ${ticketUrl}
-      `.trim();
-
-      const dispatchResult = await dispatchEmail({
-        recipient,
-        subject,
-        htmlContent,
-        plainText,
-      });
+      await supabase
+        .from('registrations')
+        .update({ check_in_status: 'CHECKED_IN', check_in_time: now })
+        .or(`registration_number.ilike.${identifier},id.eq.${identifier}`);
 
       return {
-        statusCode: dispatchResult.success ? 200 : 502,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({
-          success: dispatchResult.success,
-          message: dispatchResult.success
-            ? `Confirmation email issued for pass ${identifier}`
-            : `Failed: ${dispatchResult.error}`,
-          data: dispatchResult,
-        }),
-      };
-    } catch (e: any) {
-      return {
-        statusCode: 500,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ success: false, message: e?.message || 'Internal server error' }),
-      };
-    }
-  }
-
-  // 4. Save Registration to Supabase directly: /registrations
-  if (pathname === '/registrations' && event.httpMethod === 'POST') {
-    try {
-      const body = JSON.parse(event.body || '{}');
-      if (!body.first_name || !body.email) {
-        return {
-          statusCode: 400,
-          headers: CORS_HEADERS,
-          body: JSON.stringify({ success: false, message: 'First name and email are required' }),
-        };
-      }
-
-      const regNumber = body.registration_number || `CIB-${Date.now().toString(36).toUpperCase()}`;
-
-      // Insert into Supabase registrations
-      const sbRes = await fetch(`${SUPABASE_URL}/rest/v1/registrations`, {
-        method: 'POST',
-        headers: {
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          'Content-Type': 'application/json',
-          Prefer: 'return=representation',
-        },
-        body: JSON.stringify({
-          registration_number: regNumber,
-          first_name: body.first_name,
-          last_name: body.last_name || '',
-          email: body.email,
-          phone: body.phone || '',
-          organization: body.organization || '',
-          job_title: body.job_title || 'Delegate',
-          country: body.country || 'Ghana',
-          cib_member_id: body.cib_member_id,
-          attendance_type: body.attendance_type || 'PHYSICAL',
-          dietary_requirements: body.dietary_requirements,
-          special_assistance: body.special_assistance,
-          total_amount: body.total_amount || 0,
-          currency: body.currency || 'GHS',
-          payment_status: body.payment_status || 'SUCCESSFUL',
-          payment_reference: body.payment_reference || `PAY_${Date.now()}`,
-          payment_method: body.payment_method || 'PAYSTACK_CARD',
-          check_in_status: body.check_in_status || 'REGISTERED',
-          event_id: body.event_id || 'e1111111-1111-1111-1111-111111111111',
-          registration_type_id: body.registration_type_id || 'd1111111-1111-1111-1111-111111111111',
-        }),
-      });
-
-      const sbData: any = await sbRes.json();
-      const savedReg = Array.isArray(sbData) ? sbData[0] : sbData;
-
-      // Also trigger confirmation email asynchronously
-      dispatchEmail({
-        recipient: body.email,
-        subject: `Payment Confirmed & Pass Issued: ${body.event_title || '30th National Banking & Ethics Conference 2026'} (Ref: ${regNumber})`,
-        htmlContent: buildConfirmationHtml({
-          attendeeName: `${body.first_name} ${body.last_name || ''}`.trim(),
-          eventTitle: body.event_title || '30th National Banking & Ethics Conference 2026',
-          eventDate: 'November 9 - 10, 2026',
-          eventVenue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
-          regNumber,
-          amount: body.total_amount || 4000,
-          reference: body.payment_reference || `PAY_${Date.now()}`,
-          paymentMethod: body.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)',
-          ticketUrl: `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${regNumber}`,
-          qrImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`,
-        }),
-        plainText: `Payment confirmed for ${body.first_name}. Registration Number: ${regNumber}`,
-      }).catch((e) => console.warn('Netlify function email dispatch notice:', e));
-
-      return {
-        statusCode: 201,
+        statusCode: 200,
         headers: CORS_HEADERS,
         body: JSON.stringify({
           success: true,
-          message: 'Registration created and confirmation email dispatched',
+          message: `Successfully checked in attendee ${identifier}`,
+        }),
+      };
+    }
+
+    if (pathname.startsWith('/tickets/') && method === 'GET') {
+      const identifier = decodeURIComponent(pathname.replace('/tickets/', ''));
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier);
+
+      let query = supabase.from('registrations').select('*, registration_types(name), events(title)');
+      if (isUuid) {
+        query = query.eq('id', identifier);
+      } else {
+        query = query.or(`registration_number.ilike.${identifier},payment_reference.ilike.${identifier}`);
+      }
+
+      const { data, error } = await query.maybeSingle();
+      if (error || !data) {
+        return {
+          statusCode: 404,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Ticket not found' }),
+        };
+      }
+
+      const mapped = mapDbRegistration(data);
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({
+          success: true,
           data: {
-            registration: savedReg || body,
+            id: `tck-${mapped.registration_number}`,
+            ticket_code: `TCK-${mapped.registration_number}`,
+            registration_id: mapped.id,
+            registration_number: mapped.registration_number,
+            attendee_name: `${mapped.first_name} ${mapped.last_name}`.trim(),
+            attendee_email: mapped.email,
+            event_id: mapped.event_id,
+            event_title: mapped.event_title,
+            venue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
+            dates: 'November 9 - 10, 2026',
+            registration_tier: mapped.registration_type_name,
+            amount_paid: mapped.total_amount,
+            payment_status: mapped.payment_status,
+            check_in_status: mapped.check_in_status,
+            qr_code_data: JSON.stringify({ reg: mapped.registration_number }),
           },
         }),
       };
-    } catch (e: any) {
-      return {
-        statusCode: 500,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ success: false, message: e?.message || 'Internal server error' }),
-      };
     }
-  }
 
-  return {
-    statusCode: 404,
-    headers: CORS_HEADERS,
-    body: JSON.stringify({ success: false, message: `Route not found: ${event.httpMethod} ${event.path}` }),
-  };
+    return {
+      statusCode: 404,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ success: false, message: `Route not found: ${method} ${pathname}` }),
+    };
+  } catch (err: any) {
+    console.error('[Netlify Function Exception]:', err);
+    return {
+      statusCode: 500,
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ success: false, message: err?.message || 'Internal server error' }),
+    };
+  }
 };

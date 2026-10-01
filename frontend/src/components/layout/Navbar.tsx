@@ -217,16 +217,13 @@ export const Navbar: React.FC = () => {
             onClick={handleHomeNavigation}
             className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none py-1 select-none"
           >
-            {/* Stacked Wordmark in exact reference screenshot style */}
+            {/* Single-line Wordmark */}
             <div className="flex flex-col text-left font-black tracking-tight leading-none uppercase">
               <span className="text-[#FFE500] text-[13px] sm:text-[15px] font-black tracking-wider drop-shadow-sm">
                 CIB GHANA
               </span>
-              <span className="text-white text-[15px] sm:text-[17px] font-black tracking-wider leading-none mt-0.5">
-                BANKING &amp; ETHICS
-              </span>
-              <span className="text-white text-[13px] sm:text-[15px] font-black tracking-wider leading-none mt-0.5">
-                CONFERENCE
+              <span className="text-white text-[13px] sm:text-[15px] font-black tracking-wider leading-none mt-0.5 whitespace-nowrap">
+                BANKING &amp; ETHICS CONFERENCE
               </span>
             </div>
 
@@ -374,11 +371,8 @@ export const Navbar: React.FC = () => {
                     <span className="text-[#FFE500] text-[11px] font-black tracking-wider">
                       CIB GHANA
                     </span>
-                    <span className="text-white text-[13px] font-black tracking-wider leading-none mt-0.5">
-                      BANKING &amp; ETHICS
-                    </span>
-                    <span className="text-white text-[11px] font-black tracking-wider leading-none mt-0.5">
-                      CONFERENCE
+                    <span className="text-white text-[11px] font-black tracking-wider leading-none mt-0.5 whitespace-nowrap">
+                      BANKING &amp; ETHICS CONFERENCE
                     </span>
                   </div>
 

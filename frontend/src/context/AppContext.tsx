@@ -3,7 +3,7 @@ import { EventItem, Registration, UserProfile, Speaker, SpeakerType, Sponsor, Ev
 import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSORS } from '../data/mockData';
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
-import { supabase, supabaseAdmin, stringToUuid, uploadSpeakerPhotoToCloud } from '../lib/supabase';
+import { supabase, supabaseAdmin, stringToUuid, uploadSpeakerPhotoToCloud, uploadSponsorLogoToCloud } from '../lib/supabase';
 
 interface AppContextType {
   events: EventItem[];
@@ -21,6 +21,7 @@ interface AppContextType {
   getRegistrationByNumber: (regNumber: string) => Registration | undefined;
   refreshRegistrations: () => Promise<void>;
   refreshSpeakers: () => Promise<void>;
+  refreshSponsors: () => Promise<void>;
   refreshAll: () => Promise<void>;
   isLiveSyncing: boolean;
   lastSyncedAt: Date | null;
@@ -471,10 +472,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch { /* ignore */ }
   };
 
-  const addSponsor = (sponsor: Partial<Sponsor>) => {
+  const addSponsor = async (sponsor: Partial<Sponsor>) => {
     const isMember = sponsor.type === 'CORPORATE_MEMBER' || (sponsor.type as any) === 'PARTNER';
+    const newId = sponsor.id || `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const newSponsor: Sponsor = {
-      id: sponsor.id || `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      id: newId,
       name: sponsor.name || 'New Entity',
       logo_url: sponsor.logo_url || '',
       website_url: sponsor.website_url || '',
@@ -484,26 +486,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       description: sponsor.description || '',
     };
     setSponsors((prev) => [newSponsor, ...prev]);
+
+    // Live Sync to Supabase & Backend API
+    const uuid = stringToUuid(newId);
+    const validTiers = ['PARTNER', 'PLATINUM', 'GOLD', 'SILVER', 'ACADEMIC'];
+    const dbTier = isMember ? 'PARTNER' : (validTiers.includes(newSponsor.tier as any) ? newSponsor.tier : 'PLATINUM');
+    const descJson = JSON.stringify({
+      role: newSponsor.categoryOrRole,
+      desc: newSponsor.description,
+      type: newSponsor.type,
+      originalId: newId,
+    });
+
+    try {
+      await supabaseAdmin.from('sponsors').upsert({
+        id: uuid,
+        name: newSponsor.name,
+        logo_url: newSponsor.logo_url || '',
+        website_url: newSponsor.website_url || null,
+        tier: dbTier,
+        description: descJson,
+      });
+    } catch (e) {
+      console.warn('Direct Supabase sponsor save failed:', e);
+    }
+    try {
+      await ApiClient.saveSponsor({ ...newSponsor, id: uuid });
+    } catch {}
   };
 
-  const updateSponsor = (id: string, updates: Partial<Sponsor>) => {
+  const updateSponsor = async (id: string, updates: Partial<Sponsor>) => {
+    let targetSponsor: Sponsor | null = null;
     setSponsors((prev) =>
       prev.map((s) => {
         if (s.id !== id) return s;
         const newType = updates.type || s.type;
         const normalizedType = (newType as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : newType;
-        return {
+        const merged: Sponsor = {
           ...s,
           ...updates,
           type: normalizedType,
           tier: normalizedType,
         };
+        targetSponsor = merged;
+        return merged;
       })
     );
+
+    // Live Sync to Supabase & Backend API
+    const sToSave: Partial<Sponsor> = targetSponsor || { id, ...updates };
+    const uuid = stringToUuid(id);
+    const isMember = sToSave.type === 'CORPORATE_MEMBER' || (sToSave.type as any) === 'PARTNER';
+    const validTiers = ['PARTNER', 'PLATINUM', 'GOLD', 'SILVER', 'ACADEMIC'];
+    const dbTier = isMember ? 'PARTNER' : (validTiers.includes(sToSave.tier as any) ? sToSave.tier : 'PLATINUM');
+    const descJson = JSON.stringify({
+      role: sToSave.categoryOrRole || '',
+      desc: sToSave.description || '',
+      type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+      originalId: id,
+    });
+
+    try {
+      await supabaseAdmin.from('sponsors').upsert({
+        id: uuid,
+        name: sToSave.name || '',
+        logo_url: sToSave.logo_url || '',
+        website_url: sToSave.website_url || null,
+        tier: dbTier,
+        description: descJson,
+      });
+    } catch (e) {
+      console.warn('Direct Supabase sponsor update failed:', e);
+    }
+    try {
+      await ApiClient.saveSponsor({ ...sToSave, id: uuid });
+    } catch {}
   };
 
-  const deleteSponsor = (id: string) => {
+  const deleteSponsor = async (id: string) => {
     setSponsors((prev) => prev.filter((s) => s.id !== id));
+
+    // Live Delete from Supabase & Backend API
+    const uuid = stringToUuid(id);
+    try {
+      await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+    } catch (e) {
+      console.warn('Direct Supabase sponsor delete failed:', e);
+    }
+    try {
+      await ApiClient.deleteSponsor(uuid);
+    } catch {}
   };
 
   const refreshEvents = async () => {
@@ -740,6 +812,104 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Fetch sponsors from backend API / Supabase and merge into local state
+  // Guarantees all corporate members and sponsors sync live across localhost and deployed site
+  const refreshSponsors = async () => {
+    let remoteSponsors: any[] = [];
+    try {
+      const res = await ApiClient.getSponsors();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        remoteSponsors = res.data;
+      }
+    } catch {
+      // ApiClient offline
+    }
+
+    const spClient = supabaseAdmin || supabase;
+    if (remoteSponsors.length === 0 && spClient) {
+      try {
+        const { data, error } = await spClient
+          .from('sponsors')
+          .select('*')
+          .order('created_at', { ascending: true });
+        if (!error && Array.isArray(data) && data.length > 0) {
+          remoteSponsors = data.map((row: any) => {
+            let meta: any = {};
+            try {
+              if (row.description && row.description.startsWith('{')) {
+                meta = JSON.parse(row.description);
+              }
+            } catch {}
+            const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
+            return {
+              id: meta.originalId || row.id,
+              name: row.name,
+              logo_url: row.logo_url || '',
+              website_url: row.website_url || '',
+              tier: isMember ? 'CORPORATE_MEMBER' : row.tier,
+              type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+              categoryOrRole: meta.role || row.description || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+              description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
+            };
+          });
+        }
+      } catch (err) {
+        console.warn('Supabase sponsors query failed:', err);
+      }
+    }
+
+    if (remoteSponsors.length === 0) return;
+
+    setSponsors((prev) => {
+      // 1. Update existing local sponsors with remote info
+      const updated: Sponsor[] = prev.map((s): Sponsor => {
+        const remote = remoteSponsors.find((d: any) =>
+          d.id === s.id ||
+          d.name?.toLowerCase().trim() === s.name?.toLowerCase().trim() ||
+          stringToUuid(s.id) === d.id
+        );
+        if (!remote) return s;
+
+        const isMember = remote.type === 'CORPORATE_MEMBER' || remote.tier === 'CORPORATE_MEMBER' || remote.tier === 'PARTNER';
+        return {
+          ...s,
+          name: remote.name || s.name,
+          logo_url: remote.logo_url && remote.logo_url.trim() !== '' ? remote.logo_url : s.logo_url,
+          website_url: remote.website_url || s.website_url,
+          categoryOrRole: remote.categoryOrRole || s.categoryOrRole,
+          description: remote.description || s.description,
+          type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+          tier: isMember ? 'CORPORATE_MEMBER' : remote.tier,
+        };
+      });
+
+      // 2. Add remote sponsors not in local list
+      const toAdd: Sponsor[] = [];
+      for (const d of remoteSponsors) {
+        const exists = updated.some((p) =>
+          p.id === d.id ||
+          p.name?.toLowerCase().trim() === d.name?.toLowerCase().trim() ||
+          stringToUuid(p.id) === d.id
+        );
+        if (!exists) {
+          const isMember = d.type === 'CORPORATE_MEMBER' || d.tier === 'CORPORATE_MEMBER' || d.tier === 'PARTNER';
+          toAdd.push({
+            id: d.id,
+            name: d.name,
+            logo_url: d.logo_url || '',
+            website_url: d.website_url || '',
+            type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+            tier: isMember ? 'CORPORATE_MEMBER' : d.tier,
+            categoryOrRole: d.categoryOrRole || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+            description: d.description || '',
+          });
+        }
+      }
+
+      return [...updated, ...toAdd];
+    });
+  };
+
   // Auto-migrate any local base64 photos to cloud storage so they show on all devices
   // Runs only once on mount — not on every speakers change to avoid loops
   useEffect(() => {
@@ -782,7 +952,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshAll = async () => {
     setIsLiveSyncing(true);
     try {
-      await Promise.allSettled([refreshRegistrations(), refreshEvents()]);
+      await Promise.allSettled([refreshRegistrations(), refreshEvents(), refreshSponsors()]);
       setLastSyncedAt(new Date());
     } finally {
       setIsLiveSyncing(false);
@@ -792,8 +962,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Cross-tab and real-time backend synchronization for admin and attendees
   useEffect(() => {
     refreshAll();
-    // Restore admin-added speakers from Supabase (recovers from localStorage version bumps)
+    // Restore admin-added speakers and sponsors from Supabase
     refreshSpeakers();
+    refreshSponsors();
 
     const handleStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY_REGS && e.newValue) {
@@ -821,12 +992,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     window.addEventListener('storage', handleStorage);
     window.addEventListener('cib_registration_created', handleCustom);
+
+    // Realtime Supabase channel for sponsors so updates appear instantly on all browsers
+    const spChannel = supabase
+      ?.channel('realtime-sponsors')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'sponsors' },
+        () => {
+          refreshSponsors();
+        }
+      )
+      .subscribe();
+
     const interval = setInterval(refreshAll, 6000);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('cib_registration_created', handleCustom);
       clearInterval(interval);
+      spChannel?.unsubscribe();
     };
   }, []);
 
@@ -1181,6 +1366,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         getRegistrationByNumber,
         refreshRegistrations,
         refreshSpeakers,
+        refreshSponsors,
         refreshAll,
         isLiveSyncing,
         lastSyncedAt,

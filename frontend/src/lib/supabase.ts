@@ -284,6 +284,63 @@ export async function uploadSpeakerPhotoToCloud(
   return { url: base64, isPublic: false };
 }
 
+export async function uploadSponsorLogoToCloud(
+  base64: string,
+  sponsorId: string
+): Promise<{ url: string; isPublic: boolean }> {
+  // If it's already a hosted http/https URL, return directly
+  if (base64.startsWith('http://') || base64.startsWith('https://')) {
+    return { url: base64, isPublic: true };
+  }
+
+  // 1. Direct Supabase Storage via Service Role client (bypasses RLS)
+  try {
+    const blob = await base64ToBlob(base64);
+    const mime = blob.type || 'image/png';
+    const ext = mime.includes('svg') ? 'svg' : mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : 'jpg';
+    const cleanId = String(sponsorId).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const path = `sponsors/${cleanId}-${Date.now()}.${ext}`;
+
+    const { error } = await supabaseAdmin.storage
+      .from('speaker-photos')
+      .upload(path, blob, {
+        upsert: true,
+        contentType: mime,
+      });
+
+    if (!error) {
+      const { data } = supabaseAdmin.storage.from('speaker-photos').getPublicUrl(path);
+      if (data?.publicUrl) {
+        return { url: data.publicUrl, isPublic: true };
+      }
+    } else {
+      console.warn('Direct supabaseAdmin storage upload error for sponsor:', error);
+    }
+  } catch (err) {
+    console.warn('Direct cloud sponsor logo upload failed, trying backend API:', err);
+  }
+
+  // 2. Fallback: Backend Upload API
+  try {
+    const res = await fetch('/api/sponsors/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: base64, sponsorId }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.url) {
+        return { url: data.url, isPublic: true };
+      }
+    }
+  } catch {
+    // Both failed
+  }
+
+  // 3. Fallback (local browser only)
+  return { url: base64, isPublic: false };
+}
+
 export async function checkSupabaseConnection(): Promise<{ connected: boolean; message: string }> {
   if (!isSupabaseConfigured || !supabase) {
     return {

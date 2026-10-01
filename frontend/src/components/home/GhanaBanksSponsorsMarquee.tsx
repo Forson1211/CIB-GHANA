@@ -519,7 +519,7 @@ const renderCorporateMemberLogo = (cm: Sponsor): React.ReactNode => {
   // Fallback card for newly added corporate members without uploaded image
   return (
     <div className="flex items-center gap-3.5">
-      <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base border border-cib-green-200">
+      <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-none bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base shadow-sm">
         <Building className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
       </div>
       <div className="text-left leading-tight">

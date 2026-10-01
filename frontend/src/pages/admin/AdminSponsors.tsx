@@ -19,9 +19,11 @@ import {
 import { Button } from '../../components/ui/Button';
 import { Sponsor, SponsorType } from '../../types';
 import { renderBrandLogo } from '../PartnersSponsors';
+import { supabaseAdmin, stringToUuid, uploadSponsorLogoToCloud } from '../../lib/supabase';
+import { ApiClient } from '../../lib/api';
 
 export const AdminSponsors: React.FC = () => {
-  const { sponsors, addSponsor, updateSponsor, deleteSponsor } = useApp();
+  const { sponsors, addSponsor, updateSponsor, deleteSponsor, refreshSponsors } = useApp();
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'CORPORATE_MEMBER' | 'SPONSOR'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +40,7 @@ export const AdminSponsors: React.FC = () => {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [description, setDescription] = useState('');
   const [fileName, setFileName] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [successNotice, setSuccessNotice] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -87,23 +90,49 @@ export const AdminSponsors: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setFileName(file.name);
+    setIsUploading(true);
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       if (typeof reader.result === 'string') {
-        setLogoUrl(reader.result);
+        const base64 = reader.result;
+        setLogoUrl(base64);
+
+        // Upload directly to Supabase cloud storage so all browsers can view it
+        try {
+          const tempId = editingId || `sp-${Date.now()}`;
+          const { url, isPublic } = await uploadSponsorLogoToCloud(base64, tempId);
+          if (isPublic && url.startsWith('http')) {
+            setLogoUrl(url);
+          }
+        } catch (uploadErr) {
+          console.warn('Logo upload to cloud storage error:', uploadErr);
+        } finally {
+          setIsUploading(false);
+        }
       }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    let finalLogoUrl = logoUrl.trim();
+    if (finalLogoUrl.startsWith('data:')) {
+      try {
+        const tempId = editingId || `sp-${Date.now()}`;
+        const { url, isPublic } = await uploadSponsorLogoToCloud(finalLogoUrl, tempId);
+        if (isPublic && url.startsWith('http')) {
+          finalLogoUrl = url;
+        }
+      } catch {}
+    }
 
     const payload: Partial<Sponsor> = {
       name: name.trim(),
@@ -111,32 +140,80 @@ export const AdminSponsors: React.FC = () => {
       categoryOrRole:
         categoryOrRole.trim() ||
         (type === 'CORPORATE_MEMBER' ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
-      logo_url: logoUrl.trim(),
+      logo_url: finalLogoUrl,
       website_url: websiteUrl.trim(),
       description: description.trim(),
     };
 
+    const targetId = editingId || `sp-${Date.now()}`;
+    const uuid = stringToUuid(targetId);
+    const isMember = type === 'CORPORATE_MEMBER';
+    const validTiers = ['PARTNER', 'PLATINUM', 'GOLD', 'SILVER', 'ACADEMIC'];
+    const dbTier = isMember ? 'PARTNER' : (validTiers.includes(payload.tier as any) ? payload.tier : 'PLATINUM');
+    const descJson = JSON.stringify({
+      role: payload.categoryOrRole,
+      desc: payload.description,
+      type: payload.type,
+      originalId: targetId,
+    });
+
     if (editingId) {
       updateSponsor(editingId, payload);
-      setSuccessNotice(`Updated "${name}" successfully.`);
+      setSuccessNotice(`Updated "${name}" successfully in live database.`);
     } else {
-      addSponsor(payload);
+      addSponsor({ ...payload, id: targetId });
       setSuccessNotice(
         type === 'CORPORATE_MEMBER'
-          ? `Added "${name}" to Corporate Members (will show in homepage moving marquee)!`
-          : `Added "${name}" to Corporate Sponsors (will show on Sponsors page)!`
+          ? `Added "${name}" to Corporate Members (syncing live across all devices)!`
+          : `Added "${name}" to Corporate Sponsors (syncing live across all devices)!`
       );
     }
 
+    // Direct Supabase upsert with service role to guarantee immediate live persistence
+    try {
+      await supabaseAdmin.from('sponsors').upsert({
+        id: uuid,
+        name: payload.name,
+        logo_url: payload.logo_url || '',
+        website_url: payload.website_url || null,
+        tier: dbTier,
+        description: descJson,
+      });
+    } catch (sbErr) {
+      console.warn('Supabase sponsors upsert failed:', sbErr);
+    }
+
+    // Also notify backend API if running
+    try {
+      await ApiClient.saveSponsor({ ...payload, id: uuid });
+    } catch {}
+
     setIsModalOpen(false);
-    setTimeout(() => setSuccessNotice(null), 3500);
+    setTimeout(() => {
+      refreshSponsors();
+      setSuccessNotice(null);
+    }, 1000);
   };
 
-  const handleDelete = (id: string, entityName: string) => {
-    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the site.`)) {
+  const handleDelete = async (id: string, entityName: string) => {
+    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the live site.`)) {
       deleteSponsor(id);
-      setSuccessNotice(`Removed "${entityName}".`);
-      setTimeout(() => setSuccessNotice(null), 3000);
+      setSuccessNotice(`Removed "${entityName}" from live database.`);
+
+      const uuid = stringToUuid(id);
+      try {
+        await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+      } catch (sbErr) {
+        console.warn('Supabase sponsors delete failed:', sbErr);
+      }
+      try {
+        await ApiClient.deleteSponsor(uuid);
+      } catch {}
+
+      setTimeout(() => {
+        refreshSponsors();
+        setSuccessNotice(null);
+      }, 1000);
     }
   };
 

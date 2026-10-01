@@ -520,6 +520,165 @@ export const handler = async (event: any, _context?: any) => {
     }
 
     // -------------------------------------------------------------
+    // 3b. Sponsors & Corporate Members CRUD & Logo Upload
+    // -------------------------------------------------------------
+    if (pathname === '/sponsors/upload' && method === 'POST') {
+      try {
+        const body = JSON.parse(event.body || '{}');
+        const { image, sponsorId } = body;
+        if (!image) {
+          return {
+            statusCode: 400,
+            headers: CORS_HEADERS,
+            body: JSON.stringify({ success: false, message: 'Image base64 data required' }),
+          };
+        }
+
+        const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        const buffer = matches ? Buffer.from(matches[2], 'base64') : Buffer.from(image, 'base64');
+        const mimeType = matches ? matches[1] : 'image/png';
+        const ext = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+
+        const cleanId = String(sponsorId || 'sp').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const filePath = `sponsors/${cleanId}-${Date.now()}.${ext}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('speaker-photos')
+          .upload(filePath, buffer, { contentType: mimeType, upsert: true });
+
+        if (uploadError) {
+          return {
+            statusCode: 500,
+            headers: CORS_HEADERS,
+            body: JSON.stringify({ success: false, message: uploadError.message }),
+          };
+        }
+
+        const { data } = supabase.storage.from('speaker-photos').getPublicUrl(filePath);
+        return {
+          statusCode: 200,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: true, url: data.publicUrl }),
+        };
+      } catch (err: any) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: err.message }),
+        };
+      }
+    }
+
+    if (pathname === '/sponsors' && method === 'GET') {
+      const { data, error } = await supabase
+        .from('sponsors')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      const mapped = (data || []).map((row: any) => {
+        let meta: any = {};
+        try {
+          if (row.description && row.description.startsWith('{')) {
+            meta = JSON.parse(row.description);
+          }
+        } catch {}
+
+        const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
+        return {
+          id: row.id,
+          name: row.name,
+          logo_url: row.logo_url || '',
+          website_url: row.website_url || '',
+          tier: isMember ? 'CORPORATE_MEMBER' : row.tier,
+          type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+          categoryOrRole: meta.role || row.description || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+          description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
+        };
+      });
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data: mapped }),
+      };
+    }
+
+    if (pathname === '/sponsors' && method === 'POST') {
+      const sp = JSON.parse(event.body || '{}');
+      if (!sp || !sp.name) {
+        return {
+          statusCode: 400,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: 'Entity name is required' }),
+        };
+      }
+
+      const rawId = sp.id || `sp-${Date.now()}`;
+      const uuid = stringToUuid(rawId);
+      const isMember = sp.type === 'CORPORATE_MEMBER' || sp.tier === 'CORPORATE_MEMBER';
+      const validTiers = ['PARTNER', 'PLATINUM', 'GOLD', 'SILVER', 'ACADEMIC'];
+      const tier = isMember ? 'PARTNER' : (validTiers.includes(sp.tier) ? sp.tier : 'PLATINUM');
+
+      const descJson = JSON.stringify({
+        role: sp.categoryOrRole || '',
+        desc: sp.description || '',
+        type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+        originalId: sp.id || '',
+      });
+
+      const row = {
+        id: uuid,
+        name: sp.name.trim(),
+        logo_url: sp.logo_url || '',
+        website_url: sp.website_url || null,
+        tier: tier,
+        description: descJson,
+      };
+
+      const { data, error } = await supabase.from('sponsors').upsert(row).select().single();
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data }),
+      };
+    }
+
+    if (pathname.startsWith('/sponsors/') && method === 'DELETE') {
+      const sponsorId = pathname.replace('/sponsors/', '');
+      const uuid = stringToUuid(sponsorId);
+      const { error } = await supabase.from('sponsors').delete().eq('id', uuid);
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, message: 'Entity deleted successfully' }),
+      };
+    }
+
+    // -------------------------------------------------------------
     // 4. Events CRUD
     // -------------------------------------------------------------
     if (pathname === '/events' && method === 'GET') {

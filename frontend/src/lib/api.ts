@@ -1,4 +1,4 @@
-import { EventItem, Registration, DigitalTicket, CreateRegistrationRequest, Speaker } from '../types';
+import { EventItem, Registration, DigitalTicket, CreateRegistrationRequest, Speaker, Sponsor } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -230,6 +230,31 @@ export class ApiClient {
 
   static async deleteSpeaker(id: string): Promise<{ success: boolean; message: string }> {
     return this.request(`/speakers/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Sponsors & Corporate Members
+  static async uploadSponsorLogo(image: string, sponsorId: string): Promise<{ success: boolean; url: string }> {
+    return this.request('/sponsors/upload', {
+      method: 'POST',
+      body: JSON.stringify({ image, sponsorId }),
+    });
+  }
+
+  static async getSponsors(): Promise<{ success: boolean; data: Sponsor[] }> {
+    return this.request('/sponsors');
+  }
+
+  static async saveSponsor(sponsor: Partial<Sponsor>): Promise<{ success: boolean; data: Sponsor }> {
+    return this.request('/sponsors', {
+      method: 'POST',
+      body: JSON.stringify(sponsor),
+    });
+  }
+
+  static async deleteSponsor(id: string): Promise<{ success: boolean; message: string }> {
+    return this.request(`/sponsors/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     });
   }

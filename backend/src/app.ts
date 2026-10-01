@@ -10,6 +10,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 import speakerRoutes from './routes/speakerRoutes.js';
+import sponsorRoutes from './routes/sponsorRoutes.js';
 import { RegistrationController } from './controllers/registrationController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
@@ -46,6 +47,7 @@ export function createApp(): Express {
   app.use('/api/admin', adminRoutes);
   app.use('/api/chat', chatRoutes);
   app.use('/api/speakers', speakerRoutes);
+  app.use('/api/sponsors', sponsorRoutes);
   app.post('/api/send-email', (req: Request, res: Response, next) => RegistrationController.sendEmailDirect(req, res, next));
 
   // Email Preview Route (allows instant browser preview of dispatched payment receipt & pass)

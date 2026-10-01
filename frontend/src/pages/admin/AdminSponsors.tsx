@@ -193,10 +193,12 @@ export const AdminSponsors: React.FC = () => {
     } catch {}
 
     setIsModalOpen(false);
+    // Refresh immediately to show updated logo and entity data without delay
+    refreshSponsors();
     setTimeout(() => {
       refreshSponsors();
       setSuccessNotice(null);
-    }, 1000);
+    }, 1500);
   };
 
   const handleDelete = async (id: string, entityName: string) => {
@@ -239,20 +241,24 @@ export const AdminSponsors: React.FC = () => {
         await ApiClient.deleteSponsor(uuid);
       } catch {}
 
+      refreshSponsors();
       setTimeout(() => {
         refreshSponsors();
         setSuccessNotice(null);
-      }, 1000);
+      }, 1500);
     }
   };
 
   const renderCardLogo = (sp: Sponsor) => {
-    if (sp.logo_url && sp.logo_url.trim()) {
+    if (sp.logo_url && sp.logo_url.trim() && !sp.logo_url.includes('unsplash.com')) {
       return (
         <img
           src={sp.logo_url}
           alt={sp.name}
           className="max-h-full max-w-full object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
         />
       );
     }

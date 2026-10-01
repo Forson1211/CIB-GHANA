@@ -138,14 +138,14 @@ const SpeakerModal: React.FC<{
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-5 border-b border-slate-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-4 sm:px-7 py-3.5 sm:py-5 sticky top-0 bg-[#005C20] z-10">
           <div>
-            <h2 className="text-xl font-black text-slate-900 font-display">
+            <h2 className="text-xl font-black text-white font-display">
               {speaker?.id && !speaker.id.startsWith('sp-') ? 'Edit Speaker' : 'Add Speaker'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">Changes are saved and will show on the main site.</p>
+            <p className="text-xs text-white/70 mt-0.5">Changes are saved and will show on the main site.</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-none hover:bg-slate-100 text-slate-500">
+          <button onClick={onClose} className="p-2 rounded-none hover:bg-white/10 text-white/80 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -153,7 +153,7 @@ const SpeakerModal: React.FC<{
         <div className="px-7 py-6 space-y-6">
           {/* Photo Upload */}
           <div className="flex items-center gap-5">
-            <div className="relative flex-shrink-0">
+            <div className="relative flex-shrink-0 w-24 h-24">
               {previewUrl ? (
                 <img src={previewUrl} alt="preview" className="w-24 h-24 rounded-none object-cover shadow-sm" />
               ) : (
@@ -163,12 +163,12 @@ const SpeakerModal: React.FC<{
               )}
               <button
                 onClick={() => fileRef.current?.click()}
-                className="absolute top-0 right-0 w-7 h-7 rounded-none bg-[#008B2E] text-white flex items-center justify-center shadow hover:bg-[#006B22] transition-colors"
+                className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/50 transition-colors"
               >
                 {uploading ? (
-                  <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Camera className="w-4 h-4" />
+                  <Camera className="w-6 h-6 text-white drop-shadow" />
                 )}
               </button>
               <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
@@ -248,7 +248,7 @@ const SpeakerModal: React.FC<{
                 }}
                 className={`flex items-start gap-3.5 p-4 rounded-none text-left transition-all cursor-pointer ${
                   (form.speaker_type === 'KEYNOTE' || form.is_keynote)
-                    ? 'bg-amber-100 text-amber-950 shadow-sm ring-2 ring-amber-500'
+                    ? 'bg-amber-100 text-amber-950 shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
@@ -281,7 +281,7 @@ const SpeakerModal: React.FC<{
                 }}
                 className={`flex items-start gap-3.5 p-4 rounded-none text-left transition-all cursor-pointer ${
                   (form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE'))
-                    ? 'bg-emerald-100 text-emerald-950 shadow-sm ring-2 ring-[#008B2E]'
+                    ? 'bg-emerald-100 text-emerald-950 shadow-md'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >

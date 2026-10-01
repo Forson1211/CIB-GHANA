@@ -57,7 +57,7 @@ const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 // v10: Background-removed executive photos; photos-first sorting
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v10';
 const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v10';
-const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v3';
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v4';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
   'spk-1',
@@ -121,6 +121,37 @@ export const isSameSpeaker = (
     if (nameA === nameB) return true;
     if (nameA.length > 5 && nameB.length > 5) {
       if (nameA.includes(nameB) || nameB.includes(nameA)) return true;
+    }
+  }
+  return false;
+};
+
+export const isSameSponsor = (
+  a: { id?: string; name?: string; type?: string; tier?: string },
+  b: { id?: string; name?: string; type?: string; tier?: string }
+): boolean => {
+  if (a.id && b.id) {
+    if (a.id === b.id) return true;
+    if (stringToUuid(a.id) === b.id || a.id === stringToUuid(b.id)) return true;
+  }
+  const typeA = (a.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : a.type;
+  const typeB = (b.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : b.type;
+
+  const nameA = (a.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const nameB = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  if (nameA && nameB) {
+    if (nameA === nameB) {
+      if (typeA && typeB) return typeA === typeB;
+      return true;
+    }
+    // Check ADB aliases: 'adb' vs 'agriculturaldevelopmentbankadb'
+    if (
+      (nameA === 'adb' && nameB.includes('agriculturaldevelopmentbank')) ||
+      (nameB === 'adb' && nameA.includes('agriculturaldevelopmentbank'))
+    ) {
+      if (typeA && typeB) return typeA === typeB;
+      return true;
     }
   }
   return false;
@@ -831,7 +862,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const { data, error } = await spClient
           .from('sponsors')
           .select('*')
-          .order('created_at', { ascending: true });
+          .order('created_at', { ascending: false }); // Latest edits and uploaded logos first
         if (!error && Array.isArray(data) && data.length > 0) {
           remoteSponsors = data.map((row: any) => {
             let meta: any = {};
@@ -841,14 +872,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               }
             } catch {}
             const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
+            const cleanLogo = row.logo_url && !row.logo_url.includes('unsplash.com') ? row.logo_url.trim() : '';
             return {
               id: meta.originalId || row.id,
+              dbId: row.id,
               name: row.name,
-              logo_url: row.logo_url || '',
+              logo_url: cleanLogo,
               website_url: row.website_url || '',
               tier: isMember ? 'CORPORATE_MEMBER' : row.tier,
               type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
-              categoryOrRole: meta.role || row.description || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+              categoryOrRole: meta.role || (row.description && !row.description.startsWith('{') ? row.description : '') || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
               description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
             };
           });
@@ -863,18 +896,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSponsors((prev) => {
       // 1. Update existing local sponsors with remote info
       const updated: Sponsor[] = prev.map((s): Sponsor => {
-        const remote = remoteSponsors.find((d: any) =>
-          d.id === s.id ||
-          d.name?.toLowerCase().trim() === s.name?.toLowerCase().trim() ||
-          stringToUuid(s.id) === d.id
-        );
+        const remote = remoteSponsors.find((d: any) => isSameSponsor(s, d));
         if (!remote) return s;
 
         const isMember = remote.type === 'CORPORATE_MEMBER' || remote.tier === 'CORPORATE_MEMBER' || remote.tier === 'PARTNER';
+        const remoteLogo = remote.logo_url && remote.logo_url.trim() !== '' && !remote.logo_url.includes('unsplash.com') ? remote.logo_url : '';
+        const localLogoIsRemote = s.logo_url && (s.logo_url.startsWith('http://') || s.logo_url.startsWith('https://')) && !s.logo_url.includes('unsplash.com');
+        const logoToUse = remoteLogo.startsWith('http')
+          ? remoteLogo
+          : (localLogoIsRemote ? s.logo_url : (remoteLogo || s.logo_url || ''));
+
         return {
           ...s,
           name: remote.name || s.name,
-          logo_url: remote.logo_url && remote.logo_url.trim() !== '' ? remote.logo_url : s.logo_url,
+          logo_url: logoToUse,
           website_url: remote.website_url || s.website_url,
           categoryOrRole: remote.categoryOrRole || s.categoryOrRole,
           description: remote.description || s.description,
@@ -886,17 +921,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // 2. Add remote sponsors not in local list
       const toAdd: Sponsor[] = [];
       for (const d of remoteSponsors) {
-        const exists = updated.some((p) =>
-          p.id === d.id ||
-          p.name?.toLowerCase().trim() === d.name?.toLowerCase().trim() ||
-          stringToUuid(p.id) === d.id
-        );
+        const exists = updated.some((p) => isSameSponsor(p, d));
         if (!exists) {
           const isMember = d.type === 'CORPORATE_MEMBER' || d.tier === 'CORPORATE_MEMBER' || d.tier === 'PARTNER';
           toAdd.push({
             id: d.id,
             name: d.name,
-            logo_url: d.logo_url || '',
+            logo_url: d.logo_url && !d.logo_url.includes('unsplash.com') ? d.logo_url : '',
             website_url: d.website_url || '',
             type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
             tier: isMember ? 'CORPORATE_MEMBER' : d.tier,

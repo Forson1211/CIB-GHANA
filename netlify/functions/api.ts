@@ -1177,6 +1177,108 @@ View Ticket: ${ticketUrl}
       };
     }
 
+    // -------------------------------------------------------------
+    // 8. Sponsors & Corporate Members
+    // -------------------------------------------------------------
+    if (pathname === '/sponsors' && method === 'GET') {
+      const { data, error } = await supabase
+        .from('sponsors')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      const mapped = (data || []).map((row: any) => {
+        let meta: any = {};
+        try {
+          if (row.description && row.description.startsWith('{')) {
+            meta = JSON.parse(row.description);
+          }
+        } catch {}
+        const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
+        const cleanLogo = row.logo_url && !row.logo_url.includes('unsplash.com') ? row.logo_url.trim() : '';
+        return {
+          id: meta.originalId || row.id,
+          dbId: row.id,
+          name: row.name,
+          logo_url: cleanLogo,
+          website_url: row.website_url || '',
+          tier: isMember ? 'CORPORATE_MEMBER' : row.tier,
+          type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
+          categoryOrRole: meta.role || (row.description && !row.description.startsWith('{') ? row.description : '') || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+          description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
+        };
+      });
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data: mapped }),
+      };
+    }
+
+    if (pathname === '/sponsors' && method === 'POST') {
+      const sponsor = body ? JSON.parse(body) : {};
+      const rawId = sponsor.id || `sp-${Date.now()}`;
+      const uuid = stringToUuid(rawId);
+      const isMember = sponsor.type === 'CORPORATE_MEMBER';
+      const validTiers = ['PARTNER', 'PLATINUM', 'GOLD', 'SILVER', 'ACADEMIC'];
+      const dbTier = isMember ? 'PARTNER' : (validTiers.includes(sponsor.tier) ? sponsor.tier : 'PLATINUM');
+      const descJson = JSON.stringify({
+        role: sponsor.categoryOrRole || '',
+        desc: sponsor.description || '',
+        type: sponsor.type,
+        originalId: rawId,
+      });
+
+      const { data, error } = await supabase.from('sponsors').upsert({
+        id: uuid,
+        name: sponsor.name,
+        logo_url: sponsor.logo_url || '',
+        website_url: sponsor.website_url || null,
+        tier: dbTier,
+        description: descJson,
+      }).select().single();
+
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, data }),
+      };
+    }
+
+    if (pathname.startsWith('/sponsors/') && method === 'DELETE') {
+      const id = decodeURIComponent(pathname.replace('/sponsors/', ''));
+      const uuid = stringToUuid(id);
+      const { error } = await supabase.from('sponsors').delete().eq('id', uuid);
+      if (error) {
+        return {
+          statusCode: 500,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ success: false, message: error.message }),
+        };
+      }
+      return {
+        statusCode: 200,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ success: true, message: 'Deleted successfully' }),
+      };
+    }
+
     return {
       statusCode: 404,
       headers: CORS_HEADERS,

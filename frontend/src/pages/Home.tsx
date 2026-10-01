@@ -308,7 +308,7 @@ export const Home: React.FC = () => {
         <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12 relative z-10">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12 relative z-10">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -400,7 +400,7 @@ export const Home: React.FC = () => {
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
           variants={fadeInUp}
-          className="text-left max-w-[1360px] mx-auto space-y-2 px-4 sm:px-6 lg:px-8 relative z-10"
+          className="text-left max-w-[1380px] mx-auto space-y-2 px-4 sm:px-6 lg:px-8 relative z-10"
         >
           <span className="text-xs font-black uppercase tracking-widest text-[#FFE500]">
             EXPLORE IMAGES &amp; ARCHIVE
@@ -430,7 +430,7 @@ export const Home: React.FC = () => {
         {/* Subtle ambient lighting */}
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 text-left relative z-10">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 text-left relative z-10">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -485,7 +485,7 @@ export const Home: React.FC = () => {
 
       {/* 10. EARLY BIRD PACKAGE (Book Early & Save) */}
       <section id="early-bird" className="w-full bg-[#008129] py-16 sm:py-20 text-white scroll-mt-24">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 text-left">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Column: Heading, Description, and Amounts */}
             <motion.div

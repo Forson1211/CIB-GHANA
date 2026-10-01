@@ -581,7 +581,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
       `}</style>
 
       {/* Header Aligned in Line with Site Logo on Mobile & Desktop */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-left space-y-1.5">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 text-left space-y-1.5">
         <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
           Corporate Members
         </h2>

@@ -61,16 +61,16 @@ export const Modal: React.FC<ModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
-            className={`relative w-full ${maxWidthStyles[maxWidth]} bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-10 my-8`}
+            className={`relative w-full ${maxWidthStyles[maxWidth]} bg-white rounded-none shadow-2xl overflow-hidden z-10 my-8`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
-              <h3 className="text-lg font-bold text-cib-charcoal-900 font-display">
+            <div className="flex items-center justify-between px-6 py-4 bg-[#005C20]">
+              <h3 className="text-lg font-bold text-white font-display">
                 {title}
               </h3>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-cib-charcoal hover:bg-slate-100 transition-colors"
+                className="p-1.5 rounded-none text-white/80 hover:text-white hover:bg-white/10 transition-colors"
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />

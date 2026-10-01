@@ -29,7 +29,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="bg-[#064225] text-white relative z-20">
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* ROW 1: NEWSLETTER SUBSCRIPTION (Matching reference) */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 py-10 sm:py-12 border-b border-white/20">
           <div className="space-y-1.5 max-w-xl">

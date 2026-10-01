@@ -32,7 +32,7 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-8 sm:space-y-10 pb-20">
       {/* Sleek Banner for Dashboard (Green to Yellow Gradient & Left-aligned) */}
       <section className="w-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] text-white py-10 sm:py-14 relative overflow-hidden shadow-sm">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="text-left space-y-2 sm:space-y-3">
               <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black font-display tracking-tight text-white uppercase">
@@ -69,7 +69,7 @@ export const Dashboard: React.FC = () => {
       </section>
 
       {/* Main Page Content */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
 
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2">

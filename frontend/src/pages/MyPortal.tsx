@@ -108,7 +108,7 @@ export const MyPortal: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0D3A21] text-white pb-24">
-      {/* 1. Hero Banner - Aligned flush with site container max-w-[1360px] */}
+      {/* 1. Hero Banner - Aligned flush with site container max-w-[1380px] */}
       <div className="w-full bg-[#008129] relative overflow-hidden">
         <div
           className="absolute inset-0 opacity-10 pointer-events-none"
@@ -121,7 +121,7 @@ export const MyPortal: React.FC = () => {
         <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5 pointer-events-none" />
         <div className="absolute -right-8 top-12 w-48 h-48 rounded-full bg-white/5 pointer-events-none" />
 
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight font-display">
@@ -147,10 +147,10 @@ export const MyPortal: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. Stats Strip - Aligned with max-w-[1360px] */}
+      {/* 2. Stats Strip - Aligned with max-w-[1380px] */}
       {uniqueRegistrations.length > 0 && (
         <div className="bg-white border-b border-slate-200 shadow-sm">
-          <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-8">
+          <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-8">
             <div>
               <p className="text-2xl font-black text-[#008129]">{uniqueRegistrations.length}</p>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">
@@ -168,8 +168,8 @@ export const MyPortal: React.FC = () => {
         </div>
       )}
 
-      {/* 3. Main Content Area - Aligned flush with max-w-[1360px] */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+      {/* 3. Main Content Area - Aligned flush with max-w-[1380px] */}
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
         {uniqueRegistrations.length === 0 ? (
           <div className="text-center py-20 space-y-4 bg-white border border-slate-200 p-8 shadow-sm rounded-none">
             <div className="w-16 h-16 bg-[#008129]/10 flex items-center justify-center mx-auto rounded-none">

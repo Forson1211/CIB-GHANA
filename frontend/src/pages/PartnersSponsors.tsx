@@ -399,7 +399,7 @@ export const PartnersSponsors: React.FC = () => {
       </section>
 
       {/* 2. LOGO SHOWCASE GRID (Big prominent logos, zero text clutter) */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20 space-y-12">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 -mt-6 sm:-mt-8 relative z-20 space-y-12">
         {/* Action Header Card (White card on green page) */}
         <div className="bg-white p-6 sm:p-7 rounded-none border border-slate-200 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-center sm:text-left">

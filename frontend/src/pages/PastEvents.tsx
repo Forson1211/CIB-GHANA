@@ -60,7 +60,7 @@ export const PastEvents: React.FC = () => {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
+          className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10"
         >
           <div className="text-left max-w-3xl space-y-2 sm:space-y-3">
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white uppercase">
@@ -74,7 +74,7 @@ export const PastEvents: React.FC = () => {
       </section>
 
       {/* Main Page Content */}
-      <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
         {/* Year Filter Pills */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}

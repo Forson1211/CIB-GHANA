@@ -155,7 +155,7 @@ export const EventDetails: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#021a0f]/40 via-transparent to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-6 text-left">
+        <div className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-6 text-left">
           {/* Breadcrumb Navigation */}
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
             <Link to="/" className="hover:text-white transition-colors">Home</Link>
@@ -257,7 +257,7 @@ export const EventDetails: React.FC = () => {
       </section>
 
       {/* 2. ABOUT THE EVENT */}
-      <section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Main Description */}
           <div className="lg:col-span-8 space-y-6">
@@ -534,7 +534,7 @@ export const EventDetails: React.FC = () => {
 
       {/* 5. INTERACTIVE AGENDA SECTION (Actual Brand Green Background) */}
       <section id="agenda" className="w-full bg-[#008129] py-12 sm:py-16 text-white scroll-mt-24 shadow-inner">
-        <div className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="text-left max-w-3xl space-y-1.5">
             <span className="text-[11px] font-black uppercase tracking-widest text-[#FFE500]">
               PROGRAMME ITINERARY
@@ -558,7 +558,7 @@ export const EventDetails: React.FC = () => {
       </section>
 
       {/* 6. THE VENUE SHOWCASE */}
-      <section className="max-w-[1360px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
+      <section className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         <div className="text-left space-y-2 max-w-2xl">
           <span className="text-xs font-bold uppercase tracking-widest text-[#008129]">
             THE VENUE

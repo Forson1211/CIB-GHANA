@@ -40,8 +40,16 @@ export function createApp(): Express {
   app.use(express.json({ limit: '20mb' }));
   app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
+  // Ensure req.url starts with /api so routes match regardless of how Vercel proxies the service
+  app.use((req, res, next) => {
+    if (req.url && !req.url.startsWith('/api')) {
+      req.url = `/api${req.url.startsWith('/') ? req.url : `/${req.url}`}`;
+    }
+    next();
+  });
+
   // Health and System Diagnostics
-  app.get('/api/health', (req: Request, res: Response) => {
+  const healthHandler = (req: Request, res: Response) => {
     res.json({
       status: 'UP',
       service: 'CIB Ghana Events API',
@@ -50,7 +58,9 @@ export function createApp(): Express {
       version: '1.0.0',
       environment: config.nodeEnv,
     });
-  });
+  };
+  app.get('/api/health', healthHandler);
+  app.get('/api', healthHandler);
 
   // REST API Routes
   app.use('/api/events', eventRoutes);

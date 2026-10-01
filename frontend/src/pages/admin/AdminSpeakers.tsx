@@ -134,7 +134,7 @@ const SpeakerModal: React.FC<{
 
       <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4" onClick={onClose}>
       <div
-        className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
+        className="bg-white rounded-none shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -145,7 +145,7 @@ const SpeakerModal: React.FC<{
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">Changes are saved and will show on the main site.</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 text-slate-500">
+          <button onClick={onClose} className="p-2 rounded-none hover:bg-slate-100 text-slate-500">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -155,15 +155,15 @@ const SpeakerModal: React.FC<{
           <div className="flex items-center gap-5">
             <div className="relative flex-shrink-0">
               {previewUrl ? (
-                <img src={previewUrl} alt="preview" className="w-24 h-24 rounded-2xl object-cover border-2 border-slate-200" />
+                <img src={previewUrl} alt="preview" className="w-24 h-24 rounded-none object-cover shadow-sm" />
               ) : (
-                <div className="w-24 h-24 rounded-2xl bg-slate-100 flex items-center justify-center border-2 border-dashed border-slate-300">
+                <div className="w-24 h-24 rounded-none bg-slate-100 flex items-center justify-center">
                   <User className="w-8 h-8 text-slate-300" />
                 </div>
               )}
               <button
                 onClick={() => fileRef.current?.click()}
-                className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-[#008B2E] text-white flex items-center justify-center shadow-lg hover:bg-[#006B22] transition-colors"
+                className="absolute top-0 right-0 w-7 h-7 rounded-none bg-[#008B2E] text-white flex items-center justify-center shadow hover:bg-[#006B22] transition-colors"
               >
                 {uploading ? (
                   <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -178,12 +178,12 @@ const SpeakerModal: React.FC<{
               <p className="text-xs text-slate-400 mb-3">Upload a professional headshot. Saved automatically.</p>
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl border-2 border-dashed border-slate-200 hover:border-[#008B2E] hover:bg-[#F0FAF4] text-xs font-bold text-slate-500 hover:text-[#008B2E] transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-none bg-slate-100 hover:bg-[#F0FAF4] text-xs font-bold text-slate-600 hover:text-[#008B2E] transition-all"
               >
                 <Upload className="w-4 h-4" /> {uploading ? 'Uploading to cloud…' : 'Upload Photo'}
               </button>
               {uploadWarning && (
-                <p className="mt-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 leading-relaxed">
+                <p className="mt-2 text-xs text-amber-700 bg-amber-50 rounded-none px-3 py-2 leading-relaxed">
                   {uploadWarning}
                 </p>
               )}
@@ -198,7 +198,7 @@ const SpeakerModal: React.FC<{
                 value={form.name ?? ''}
                 onChange={(e) => set('name', e.target.value)}
                 placeholder="Dr. Ernest Addison"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
+                className="w-full px-4 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]"
               />
             </div>
             <div>
@@ -207,7 +207,7 @@ const SpeakerModal: React.FC<{
                 value={form.position ?? ''}
                 onChange={(e) => set('position', e.target.value)}
                 placeholder="Governor"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
+                className="w-full px-4 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]"
               />
             </div>
           </div>
@@ -219,7 +219,7 @@ const SpeakerModal: React.FC<{
                 value={form.organization ?? ''}
                 onChange={(e) => set('organization', e.target.value)}
                 placeholder="Bank of Ghana"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
+                className="w-full px-4 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]"
               />
             </div>
             <div>
@@ -228,7 +228,7 @@ const SpeakerModal: React.FC<{
                 value={form.country ?? ''}
                 onChange={(e) => set('country', e.target.value)}
                 placeholder="Ghana"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
+                className="w-full px-4 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]"
               />
             </div>
           </div>
@@ -246,16 +246,16 @@ const SpeakerModal: React.FC<{
                   set('is_keynote', true);
                   set('speaker_type', 'KEYNOTE');
                 }}
-                className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                className={`flex items-start gap-3.5 p-4 rounded-none text-left transition-all cursor-pointer ${
                   (form.speaker_type === 'KEYNOTE' || form.is_keynote)
-                    ? 'bg-amber-50/90 border-amber-400 ring-2 ring-amber-400/20 shadow-sm'
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                    ? 'bg-amber-100 text-amber-950 shadow-sm ring-2 ring-amber-500'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 transition-colors ${
                   (form.speaker_type === 'KEYNOTE' || form.is_keynote)
                     ? 'bg-amber-500 text-white shadow'
-                    : 'bg-slate-100 text-slate-400'
+                    : 'bg-white text-slate-400'
                 }`}>
                   <Star className="w-5 h-5 fill-current" />
                 </div>
@@ -263,10 +263,10 @@ const SpeakerModal: React.FC<{
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-sm font-extrabold text-slate-900">Keynote Speaker</span>
                     {(form.speaker_type === 'KEYNOTE' || form.is_keynote) && (
-                      <span className="text-[10px] font-black uppercase bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">Selected</span>
+                      <span className="text-[10px] font-black uppercase bg-amber-500 text-white px-2 py-0.5 rounded-none">Selected</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 leading-snug">
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
                     Featured luminary, plenary address &amp; distinguished keynote
                   </p>
                 </div>
@@ -279,16 +279,16 @@ const SpeakerModal: React.FC<{
                   set('is_keynote', false);
                   set('speaker_type', 'PANEL');
                 }}
-                className={`flex items-start gap-3.5 p-4 rounded-2xl border-2 text-left transition-all cursor-pointer ${
+                className={`flex items-start gap-3.5 p-4 rounded-none text-left transition-all cursor-pointer ${
                   (form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE'))
-                    ? 'bg-emerald-50/90 border-[#008B2E] ring-2 ring-[#008B2E]/20 shadow-sm'
-                    : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                    ? 'bg-emerald-100 text-emerald-950 shadow-sm ring-2 ring-[#008B2E]'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                <div className={`w-10 h-10 rounded-none flex items-center justify-center shrink-0 transition-colors ${
                   (form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE'))
                     ? 'bg-[#008B2E] text-white shadow'
-                    : 'bg-slate-100 text-slate-400'
+                    : 'bg-white text-slate-400'
                 }`}>
                   <Users className="w-5 h-5" />
                 </div>
@@ -296,10 +296,10 @@ const SpeakerModal: React.FC<{
                   <div className="flex items-center justify-between gap-1">
                     <span className="text-sm font-extrabold text-slate-900">Panels</span>
                     {(form.speaker_type === 'PANEL' || (!form.is_keynote && form.speaker_type !== 'KEYNOTE')) && (
-                      <span className="text-[10px] font-black uppercase bg-emerald-200 text-[#006B22] px-2 py-0.5 rounded-full">Selected</span>
+                      <span className="text-[10px] font-black uppercase bg-[#008B2E] text-white px-2 py-0.5 rounded-none">Selected</span>
                     )}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1 leading-snug">
+                  <p className="text-xs text-slate-600 mt-1 leading-snug">
                     Panel moderator, panelist &amp; breakout session faculty
                   </p>
                 </div>
@@ -315,7 +315,7 @@ const SpeakerModal: React.FC<{
               onChange={(e) => set('biography', e.target.value)}
               rows={3}
               placeholder="Brief professional biography..."
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20 resize-none"
+              className="w-full px-4 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E] resize-none"
             />
           </div>
 
@@ -328,18 +328,18 @@ const SpeakerModal: React.FC<{
                 onChange={(e) => setExpertiseInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addExpertise())}
                 placeholder="e.g. Central Banking"
-                className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none"
+                className="flex-1 px-4 py-2 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]"
               />
               <button
                 onClick={addExpertise}
-                className="px-4 py-2 bg-[#008B2E] text-white rounded-xl text-sm font-bold hover:bg-[#006B22]"
+                className="px-4 py-2 bg-[#008B2E] text-white rounded-none text-sm font-bold hover:bg-[#006B22]"
               >
                 Add
               </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {(form.expertise ?? []).map((tag, i) => (
-                <span key={i} className="flex items-center gap-1 px-3 py-1 bg-[#E6F5EC] text-[#008B2E] text-xs font-bold rounded-full">
+                <span key={i} className="flex items-center gap-1 px-3 py-1 bg-[#E6F5EC] text-[#008B2E] text-xs font-bold rounded-none">
                   {tag}
                   <button onClick={() => removeExpertise(i)} className="hover:text-red-500"><X className="w-3 h-3" /></button>
                 </span>
@@ -351,28 +351,28 @@ const SpeakerModal: React.FC<{
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1 block"><Link2 className="w-3 h-3" /> LinkedIn</label>
-              <input value={form.linkedin_url ?? ''} onChange={(e) => set('linkedin_url', e.target.value)} placeholder="https://linkedin.com/in/..." className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#008B2E] focus:outline-none" />
+              <input value={form.linkedin_url ?? ''} onChange={(e) => set('linkedin_url', e.target.value)} placeholder="https://linkedin.com/in/..." className="w-full px-3 py-2 rounded-none bg-slate-100 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]" />
             </div>
             <div>
               <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1 block"><AtSign className="w-3 h-3" /> Twitter / X</label>
-              <input value={form.twitter_url ?? ''} onChange={(e) => set('twitter_url', e.target.value)} placeholder="https://x.com/..." className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#008B2E] focus:outline-none" />
+              <input value={form.twitter_url ?? ''} onChange={(e) => set('twitter_url', e.target.value)} placeholder="https://x.com/..." className="w-full px-3 py-2 rounded-none bg-slate-100 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]" />
             </div>
             <div>
               <label className="text-xs font-bold text-slate-500 mb-1 flex items-center gap-1 block"><Globe className="w-3 h-3" /> Website</label>
-              <input value={form.website_url ?? ''} onChange={(e) => set('website_url', e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-[#008B2E] focus:outline-none" />
+              <input value={form.website_url ?? ''} onChange={(e) => set('website_url', e.target.value)} placeholder="https://..." className="w-full px-3 py-2 rounded-none bg-slate-100 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E]" />
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="px-7 py-5 border-t border-slate-100 flex items-center justify-end gap-3 sticky bottom-0 bg-white">
-          <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-none bg-slate-100 text-sm font-bold text-slate-600 hover:bg-slate-200">
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!form.name?.trim() || uploading}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#008B2E] text-white text-sm font-bold hover:bg-[#006B22] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-none bg-[#008B2E] text-white text-sm font-bold hover:bg-[#006B22] disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-md"
           >
             <Save className="w-4 h-4" /> Save Speaker
           </button>
@@ -504,23 +504,23 @@ export const AdminSpeakers: React.FC = () => {
       title="Conference Faculty & Speakers"
       subtitle="Manage keynote luminaries, panel moderators, and guest resource persons."
       actions={
-        <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsAdding(true)}>
+        <Button variant="primary" size="sm" leftIcon={<Plus className="w-4 h-4" />} onClick={() => setIsAdding(true)} className="rounded-none">
           Add Speaker
         </Button>
       }
     >
       <div className="space-y-6">
         {/* Category Filter Tabs & Search Controls */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="bg-white p-4 rounded-none shadow-md space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Filter Tabs */}
-            <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+            <div className="inline-flex rounded-none bg-slate-100 p-1">
               <button
                 type="button"
                 onClick={() => setCategoryFilter('ALL')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-2 rounded-none text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   categoryFilter === 'ALL'
-                    ? 'bg-slate-900 text-white shadow-xs'
+                    ? 'bg-slate-900 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
                 }`}
               >
@@ -529,9 +529,9 @@ export const AdminSpeakers: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCategoryFilter('KEYNOTE')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-none text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   categoryFilter === 'KEYNOTE'
-                    ? 'bg-amber-500 text-white shadow-xs'
+                    ? 'bg-amber-500 text-white shadow-sm'
                     : 'text-amber-700 hover:text-amber-900 hover:bg-white/60'
                 }`}
               >
@@ -541,9 +541,9 @@ export const AdminSpeakers: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCategoryFilter('PANEL')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-none text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   categoryFilter === 'PANEL'
-                    ? 'bg-[#008B2E] text-white shadow-xs'
+                    ? 'bg-[#008B2E] text-white shadow-sm'
                     : 'text-[#006B22] hover:text-[#005018] hover:bg-white/60'
                 }`}
               >
@@ -565,7 +565,7 @@ export const AdminSpeakers: React.FC = () => {
               placeholder="Search by speaker name, job position, or organization..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-[#008B2E] focus:outline-none focus:ring-2 focus:ring-[#008B2E]/20"
+              className="w-full pl-10 pr-4 py-2.5 rounded-none bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008B2E] shadow-inner"
             />
           </div>
         </div>
@@ -579,7 +579,7 @@ export const AdminSpeakers: React.FC = () => {
             return (
               <div
                 key={spk.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group flex flex-col justify-between"
+                className="bg-white rounded-none shadow-md hover:shadow-xl transition-all group flex flex-col justify-between overflow-hidden"
               >
                 {/* Card Top */}
                 <div className="p-5 pb-3">
@@ -590,23 +590,23 @@ export const AdminSpeakers: React.FC = () => {
                         <img
                           src={photo}
                           alt={spk.name}
-                          className="w-16 h-16 rounded-2xl object-cover border border-slate-200"
+                          className="w-16 h-16 rounded-none object-cover shadow-sm"
                         />
                       ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                        <div className="w-16 h-16 rounded-none bg-slate-100 flex items-center justify-center text-slate-400">
                           <User className="w-8 h-8 text-slate-400" />
                         </div>
                       )}
                       {isKeynote ? (
                         <span
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center shadow"
+                          className="absolute top-0 right-0 w-5 h-5 bg-amber-500 rounded-none flex items-center justify-center shadow-sm"
                           title="Keynote Speaker"
                         >
                           <Star className="w-3 h-3 text-white fill-white" />
                         </span>
                       ) : (
                         <span
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#008B2E] rounded-full flex items-center justify-center shadow"
+                          className="absolute top-0 right-0 w-5 h-5 bg-[#008B2E] rounded-none flex items-center justify-center shadow-sm"
                           title="Panels"
                         >
                           <Users className="w-3 h-3 text-white" />
@@ -619,13 +619,13 @@ export const AdminSpeakers: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <h4 className="text-sm font-black text-slate-900 truncate">{spk.name}</h4>
                         {isKeynote ? (
-                          <span className="text-[9px] font-extrabold uppercase bg-amber-100 border border-amber-300 text-amber-900 px-2 py-0.5 rounded-full leading-none inline-flex items-center gap-1">
-                            <Star className="w-2.5 h-2.5 fill-current text-amber-600" />
+                          <span className="text-[9px] font-extrabold uppercase bg-amber-500 text-white px-2 py-0.5 rounded-none leading-none inline-flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-current" />
                             Keynote Speaker
                           </span>
                         ) : (
-                          <span className="text-[9px] font-extrabold uppercase bg-emerald-100 border border-emerald-300 text-[#006B22] px-2 py-0.5 rounded-full leading-none inline-flex items-center gap-1">
-                            <Users className="w-2.5 h-2.5 text-[#008B2E]" />
+                          <span className="text-[9px] font-extrabold uppercase bg-[#008B2E] text-white px-2 py-0.5 rounded-none leading-none inline-flex items-center gap-1">
+                            <Users className="w-2.5 h-2.5" />
                             Panels
                           </span>
                         )}
@@ -641,7 +641,7 @@ export const AdminSpeakers: React.FC = () => {
                   {spk.expertise && spk.expertise.length > 0 && (
                     <div className="pt-3 flex flex-wrap gap-1.5">
                       {spk.expertise.slice(0, 3).map((exp, idx) => (
-                        <span key={idx} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+                        <span key={idx} className="text-[10px] bg-slate-100 text-slate-700 px-2.5 py-1 rounded-none font-semibold">
                           {exp}
                         </span>
                       ))}
@@ -650,16 +650,16 @@ export const AdminSpeakers: React.FC = () => {
                 </div>
 
                 {/* Card Footer Actions */}
-                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/70 rounded-b-2xl">
+                <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-slate-50/70 rounded-none">
                   {/* 1-Click Role Switcher */}
                   <button
                     type="button"
                     onClick={() => handleToggleRole(spk)}
                     title={`Click to switch designation to ${isKeynote ? 'Panels' : 'Keynote Speaker'}`}
-                    className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 shadow-xs ${
+                    className={`text-[11px] font-bold px-3 py-1.5 rounded-none transition-all cursor-pointer flex items-center gap-1.5 ${
                       isKeynote
-                        ? 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
-                        : 'bg-emerald-50 text-[#006B22] border-emerald-300 hover:bg-emerald-100'
+                        ? 'bg-amber-100 text-amber-900 hover:bg-amber-200'
+                        : 'bg-emerald-100 text-[#006B22] hover:bg-emerald-200'
                     }`}
                   >
                     {isKeynote ? (
@@ -675,16 +675,16 @@ export const AdminSpeakers: React.FC = () => {
                     )}
                   </button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setEditTarget(spk)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:border-[#008B2E] hover:text-[#008B2E] transition-all shadow-xs"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-none bg-slate-200 text-xs font-bold text-slate-700 hover:bg-[#008B2E] hover:text-white transition-all shadow-xs"
                     >
                       <Edit2 className="w-3 h-3" /> Edit
                     </button>
                     <button
                       onClick={() => handleDelete(spk.id!)}
-                      className="p-1.5 rounded-lg bg-white border border-slate-200 text-red-400 hover:border-red-300 hover:bg-red-50 transition-all shadow-xs"
+                      className="p-1.5 rounded-none bg-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-xs"
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -697,7 +697,7 @@ export const AdminSpeakers: React.FC = () => {
           {/* Empty State */}
           {filtered.length === 0 && (
             <div className="col-span-3 py-16 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-none bg-slate-100 flex items-center justify-center mb-4">
                 <User className="w-8 h-8 text-slate-300" />
               </div>
               <p className="text-base font-bold text-slate-700">No speakers found</p>

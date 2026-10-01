@@ -83,7 +83,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden"
+        className="bg-white rounded-none shadow-2xl w-full max-w-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -92,7 +92,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             <h3 className="text-base font-black text-slate-900">Crop Photo</h3>
             <p className="text-xs text-slate-400 mt-0.5">Drag to reposition · Pinch or scroll to zoom</p>
           </div>
-          <button onClick={onCancel} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+          <button onClick={onCancel} className="p-2 rounded-none hover:bg-slate-100 text-slate-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -108,12 +108,12 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             onCropChange={setCrop}
             onZoomChange={setZoom}
             onCropComplete={onCropComplete}
-            cropShape="round"
+            cropShape="rect"
             showGrid={false}
             style={{
               containerStyle: { borderRadius: 0 },
               cropAreaStyle: {
-                border: '3px solid #008B2E',
+                border: '2px solid #008B2E',
                 boxShadow: '0 0 0 9999px rgba(0,0,0,0.55)',
               },
             }}
@@ -126,7 +126,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setZoom((z) => Math.max(1, +(z - 0.1).toFixed(1)))}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+              className="p-1.5 rounded-none hover:bg-slate-100 text-slate-500 transition-colors"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
@@ -141,14 +141,14 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
             />
             <button
               onClick={() => setZoom((z) => Math.min(3, +(z + 0.1).toFixed(1)))}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"
+              className="p-1.5 rounded-none hover:bg-slate-100 text-slate-500 transition-colors"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             {/* Rotation */}
             <button
               onClick={() => setRotation((r) => (r + 90) % 360)}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors ml-1"
+              className="p-1.5 rounded-none hover:bg-slate-100 text-slate-500 transition-colors ml-1"
               title="Rotate 90°"
             >
               <RotateCw className="w-4 h-4" />
@@ -159,14 +159,14 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           <div className="flex items-center gap-3 pt-1">
             <button
               onClick={onCancel}
-              className="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="flex-1 py-2.5 rounded-none bg-slate-100 text-sm font-bold text-slate-700 hover:bg-slate-200 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleApply}
               disabled={processing}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#008B2E] text-white text-sm font-bold hover:bg-[#006B22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-none bg-[#008B2E] text-white text-sm font-bold hover:bg-[#006B22] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
             >
               {processing ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

@@ -424,7 +424,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         {loopItems.map((b, idx) => (
           <div
             key={`${b.id}-${idx}`}
-            className="bg-white rounded-xl sm:rounded-2xl px-5 sm:px-7 py-2.5 sm:py-3 h-[84px] sm:h-[98px] lg:h-[110px] min-w-[240px] sm:min-w-[290px] lg:min-w-[340px] flex items-center justify-center shadow-lg border border-slate-200/90 hover:shadow-2xl transition-all duration-200 shrink-0 cursor-default"
+            className="bg-white rounded-none px-5 sm:px-7 py-2.5 sm:py-3 h-[84px] sm:h-[98px] lg:h-[110px] min-w-[240px] sm:min-w-[290px] lg:min-w-[340px] flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-200 shrink-0 cursor-default"
           >
             <div className="flex items-center justify-center max-w-full max-h-full">
               {b.renderLogo()}

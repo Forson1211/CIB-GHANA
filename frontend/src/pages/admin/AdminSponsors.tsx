@@ -208,15 +208,15 @@ export const AdminSponsors: React.FC = () => {
         )}
 
         {/* Tab & Search Bar */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="bg-white p-4 rounded-none shadow-md flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4">
           {/* Corporate Members & Sponsors Tabs */}
-          <div className="flex flex-wrap sm:inline-flex p-1 bg-slate-100 rounded-xl w-full sm:w-auto gap-1">
+          <div className="flex flex-wrap sm:inline-flex p-1 bg-slate-100 rounded-none w-full sm:w-auto gap-1">
             <button
               type="button"
               onClick={() => setActiveTab('ALL')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-none text-xs font-bold transition-all cursor-pointer ${
                 activeTab === 'ALL'
-                  ? 'bg-white text-cib-charcoal-900 shadow-xs'
+                  ? 'bg-slate-900 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -226,7 +226,7 @@ export const AdminSponsors: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('CORPORATE_MEMBER')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 rounded-none text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'CORPORATE_MEMBER'
                   ? 'bg-[#1B7E3E] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -239,7 +239,7 @@ export const AdminSponsors: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('SPONSOR')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              className={`px-4 py-2 rounded-none text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 activeTab === 'SPONSOR'
                   ? 'bg-amber-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -258,13 +258,13 @@ export const AdminSponsors: React.FC = () => {
               placeholder="Search name, bank or role..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-xs focus:border-cib-green-600 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2 rounded-none bg-slate-50 text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E] shadow-inner"
             />
           </div>
         </div>
 
         {/* Informative Guidance Banner */}
-        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="p-4 rounded-none bg-slate-50 text-xs text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-[#1B7E3E] shrink-0" />
             <span>
@@ -273,11 +273,11 @@ export const AdminSponsors: React.FC = () => {
           </div>
           <div className="flex items-center gap-3 font-semibold shrink-0">
             <span className="inline-flex items-center gap-1 text-[#1B7E3E]">
-              <span className="w-2 h-2 rounded-full bg-[#1B7E3E]" />
+              <span className="w-2 h-2 rounded-none bg-[#1B7E3E]" />
               {corporateMembersCount} on Home Marquee
             </span>
             <span className="inline-flex items-center gap-1 text-amber-600">
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="w-2 h-2 rounded-none bg-amber-500" />
               {sponsorsCount} on Sponsors Page
             </span>
           </div>
@@ -285,8 +285,8 @@ export const AdminSponsors: React.FC = () => {
 
         {/* Entities Grid */}
         {filtered.length === 0 ? (
-          <div className="py-16 px-6 text-center bg-white rounded-2xl border border-slate-200 space-y-4">
-            <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+          <div className="py-16 px-6 text-center bg-white rounded-none shadow-md space-y-4">
+            <div className="w-14 h-14 rounded-none bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
               <Building className="w-7 h-7" />
             </div>
             <div className="space-y-1">
@@ -300,6 +300,7 @@ export const AdminSponsors: React.FC = () => {
               size="sm"
               leftIcon={<Plus className="w-4 h-4" />}
               onClick={() => handleOpenAddModal()}
+              className="rounded-none"
             >
               Add New Entity
             </Button>
@@ -312,17 +313,17 @@ export const AdminSponsors: React.FC = () => {
               return (
                 <div
                   key={sp.id}
-                  className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:border-cib-green-300 hover:shadow-md transition-all flex flex-col justify-between space-y-4"
+                  className="bg-white p-6 rounded-none shadow-md hover:shadow-xl transition-all flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
                     {/* Badge & External Link Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border flex items-center gap-1.5 ${
+                          className={`px-3 py-1 rounded-none text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 ${
                             isMember
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                              : 'bg-amber-50 text-amber-900 border-amber-200'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-900'
                           }`}
                         >
                           {isMember ? (
@@ -356,7 +357,7 @@ export const AdminSponsors: React.FC = () => {
                     </div>
 
                     {/* Logo Display Container */}
-                    <div className="h-20 flex items-center justify-center bg-slate-50/80 rounded-xl p-3 border border-slate-100 overflow-hidden">
+                    <div className="h-20 flex items-center justify-center bg-slate-50 rounded-none p-3 shadow-inner overflow-hidden">
                       {renderCardLogo(sp)}
                     </div>
 
@@ -381,7 +382,7 @@ export const AdminSponsors: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenEditModal(sp)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50 hover:text-cib-green-700 text-xs font-bold transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-none bg-slate-100 text-slate-700 hover:bg-[#1B7E3E] hover:text-white text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -390,7 +391,7 @@ export const AdminSponsors: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDelete(sp.id, sp.name)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-none bg-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       <span>Remove</span>
@@ -407,13 +408,13 @@ export const AdminSponsors: React.FC = () => {
       {isModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl border border-slate-200 my-4 sm:my-8 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto"
+            className="bg-white rounded-none max-w-lg w-full p-4 sm:p-8 space-y-5 sm:space-y-6 shadow-2xl my-4 sm:my-8 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-xl bg-cib-green-50 text-cib-green-800">
+                <div className="p-2.5 rounded-none bg-cib-green-50 text-cib-green-800">
                   {type === 'CORPORATE_MEMBER' ? <Building className="w-5 h-5 text-[#1B7E3E]" /> : <Award className="w-5 h-5 text-amber-600" />}
                 </div>
                 <div>
@@ -429,7 +430,7 @@ export const AdminSponsors: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-none text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -446,10 +447,10 @@ export const AdminSponsors: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setType('CORPORATE_MEMBER')}
-                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                    className={`p-3 rounded-none text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                       type === 'CORPORATE_MEMBER'
-                        ? 'border-[#1B7E3E] bg-emerald-50 text-emerald-950 ring-2 ring-emerald-300 shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        ? 'bg-emerald-100 text-emerald-950 ring-2 ring-[#1B7E3E] shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <div className="flex items-center gap-1.5 font-black text-sm text-[#1B7E3E]">
@@ -464,10 +465,10 @@ export const AdminSponsors: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setType('SPONSOR')}
-                    className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
+                    className={`p-3 rounded-none text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                       type === 'SPONSOR'
-                        ? 'border-amber-500 bg-amber-50 text-amber-950 ring-2 ring-amber-300 shadow-xs'
-                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        ? 'bg-amber-100 text-amber-950 ring-2 ring-amber-500 shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <div className="flex items-center gap-1.5 font-black text-sm text-amber-700">
@@ -492,7 +493,7 @@ export const AdminSponsors: React.FC = () => {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Stanbic Bank, Ecobank, or Bank of Ghana"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E]"
                 />
               </div>
 
@@ -510,7 +511,7 @@ export const AdminSponsors: React.FC = () => {
                       ? 'e.g. Licensed Commercial Bank, Central Bank Regulator'
                       : 'e.g. Platinum Sponsor, Gold Sponsor, Fintech Partner'
                   }
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E]"
                 />
               </div>
 
@@ -534,6 +535,7 @@ export const AdminSponsors: React.FC = () => {
                     size="sm"
                     leftIcon={<Upload className="w-4 h-4" />}
                     onClick={() => fileInputRef.current?.click()}
+                    className="rounded-none border-none bg-slate-100 hover:bg-slate-200 text-slate-700"
                   >
                     Upload Logo from Device
                   </Button>
@@ -546,7 +548,7 @@ export const AdminSponsors: React.FC = () => {
 
                 {/* Logo Preview */}
                 {logoUrl && (
-                  <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-center h-20">
+                  <div className="mt-3 p-3 bg-slate-50 rounded-none flex items-center justify-center h-20 shadow-inner">
                     <img
                       src={logoUrl}
                       alt="Logo preview"
@@ -567,7 +569,7 @@ export const AdminSponsors: React.FC = () => {
                   onChange={(e) => setLogoUrl(e.target.value)}
                   disabled={logoUrl.startsWith('data:')}
                   placeholder="https://... or upload above"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:border-cib-green-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                  className="w-full px-3 py-2 rounded-none bg-slate-100 text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E] disabled:bg-slate-200 disabled:text-slate-500"
                 />
               </div>
 
@@ -581,7 +583,7 @@ export const AdminSponsors: React.FC = () => {
                   value={websiteUrl}
                   onChange={(e) => setWebsiteUrl(e.target.value)}
                   placeholder="https://example.com.gh"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E]"
                 />
               </div>
 
@@ -595,7 +597,7 @@ export const AdminSponsors: React.FC = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Additional institutional background or notes..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-cib-green-600 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-none bg-slate-100 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1B7E3E] resize-none"
                 />
               </div>
 
@@ -606,6 +608,7 @@ export const AdminSponsors: React.FC = () => {
                   variant="ghost"
                   size="md"
                   onClick={() => setIsModalOpen(false)}
+                  className="rounded-none"
                 >
                   Cancel
                 </Button>
@@ -614,6 +617,7 @@ export const AdminSponsors: React.FC = () => {
                   variant="primary"
                   size="md"
                   leftIcon={<CheckCircle2 className="w-4 h-4" />}
+                  className="rounded-none shadow-md"
                 >
                   {editingId ? 'Save Changes' : (type === 'CORPORATE_MEMBER' ? 'Add Corporate Member' : 'Add Sponsor')}
                 </Button>

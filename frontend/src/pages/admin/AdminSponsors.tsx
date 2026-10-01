@@ -93,30 +93,34 @@ export const AdminSponsors: React.FC = () => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    e.target.value = '';
 
     setFileName(file.name);
     setIsUploading(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      if (typeof reader.result === 'string') {
-        const base64 = reader.result;
-        setLogoUrl(base64);
 
-        // Upload directly to Supabase cloud storage so all browsers can view it
-        try {
-          const tempId = editingId || `sp-${Date.now()}`;
-          const { url, isPublic } = await uploadSponsorLogoToCloud(base64, tempId);
-          if (isPublic && url.startsWith('http')) {
-            setLogoUrl(url);
-          }
-        } catch (uploadErr) {
-          console.warn('Logo upload to cloud storage error:', uploadErr);
-        } finally {
-          setIsUploading(false);
-        }
+    try {
+      // Read file as base64
+      const base64: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+
+      // Show instant preview
+      setLogoUrl(base64);
+
+      // Upload to Supabase cloud storage
+      const tempId = editingId || `sp-${Date.now()}`;
+      const { url, isPublic } = await uploadSponsorLogoToCloud(base64, tempId);
+      if (isPublic && url.startsWith('http')) {
+        setLogoUrl(url);
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.warn('Logo upload error:', err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -514,16 +518,16 @@ export const AdminSponsors: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+            <div className="flex items-center justify-between px-4 sm:px-8 py-4 bg-[#005C20]">
               <div className="flex items-center gap-2.5">
-                <div className="p-2.5 rounded-none bg-cib-green-50 text-cib-green-800">
-                  {type === 'CORPORATE_MEMBER' ? <Building className="w-5 h-5 text-[#1B7E3E]" /> : <Award className="w-5 h-5 text-amber-600" />}
+                <div className="p-2 rounded-none bg-white/10">
+                  {type === 'CORPORATE_MEMBER' ? <Building className="w-5 h-5 text-white" /> : <Award className="w-5 h-5 text-white" />}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-cib-charcoal-900 font-display">
+                  <h3 className="text-lg font-bold text-white font-display">
                     {editingId ? 'Edit Entity' : 'Add Entity'}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-white/70">
                     {type === 'CORPORATE_MEMBER'
                       ? 'Corporate Members appear in the moving marquee on the homepage.'
                       : 'Corporate Sponsors appear on the public Sponsors page.'}
@@ -532,7 +536,7 @@ export const AdminSponsors: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-none text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-none text-white/80 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -551,7 +555,7 @@ export const AdminSponsors: React.FC = () => {
                     onClick={() => setType('CORPORATE_MEMBER')}
                     className={`p-3 rounded-none text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                       type === 'CORPORATE_MEMBER'
-                        ? 'bg-emerald-100 text-emerald-950 ring-2 ring-[#1B7E3E] shadow-sm'
+                        ? 'bg-emerald-100 text-emerald-950 shadow-md'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -569,7 +573,7 @@ export const AdminSponsors: React.FC = () => {
                     onClick={() => setType('SPONSOR')}
                     className={`p-3 rounded-none text-xs font-bold flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer text-center ${
                       type === 'SPONSOR'
-                        ? 'bg-amber-100 text-amber-950 ring-2 ring-amber-500 shadow-sm'
+                        ? 'bg-amber-100 text-amber-950 shadow-md'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
@@ -648,8 +652,14 @@ export const AdminSponsors: React.FC = () => {
                   )}
                 </div>
 
-                {/* Logo Preview */}
-                {logoUrl && (
+                {/* Logo Preview + uploading indicator */}
+                {isUploading && (
+                  <div className="mt-3 p-3 bg-slate-50 rounded-none flex items-center justify-center h-20 gap-2 text-xs text-slate-500">
+                    <span className="w-4 h-4 border-2 border-[#008B2E] border-t-transparent rounded-full animate-spin inline-block" />
+                    Uploading logo to cloud…
+                  </div>
+                )}
+                {!isUploading && logoUrl && (
                   <div className="mt-3 p-3 bg-slate-50 rounded-none flex items-center justify-center h-20 shadow-inner">
                     <img
                       src={logoUrl}

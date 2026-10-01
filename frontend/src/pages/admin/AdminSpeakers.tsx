@@ -24,7 +24,7 @@ const fileToBase64 = (file: File): Promise<string> =>
 
 /* ─── Empty speaker template ─── */
 const emptySpeaker = (): Partial<Speaker> => ({
-  id: `sp-${Date.now()}`,
+  id: stringToUuid(`sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`),
   name: '',
   slug: '',
   position: '',
@@ -426,50 +426,20 @@ export const AdminSpeakers: React.FC = () => {
       speaker_type: speakerType,
     };
 
-    const exists = speakers.find((s) => s.id === normalized.id);
-    if (exists) {
-      updateSpeaker(normalized.id!, normalized);
+    const exists = speakers.find(
+      (s) =>
+        (s.id && normalized.id && s.id === normalized.id) ||
+        (s.name && normalized.name && s.name.trim().toLowerCase() === normalized.name.trim().toLowerCase())
+    );
+
+    if (exists && exists.id) {
+      await updateSpeaker(exists.id, { ...normalized, id: exists.id });
     } else {
-      addSpeaker(normalized);
+      await addSpeaker(normalized);
     }
 
-    // Persist to Supabase Database (both ApiClient and supabaseAdmin with service role)
-    if (normalized.id) {
-      const uuid = stringToUuid(normalized.id);
-      const cleanSlug = normalized.slug || (normalized.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
-      const payload = {
-        id: uuid,
-        name: normalized.name ?? '',
-        slug: cleanSlug,
-        position: normalized.position ?? '',
-        organization: normalized.organization ?? '',
-        country: normalized.country ?? 'Ghana',
-        photo_url: normalized.photo_url ?? '',
-        biography: normalized.biography ?? '',
-        expertise: normalized.expertise ?? [],
-        is_keynote: isKeynote,
-        linkedin_url: normalized.linkedin_url || null,
-        twitter_url: normalized.twitter_url || null,
-        website_url: normalized.website_url || null,
-      };
-
-      // 1. Direct Supabase database upsert (service role bypasses RLS)
-      try {
-        await supabaseAdmin.from('speakers').upsert(payload);
-      } catch (sbErr) {
-        console.warn('Supabase DB save error:', sbErr);
-      }
-
-      // 2. Also notify backend API if running
-      try {
-        await ApiClient.saveSpeaker({ ...normalized, id: uuid, slug: cleanSlug });
-      } catch {
-        // Backend offline / static build fallback
-      }
-
-      // Refresh from cloud so the new photo_url shows on all devices immediately
-      setTimeout(() => refreshSpeakers(), 600);
-    }
+    // Refresh from cloud so newly added/edited speakers show across all sessions
+    setTimeout(() => refreshSpeakers(), 300);
   };
 
   const handleToggleRole = (spk: Speaker) => {
@@ -484,43 +454,24 @@ export const AdminSpeakers: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (confirm('Remove this speaker?')) {
-      // Capture photo URL before removing from local state
       const speaker = speakers.find((s) => s.id === id);
       const photoUrl = speaker?.photo_url ?? '';
 
-      deleteSpeaker(id);
-      const uuid = stringToUuid(id);
+      await deleteSpeaker(id);
 
-      // 1. Delete DB row
-      try {
-        await supabaseAdmin.from('speakers').delete().eq('id', uuid);
-      } catch (e) {
-        console.warn('Supabase DB delete error:', e);
-      }
-
-      // 2. Delete image from Supabase Storage (only cloud-hosted photos)
+      // Clean up cloud storage image if applicable
       if (photoUrl && photoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
         try {
           const storagePath = photoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
           if (storagePath) {
-            const { error: storageError } = await supabaseAdmin.storage
-              .from('speaker-photos')
-              .remove([storagePath]);
-            if (storageError) {
-              console.warn('Storage image delete error:', storageError);
-            }
+            await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
           }
         } catch (e) {
           console.warn('Failed to delete speaker photo from storage:', e);
         }
       }
 
-      // 3. Fallback API delete
-      try {
-        await ApiClient.deleteSpeaker(uuid);
-      } catch {
-        // ignore
-      }
+      setTimeout(() => refreshSpeakers(), 300);
     }
   };
 

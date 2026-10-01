@@ -1224,7 +1224,7 @@ View Ticket: ${ticketUrl}
     }
 
     if (pathname === '/sponsors' && method === 'POST') {
-      const sponsor = body ? JSON.parse(body) : {};
+      const sponsor = event.body ? JSON.parse(event.body) : {};
       const rawId = sponsor.id || `sp-${Date.now()}`;
       const uuid = stringToUuid(rawId);
       const isMember = sponsor.type === 'CORPORATE_MEMBER';

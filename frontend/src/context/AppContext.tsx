@@ -35,9 +35,9 @@ interface AppContextType {
   isAdminAuthenticated: boolean;
   adminLogin: (password: string) => Promise<boolean>;
   adminLogout: () => void;
-  addSpeaker: (speaker: Partial<Speaker>) => void;
-  updateSpeaker: (id: string, updates: Partial<Speaker>) => void;
-  deleteSpeaker: (id: string) => void;
+  addSpeaker: (speaker: Partial<Speaker>) => Promise<void> | void;
+  updateSpeaker: (id: string, updates: Partial<Speaker>) => Promise<void> | void;
+  deleteSpeaker: (id: string) => Promise<void> | void;
   addSponsor: (sponsor: Partial<Sponsor>) => void;
   updateSponsor: (id: string, updates: Partial<Sponsor>) => void;
   deleteSponsor: (id: string) => void;
@@ -54,9 +54,9 @@ const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-// v10: Background-removed executive photos; photos-first sorting
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v10';
-const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v10';
+// v11: Unified UUID persistence, zero name-based purging, instant Supabase & localStorage sync
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v11';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v11';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v4';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
@@ -73,36 +73,17 @@ export const PURGED_MOCK_SPEAKER_IDS = new Set([
   'spk-12',
 ]);
 
-export const PURGED_MOCK_SPEAKER_NAMES = [
-  'dr. ernest addison',
-  'ernest addison',
-  'mansa nettey',
-  'mawu nettey',
-  'hakim ouzzani',
-  'abena osei-poku',
-  'akenu osei-poku',
-  'prof. kweku',
-  'john kofi adomakoh',
-  'patricia poku diaby',
-  'kojo addo-kufuor',
-  'elsie addo awadzi',
-  'nana ama poku',
-];
+export const PURGED_MOCK_SPEAKER_NAMES: string[] = [];
 
-// Admin-created speakers have IDs like 'sp-1234567890' (sp- followed by timestamp digits)
-// We must NEVER purge them by name — only purge known old mock IDs.
-const isAdminCreatedSpeaker = (id: string): boolean => /^sp-\d+/.test(id);
+// Any speaker created by admin, having an 'sp-' ID, or having a Supabase UUID is genuine
+const isAdminCreatedSpeaker = (id: string): boolean =>
+  /^sp-/.test(id) || /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
 
 export const isPurgedMockSpeaker = (s: { id: string; name?: string }): boolean => {
-  // Never purge admin-created speakers regardless of name
+  // Never purge admin-created, live database, or UUID speakers
   if (isAdminCreatedSpeaker(s.id)) return false;
+  // Only purge legacy static placeholder IDs
   if (PURGED_MOCK_SPEAKER_IDS.has(s.id)) return true;
-  if (s.name) {
-    const clean = s.name.toLowerCase().trim();
-    for (const name of PURGED_MOCK_SPEAKER_NAMES) {
-      if (clean.includes(name)) return true;
-    }
-  }
   return false;
 };
 
@@ -117,12 +98,7 @@ export const isSameSpeaker = (
   if (a.slug && b.slug && a.slug === b.slug) return true;
   const nameA = (a.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
   const nameB = (b.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (nameA && nameB) {
-    if (nameA === nameB) return true;
-    if (nameA.length > 5 && nameB.length > 5) {
-      if (nameA.includes(nameB) || nameB.includes(nameA)) return true;
-    }
-  }
+  if (nameA && nameB && nameA === nameB) return true;
   return false;
 };
 
@@ -283,7 +259,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } catch { /* ignore */ }
 
-    const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
+    const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS) || localStorage.getItem('cib_ghana_speakers_v10');
     if (saved) {
       try {
         const parsed: Speaker[] = JSON.parse(saved);
@@ -435,72 +411,177 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEY_SPONSORS, JSON.stringify(sponsors));
   }, [sponsors]);
 
-  const addSpeaker = (speaker: Partial<Speaker>) => {
+  const addSpeaker = async (speaker: Partial<Speaker>) => {
     const isKeynote = speaker.speaker_type === 'KEYNOTE' || Boolean(speaker.is_keynote);
     const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
+    const rawId = speaker.id || `sp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const uuid = stringToUuid(rawId);
+    const cleanSlug = speaker.slug || (speaker.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
     const newSpeaker: Speaker = {
-      id: speaker.id ?? `sp-${Date.now()}`,
+      id: uuid,
       name: speaker.name ?? '',
-      slug: speaker.slug ?? (speaker.name ?? '').toLowerCase().replace(/\s+/g, '-'),
+      slug: cleanSlug,
       position: speaker.position ?? '',
       organization: speaker.organization ?? '',
       country: speaker.country ?? 'Ghana',
       photo_url: speaker.photo_url ?? '',
       biography: speaker.biography ?? '',
-      expertise: speaker.expertise ?? [],
+      expertise: Array.isArray(speaker.expertise) ? speaker.expertise : [],
       is_keynote: isKeynote,
       speaker_type: speakerType,
-      linkedin_url: speaker.linkedin_url,
-      twitter_url: speaker.twitter_url,
-      website_url: speaker.website_url,
+      linkedin_url: speaker.linkedin_url || '',
+      twitter_url: speaker.twitter_url || '',
+      website_url: speaker.website_url || '',
     };
-    // If this speaker ID was previously blacklisted, un-blacklist it
+
+    // Un-blacklist if previously deleted
     try {
       const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
       if (raw) {
         const arr: string[] = JSON.parse(raw);
-        if (Array.isArray(arr) && arr.includes(newSpeaker.id)) {
-          localStorage.setItem(STORAGE_KEY_DELETED_SPEAKERS, JSON.stringify(arr.filter((id) => id !== newSpeaker.id)));
+        if (Array.isArray(arr) && (arr.includes(rawId) || arr.includes(uuid))) {
+          localStorage.setItem(
+            STORAGE_KEY_DELETED_SPEAKERS,
+            JSON.stringify(arr.filter((id) => id !== rawId && id !== uuid))
+          );
         }
       }
     } catch { /* ignore */ }
 
+    // 1. Immediately update state
     setSpeakers((prev) => {
-      // Prevent duplicates: if a speaker with the same id already exists, replace instead of append
-      if (prev.some((s) => s.id === newSpeaker.id)) {
-        return prev.map((s) => (s.id === newSpeaker.id ? newSpeaker : s));
-      }
-      return [...prev, newSpeaker];
+      const filtered = prev.filter((s) => !isSameSpeaker(s, newSpeaker));
+      return [newSpeaker, ...filtered];
     });
+
+    // 2. Synchronously update localStorage so immediate page refresh never loses the speaker
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
+      const list: Speaker[] = saved ? JSON.parse(saved) : [];
+      const updated = [newSpeaker, ...list.filter((s) => !isSameSpeaker(s, newSpeaker))];
+      localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(updated));
+    } catch {}
+
+    // 3. Live Sync to Supabase Database
+    const payload = {
+      id: uuid,
+      name: newSpeaker.name,
+      slug: newSpeaker.slug,
+      position: newSpeaker.position,
+      organization: newSpeaker.organization,
+      country: newSpeaker.country,
+      photo_url: newSpeaker.photo_url,
+      biography: newSpeaker.biography,
+      expertise: newSpeaker.expertise,
+      is_keynote: isKeynote,
+      linkedin_url: newSpeaker.linkedin_url || null,
+      twitter_url: newSpeaker.twitter_url || null,
+      website_url: newSpeaker.website_url || null,
+    };
+
+    try {
+      await supabaseAdmin.from('speakers').upsert(payload);
+    } catch (e) {
+      console.warn('Direct Supabase speaker upsert failed:', e);
+    }
+
+    try {
+      await ApiClient.saveSpeaker({ ...newSpeaker, id: uuid, slug: cleanSlug });
+    } catch {}
   };
 
-  const updateSpeaker = (id: string, updates: Partial<Speaker>) => {
+  const updateSpeaker = async (id: string, updates: Partial<Speaker>) => {
+    const uuid = stringToUuid(id);
+    let targetSpeaker: Speaker | null = null;
+
     setSpeakers((prev) =>
       prev.map((s) => {
-        if (s.id !== id) return s;
-        const merged = { ...s, ...updates };
+        if (!isSameSpeaker(s, { id })) return s;
+        const merged: Speaker = { ...s, ...updates, id: s.id };
         if (updates.speaker_type !== undefined) {
           merged.is_keynote = updates.speaker_type === 'KEYNOTE';
         } else if (updates.is_keynote !== undefined) {
           merged.speaker_type = updates.is_keynote ? 'KEYNOTE' : 'PANEL';
         }
+        targetSpeaker = merged;
         return merged;
       })
     );
+
+    // Save to localStorage immediately
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
+      if (saved && targetSpeaker) {
+        const list: Speaker[] = JSON.parse(saved);
+        const updated = list.map((s) => (isSameSpeaker(s, { id }) ? targetSpeaker! : s));
+        localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(updated));
+      }
+    } catch {}
+
+    // Persist to Supabase and ApiClient
+    const sToSave = targetSpeaker || updates;
+    const isKeynote = sToSave.speaker_type === 'KEYNOTE' || Boolean(sToSave.is_keynote);
+    const cleanSlug = sToSave.slug || (sToSave.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const payload = {
+      id: uuid,
+      name: sToSave.name || '',
+      slug: cleanSlug,
+      position: sToSave.position || '',
+      organization: sToSave.organization || '',
+      country: sToSave.country || 'Ghana',
+      photo_url: sToSave.photo_url || '',
+      biography: sToSave.biography || '',
+      expertise: Array.isArray(sToSave.expertise) ? sToSave.expertise : [],
+      is_keynote: isKeynote,
+      linkedin_url: sToSave.linkedin_url || null,
+      twitter_url: sToSave.twitter_url || null,
+      website_url: sToSave.website_url || null,
+    };
+
+    try {
+      await supabaseAdmin.from('speakers').upsert(payload);
+    } catch (e) {
+      console.warn('Supabase speaker update error:', e);
+    }
+    try {
+      await ApiClient.saveSpeaker({ ...sToSave, id: uuid, slug: cleanSlug });
+    } catch {}
   };
 
-  const deleteSpeaker = (id: string) => {
-    // 1. Remove from live state (useEffect auto-saves to STORAGE_KEY_SPEAKERS)
-    setSpeakers((prev) => prev.filter((s) => s.id !== id));
+  const deleteSpeaker = async (id: string) => {
+    const uuid = stringToUuid(id);
+    // 1. Remove from live state
+    setSpeakers((prev) => prev.filter((s) => !isSameSpeaker(s, { id })));
+
     // 2. Add to permanent deleted-IDs blacklist so it never re-appears on refresh
     try {
       const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
       const arr: string[] = raw ? JSON.parse(raw) : [];
-      if (!arr.includes(id)) {
-        arr.push(id);
-        localStorage.setItem(STORAGE_KEY_DELETED_SPEAKERS, JSON.stringify(arr));
+      if (!arr.includes(id)) arr.push(id);
+      if (!arr.includes(uuid)) arr.push(uuid);
+      localStorage.setItem(STORAGE_KEY_DELETED_SPEAKERS, JSON.stringify(arr));
+    } catch {}
+
+    // 3. Immediately update localStorage
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_SPEAKERS);
+      if (saved) {
+        const list: Speaker[] = JSON.parse(saved);
+        const filtered = list.filter((s) => !isSameSpeaker(s, { id }));
+        localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(filtered));
       }
-    } catch { /* ignore */ }
+    } catch {}
+
+    // 4. Delete from Supabase
+    try {
+      await supabaseAdmin.from('speakers').delete().eq('id', uuid);
+    } catch (e) {
+      console.warn('Supabase speaker delete error:', e);
+    }
+    try {
+      await ApiClient.deleteSpeaker(uuid);
+    } catch {}
   };
 
   const addSponsor = async (sponsor: Partial<Sponsor>) => {
@@ -760,17 +841,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Ensures cloud photos and new speakers are visible on ALL devices (mobile, tablet, desktop)
   const refreshSpeakers = async () => {
     let remoteSpeakers: any[] = [];
-    try {
-      const res = await ApiClient.getSpeakers();
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        remoteSpeakers = res.data;
-      }
-    } catch {
-      // ApiClient offline
-    }
 
+    // 1. Direct Supabase query (bypasses cache, reads live postgres table)
     const spkClient = supabaseAdmin || supabase;
-    if (remoteSpeakers.length === 0 && spkClient) {
+    if (spkClient) {
       try {
         const { data, error } = await spkClient
           .from('speakers')
@@ -784,7 +858,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
+    // 2. Fallback to ApiClient
+    if (remoteSpeakers.length === 0) {
+      try {
+        const res = await ApiClient.getSpeakers();
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          remoteSpeakers = res.data;
+        }
+      } catch {
+        // ApiClient offline
+      }
+    }
+
     if (remoteSpeakers.length === 0) return;
+
+    let deletedIds = new Set<string>();
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPEAKERS);
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) deletedIds = new Set(arr);
+      }
+    } catch {}
 
     setSpeakers((prev) => {
       // 1. Update existing speakers with cloud photo and latest info
@@ -803,27 +898,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
         return {
           ...s,
+          id: remote.id || s.id,
           photo_url: photoToUse,
           name: remote.name || s.name || '',
           position: remote.position || s.position || '',
           organization: remote.organization || s.organization || '',
           biography: remote.biography || s.biography || '',
+          country: remote.country || s.country || 'Ghana',
+          expertise: Array.isArray(remote.expertise) ? remote.expertise : (s.expertise || []),
           is_keynote: isKeynote,
           speaker_type: speakerType,
+          linkedin_url: remote.linkedin_url ?? s.linkedin_url ?? '',
+          twitter_url: remote.twitter_url ?? s.twitter_url ?? '',
+          website_url: remote.website_url ?? s.website_url ?? '',
         };
       });
 
-      // 2. Add only genuine new remote speakers not already present locally
+      // 2. Add genuine new remote speakers not already present locally
       const toAdd: Speaker[] = [];
       for (const d of remoteSpeakers) {
         const alreadyExists = updated.some((p) => isSameSpeaker(p, d));
-        if (!alreadyExists && !isPurgedMockSpeaker(d)) {
+        const wasDeleted = deletedIds.has(d.id);
+        if (!alreadyExists && !wasDeleted && !isPurgedMockSpeaker(d)) {
           const isKeynote = Boolean(d.is_keynote);
           const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
           toAdd.push({
             id: d.id,
             name: d.name ?? '',
-            slug: d.slug ?? '',
+            slug: d.slug ?? (d.name ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-'),
             position: d.position ?? '',
             organization: d.organization ?? '',
             country: d.country ?? 'Ghana',
@@ -839,7 +941,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      return deduplicateSpeakers([...updated, ...toAdd]);
+      const merged = deduplicateSpeakers([...updated, ...toAdd]);
+      try {
+        localStorage.setItem(STORAGE_KEY_SPEAKERS, JSON.stringify(merged));
+      } catch {}
+      return merged;
     });
   };
 
@@ -983,7 +1089,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshAll = async () => {
     setIsLiveSyncing(true);
     try {
-      await Promise.allSettled([refreshRegistrations(), refreshEvents(), refreshSponsors()]);
+      await Promise.allSettled([
+        refreshRegistrations(),
+        refreshEvents(),
+        refreshSpeakers(),
+        refreshSponsors(),
+      ]);
       setLastSyncedAt(new Date());
     } finally {
       setIsLiveSyncing(false);

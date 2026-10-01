@@ -3,8 +3,9 @@ import { config } from './config/index.js';
 
 const app = createApp();
 
-app.listen(config.port, () => {
-  console.log(`
+if (process.env.VERCEL !== '1') {
+  app.listen(config.port, () => {
+    console.log(`
 =============================================================
   CIB GHANA EVENTS PLATFORM - BACKEND ENGINE
 =============================================================
@@ -14,6 +15,8 @@ app.listen(config.port, () => {
   🌐 Client CORS : ${config.clientUrl}
 =============================================================
 `);
-});
+  });
+}
 
 export { app };
+export default app;

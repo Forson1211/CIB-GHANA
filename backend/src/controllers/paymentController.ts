@@ -65,14 +65,22 @@ export class PaymentController {
 
         if (registration && ticket) {
           await DataService.updatePaymentStatus(registration.id, 'SUCCESSFUL', reference);
-          EmailService.sendPaymentConfirmation({
-            registration,
-            ticket,
-            eventTitle: registration.event_title || ticket.event_title,
-          }).catch((e) => console.error('[PaymentController] Email dispatch notice:', e));
+          try {
+            await EmailService.sendPaymentConfirmation({
+              registration,
+              ticket,
+              eventTitle: registration.event_title || ticket.event_title,
+            });
+          } catch (e) {
+            console.error('[PaymentController] Email dispatch notice:', e);
+          }
         } else if (ticket) {
           await DataService.updatePaymentStatus(ticket.registration_id, 'SUCCESSFUL', reference);
-          EmailService.sendTicketConfirmation(ticket).catch((e) => console.error(e));
+          try {
+            await EmailService.sendTicketConfirmation(ticket);
+          } catch (e) {
+            console.error(e);
+          }
         }
 
         return res.json({

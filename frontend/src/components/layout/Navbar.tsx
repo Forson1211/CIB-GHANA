@@ -203,39 +203,36 @@ export const Navbar: React.FC = () => {
         isHomePage
           ? `fixed top-0 left-0 right-0 ${
               isScrolled || mobileMenuOpen
-                ? 'bg-[#0D3A21] shadow-2xl border-b border-white/10 py-2 sm:py-2.5'
+                ? 'py-2 sm:py-2.5'
                 : 'bg-transparent border-none py-4 sm:py-5'
             }`
-          : 'sticky top-0 bg-[#0D3A21] border-b border-white/10 shadow-xl py-2.5 sm:py-3'
+          : 'sticky top-0 py-2.5 sm:py-3'
       }`}
+      style={
+        isScrolled || mobileMenuOpen || !isHomePage
+          ? {
+              backgroundColor: 'rgba(13, 58, 33, 0.70)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              boxShadow: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.18), 0 8px 32px 0 rgba(0, 0, 0, 0.3)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
+            }
+          : undefined
+      }
     >
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          {/* Brand Wordmark matching reference screenshot (no crest logo) */}
+          {/* Brand Official Logo */}
           <Link
             to="/"
             onClick={handleHomeNavigation}
-            className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none py-1 select-none"
+            className="flex items-center group focus:outline-none py-0.5 select-none"
           >
-            {/* Single-line Wordmark */}
-            <div className="flex flex-col text-left font-black tracking-tight leading-none uppercase">
-              <span className="text-[#FFE500] text-[13px] sm:text-[15px] font-black tracking-wider drop-shadow-sm">
-                CIB GHANA
-              </span>
-              <span className="text-white text-[13px] sm:text-[15px] font-black tracking-wider leading-none mt-0.5 whitespace-nowrap">
-                BANKING &amp; ETHICS CONFERENCE
-              </span>
-            </div>
-
-            {/* Vertical Date Divider */}
-            <div className="self-stretch w-[1.5px] bg-white/40 mx-0.5 sm:mx-1 my-0.5" />
-
-            {/* Stacked Date */}
-            <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
-              <span className="text-[13px] sm:text-[15px] tracking-tight">9-10</span>
-              <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">NOV</span>
-              <span className="text-[13px] sm:text-[15px] tracking-tight mt-0.5">2026</span>
-            </div>
+            <img
+              src="/cib-official-logo.png"
+              alt="Chartered Institute of Bankers, Ghana"
+              className="h-12 sm:h-14 md:h-16 lg:h-[68px] w-auto max-h-[72px] object-contain hover:brightness-105 transition-all"
+            />
           </Link>
 
           {/* Desktop Navigation Links matching screenshot */}
@@ -365,24 +362,13 @@ export const Navbar: React.FC = () => {
                 <Link
                   to="/"
                   onClick={handleHomeNavigation}
-                  className="flex items-center gap-2 group select-none"
+                  className="flex items-center group select-none py-1"
                 >
-                  <div className="flex flex-col text-left font-black tracking-tight leading-none uppercase">
-                    <span className="text-[#FFE500] text-[11px] font-black tracking-wider">
-                      CIB GHANA
-                    </span>
-                    <span className="text-white text-[11px] font-black tracking-wider leading-none mt-0.5 whitespace-nowrap">
-                      BANKING &amp; ETHICS CONFERENCE
-                    </span>
-                  </div>
-
-                  <div className="self-stretch w-[1.5px] bg-white/40 mx-0.5 my-0.5" />
-
-                  <div className="flex flex-col justify-center text-left text-white leading-none font-extrabold uppercase">
-                    <span className="text-[11px] tracking-tight">9-10</span>
-                    <span className="text-[11px] tracking-tight mt-0.5">NOV</span>
-                    <span className="text-[11px] tracking-tight mt-0.5">2026</span>
-                  </div>
+                  <img
+                    src="/cib-official-logo.png"
+                    alt="Chartered Institute of Bankers, Ghana"
+                    className="h-12 sm:h-13 w-auto max-h-[56px] object-contain"
+                  />
                 </Link>
 
                 {/* Yellow Square Close Button matching screenshot */}

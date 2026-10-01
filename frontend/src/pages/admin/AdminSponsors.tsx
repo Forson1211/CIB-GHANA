@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useApp } from '../../context/AppContext';
+import { useApp, sortSponsors } from '../../context/AppContext';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { Link } from 'react-router-dom';
 import {
@@ -50,20 +50,22 @@ export const AdminSponsors: React.FC = () => {
   ).length;
   const sponsorsCount = sponsors.filter((s) => s.type === 'SPONSOR').length;
 
-  const filtered = sponsors.filter((s) => {
-    const isMember = s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER';
-    const matchesTab =
-      activeTab === 'ALL' ||
-      (activeTab === 'CORPORATE_MEMBER' ? isMember : s.type === 'SPONSOR');
+  const filtered = sortSponsors(
+    sponsors.filter((s) => {
+      const isMember = s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER';
+      const matchesTab =
+        activeTab === 'ALL' ||
+        (activeTab === 'CORPORATE_MEMBER' ? isMember : s.type === 'SPONSOR');
 
-    const q = searchQuery.toLowerCase().trim();
-    const matchesQuery =
-      searchQuery === '' ||
-      s.name.toLowerCase().includes(q) ||
-      (s.categoryOrRole || '').toLowerCase().includes(q) ||
-      (s.description || '').toLowerCase().includes(q);
-    return matchesTab && matchesQuery;
-  });
+      const q = searchQuery.toLowerCase().trim();
+      const matchesQuery =
+        searchQuery === '' ||
+        s.name.toLowerCase().includes(q) ||
+        (s.categoryOrRole || '').toLowerCase().includes(q) ||
+        (s.description || '').toLowerCase().includes(q);
+      return matchesTab && matchesQuery;
+    })
+  );
 
   const handleOpenAddModal = (defaultType?: SponsorType) => {
     setEditingId(null);

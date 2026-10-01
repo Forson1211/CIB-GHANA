@@ -370,7 +370,7 @@ interface MarqueeRowProps {
   direction?: 'left' | 'right';
   speedSeconds?: number;
   leftShape?: 'badge-dark' | 'accent-red' | 'none';
-  rightShape?: 'badge-dark' | 'accent-gold' | 'none';
+  rightShape?: 'badge-dark' | 'accent-gold' | 'accent-blue' | 'none';
 }
 
 const MarqueeRow: React.FC<MarqueeRowProps> = ({
@@ -384,17 +384,17 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
   const loopItems = [...banks, ...banks, ...banks, ...banks];
 
   return (
-    <div className="relative w-full overflow-hidden py-2 sm:py-3 select-none group">
+    <div className="relative w-full overflow-hidden py-1 sm:py-1.5 select-none group">
       {/* ── LEFT SHAPES OVERLAY (High Z-Index, Cards Slide Underneath, Edge-to-Edge) ── */}
       {leftShape === 'badge-dark' && (
-        <div className="absolute left-0 top-0 bottom-0 z-30 flex items-center pointer-events-none drop-shadow-2xl">
-          {/* Main Dark Polygon Badge */}
+        <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl">
+          {/* Main Polygon Mask - Background color #0D3A21 with no text, slanting / along continuous line */}
           <div
-            className="relative h-full flex items-center"
+            className="h-full"
             style={{
-              clipPath: 'polygon(0 0, calc(100% - 55px) 0, 100% 100%, 0 100%)',
-              width: 'clamp(150px, 20vw, 290px)',
-              background: '#0D3B22',
+              clipPath: 'polygon(0 0, 100% 0, 50% 100%, 0 100%)',
+              width: 'clamp(180px, 22vw, 280px)',
+              background: '#0D3A21',
             }}
           />
         </div>
@@ -402,12 +402,12 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
 
       {leftShape === 'accent-red' && (
         <div className="absolute left-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl">
-          {/* Red Angled Triangle Accent matching screenshot */}
+          {/* Red Angled Triangle Accent - Maintained Red */}
           <div
             className="h-full bg-[#E52320]"
             style={{
               clipPath: 'polygon(0 0, 100% 0, 0 100%)',
-              width: 'clamp(80px, 11vw, 150px)',
+              width: 'clamp(90px, 11vw, 140px)',
             }}
           />
         </div>
@@ -415,7 +415,7 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
 
       {/* ── CONTINUOUS HARDWARE-ACCELERATED MOVING LOGO TRACK (Moving Right) ── */}
       <div
-        className="flex gap-4 sm:gap-6 lg:gap-8 will-change-transform py-1.5 group-hover:[animation-play-state:paused]"
+        className="flex gap-4 sm:gap-5 lg:gap-6 will-change-transform py-2 group-hover:[animation-play-state:paused]"
         style={{
           width: 'max-content',
           animation: `${direction === 'right' ? 'cibMarqueeRight' : 'cibMarqueeLeft'} ${speedSeconds}s linear infinite`,
@@ -424,9 +424,9 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
         {loopItems.map((b, idx) => (
           <div
             key={`${b.id}-${idx}`}
-            className="bg-white rounded-none px-5 sm:px-7 py-2.5 sm:py-3 h-[84px] sm:h-[98px] lg:h-[110px] min-w-[240px] sm:min-w-[290px] lg:min-w-[340px] flex items-center justify-center shadow-lg hover:shadow-2xl transition-all duration-200 shrink-0 cursor-default"
+            className="bg-white rounded-xl sm:rounded-2xl w-[220px] sm:w-[260px] lg:w-[290px] h-[90px] sm:h-[105px] lg:h-[115px] flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 shadow-md hover:shadow-xl transition-all duration-200 shrink-0 cursor-default overflow-hidden border border-white/10"
           >
-            <div className="flex items-center justify-center max-w-full max-h-full">
+            <div className="flex items-center justify-center w-full h-full max-w-full max-h-full">
               {b.renderLogo()}
             </div>
           </div>
@@ -435,27 +435,40 @@ const MarqueeRow: React.FC<MarqueeRowProps> = ({
 
       {/* ── RIGHT SHAPES OVERLAY (High Z-Index, Cards Slide Underneath, Edge-to-Edge) ── */}
       {rightShape === 'badge-dark' && (
-        <div className="absolute right-0 top-0 bottom-0 z-30 flex items-center justify-end pointer-events-none drop-shadow-2xl">
-          {/* Main Dark Polygon Badge on Right */}
+        <div className="absolute right-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl flex justify-end">
+          {/* Middle Shape on Right: Yellow Polygon Badge */}
           <div
-            className="relative h-full flex items-center justify-end"
+            className="h-full"
             style={{
-              clipPath: 'polygon(55px 0, 100% 0, 100% 100%, 0 100%)',
-              width: 'clamp(160px, 22vw, 320px)',
-              background: '#0D3B22',
+              clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 0 100%)',
+              width: 'clamp(180px, 22vw, 280px)',
+              background: '#FFD700',
+            }}
+          />
+        </div>
+      )}
+
+      {rightShape === 'accent-blue' && (
+        <div className="absolute right-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl flex justify-end">
+          {/* Top Right Shape: Section Background Color #0D3A21 */}
+          <div
+            className="h-full bg-[#0D3A21]"
+            style={{
+              clipPath: 'polygon(0 100%, 100% 0, 100% 100%)',
+              width: 'clamp(90px, 11vw, 140px)',
             }}
           />
         </div>
       )}
 
       {rightShape === 'accent-gold' && (
-        <div className="absolute right-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl">
-          {/* Yellow/Gold Angled Triangle Accent matching screenshot */}
+        <div className="absolute right-0 top-0 bottom-0 z-30 pointer-events-none drop-shadow-2xl flex justify-end">
+          {/* Bottom Right Shape: Converted to Section Background Color #0D3A21 */}
           <div
-            className="h-full bg-[#FFD700]"
+            className="h-full bg-[#0D3A21]"
             style={{
-              clipPath: 'polygon(45% 0, 100% 0, 100% 100%, 0 100%)',
-              width: 'clamp(90px, 12vw, 170px)',
+              clipPath: 'polygon(0 100%, 100% 0, 100% 100%)',
+              width: 'clamp(90px, 11vw, 140px)',
             }}
           />
         </div>
@@ -494,11 +507,11 @@ const BUILTIN_BANK_RENDERERS: Record<string, () => React.ReactNode> = {
 const renderCorporateMemberLogo = (cm: Sponsor): React.ReactNode => {
   if (cm.logo_url && cm.logo_url.trim()) {
     return (
-      <div className="flex items-center justify-center h-full max-w-[260px] px-2">
+      <div className="flex items-center justify-center w-full h-full p-2">
         <img
           src={cm.logo_url}
           alt={cm.name}
-          className="h-auto w-auto max-h-[52px] sm:max-h-[62px] lg:max-h-[68px] max-w-full object-contain filter drop-shadow-xs"
+          className="h-auto w-auto max-h-[52px] sm:max-h-[62px] lg:max-h-[70px] max-w-[85%] object-contain filter drop-shadow-xs"
         />
       </div>
     );
@@ -518,15 +531,15 @@ const renderCorporateMemberLogo = (cm: Sponsor): React.ReactNode => {
 
   // Fallback card for newly added corporate members without uploaded image
   return (
-    <div className="flex items-center gap-3.5">
-      <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-none bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base shadow-sm">
-        <Building className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
+    <div className="flex items-center gap-3 w-full px-2">
+      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base shadow-sm">
+        <Building className="w-5 h-5 sm:w-6 sm:h-6" />
       </div>
-      <div className="text-left leading-tight">
-        <span className="block text-[18px] sm:text-[22px] lg:text-[24px] font-black tracking-tight text-cib-charcoal-900 font-display line-clamp-1">
+      <div className="text-left leading-tight min-w-0 flex-1">
+        <span className="block text-[15px] sm:text-[17px] lg:text-[19px] font-black tracking-tight text-cib-charcoal-900 font-display truncate">
           {cm.name}
         </span>
-        <span className="block text-[10px] sm:text-[11px] lg:text-[12px] font-bold text-cib-green-700 uppercase tracking-wider line-clamp-1">
+        <span className="block text-[9px] sm:text-[10px] lg:text-[11px] font-bold text-cib-green-700 uppercase tracking-wider truncate">
           {cm.categoryOrRole || 'Corporate Member'}
         </span>
       </div>
@@ -591,17 +604,17 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
       </div>
 
       {/* Edge-to-Edge 3-Tier Marquee Rows with Big Cards & Crisp Vector Logos moving RIGHT */}
-      <div className="w-full space-y-5 sm:space-y-7 lg:space-y-9">
-        {/* Row 1: Dark polygon shape on left, yellow accent on right */}
+      <div className="w-full space-y-2 sm:space-y-2.5 lg:space-y-3">
+        {/* Row 1: Background mask on left, background mask on right */}
         <MarqueeRow
           banks={finalRow1}
           direction="right"
           speedSeconds={36}
           leftShape="badge-dark"
-          rightShape="accent-gold"
+          rightShape="accent-blue"
         />
 
-        {/* Row 2: Red accent on left, dark polygon shape on right */}
+        {/* Row 2: Red accent triangle on left, Yellow badge on right */}
         <MarqueeRow
           banks={finalRow2}
           direction="right"
@@ -610,7 +623,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
           rightShape="badge-dark"
         />
 
-        {/* Row 3: Dark polygon shape on left, yellow accent on right */}
+        {/* Row 3: Background mask on left, background mask on right */}
         <MarqueeRow
           banks={finalRow3}
           direction="right"

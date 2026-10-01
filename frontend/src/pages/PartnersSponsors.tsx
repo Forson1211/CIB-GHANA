@@ -55,16 +55,16 @@ const INSTITUTIONAL_PARTNERS: EntityItem[] = [
 
 const CORPORATE_SPONSORS: EntityItem[] = [
   {
-    id: 'scb',
-    name: 'Standard Chartered Bank',
-    categoryOrTier: 'Platinum Sponsor',
-    website: 'https://sc.com/gh',
-  },
-  {
     id: 'bog_sp',
     name: 'Bank of Ghana',
     categoryOrTier: 'Platinum Sponsor',
     website: 'https://bog.gov.gh',
+  },
+  {
+    id: 'scb',
+    name: 'Standard Chartered Bank',
+    categoryOrTier: 'Platinum Sponsor',
+    website: 'https://sc.com/gh',
   },
   {
     id: 'ecobank',
@@ -432,7 +432,7 @@ export const PartnersSponsors: React.FC = () => {
               href={item.website_url || (item as any).website || '#'}
               target="_blank"
               rel="noreferrer"
-              className="bg-white px-6 py-8 sm:px-8 sm:py-10 rounded-none border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#1B7E3E] transition-all duration-200 flex items-center justify-center text-center group h-36 sm:h-44 relative cursor-pointer"
+              className="bg-white px-6 py-8 sm:px-8 sm:py-10 rounded-xl sm:rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md hover:border-[#1B7E3E] transition-all duration-200 flex items-center justify-center text-center group h-36 sm:h-44 relative cursor-pointer"
               title={item.name}
               aria-label={item.name}
             >

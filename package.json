@@ -11,12 +11,21 @@
     "dev": "concurrently -k -n \"FRONTEND,BACKEND\" -c \"cyan.bold,green.bold\" \"npm run dev --workspace=cib-ghana-frontend\" \"npm run dev --workspace=cib-ghana-backend\"",
     "dev:frontend": "npm run dev --workspace=cib-ghana-frontend",
     "dev:backend": "npm run dev --workspace=cib-ghana-backend",
-    "build": "npm run build --workspace=cib-ghana-frontend && node -e \"const fs=require('fs'); if(fs.existsSync('frontend/dist')){fs.cpSync('frontend/dist','dist',{recursive:true})}\"",
-    "build:all": "npm run build --workspace=cib-ghana-frontend && npm run build --workspace=cib-ghana-backend",
+    "build": "npm run build:backend && npm run build:frontend && node -e \"const fs=require('fs'); if(fs.existsSync('frontend/dist')){fs.cpSync('frontend/dist','dist',{recursive:true})}\"",
+    "build:all": "npm run build:backend && npm run build:frontend",
     "build:frontend": "npm run build --workspace=cib-ghana-frontend",
     "build:backend": "npm run build --workspace=cib-ghana-backend",
     "start": "npm run start --workspace=cib-ghana-backend",
     "lint": "npm run lint --workspace=cib-ghana-frontend"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "nodemailer": "^10.0.10",
+    "qrcode": "^1.5.4",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -40,13 +40,15 @@ export class RegistrationController {
       const { registration, ticket } = await DataService.createRegistration(input);
 
       // Trigger official payment receipt and digital ticket pass confirmation email
-      EmailService.sendPaymentConfirmation({
-        registration,
-        ticket,
-        eventTitle: input.event_title || ticket.event_title,
-      }).catch((err) =>
-        console.error('[RegistrationController] Failed to trigger confirmation email asynchronously:', err)
-      );
+      try {
+        await EmailService.sendPaymentConfirmation({
+          registration,
+          ticket,
+          eventTitle: input.event_title || ticket.event_title,
+        });
+      } catch (err) {
+        console.error('[RegistrationController] Failed to trigger confirmation email:', err);
+      }
 
       res.status(201).json({
         success: true,

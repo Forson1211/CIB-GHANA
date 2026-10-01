@@ -160,6 +160,30 @@ export const deduplicateSpeakers = (list: Speaker[]): Speaker[] => {
   });
 };
 
+export const sortSponsors = (list: Sponsor[]): Sponsor[] => {
+  const getPriority = (name: string): number => {
+    const n = (name || '').toLowerCase().trim();
+    if (n.includes('bank of ghana') || n === 'bog') return 1;
+    if (n.includes('ghana association of banks') || n.includes('gab')) return 2;
+    if (n.includes('standard chartered') || n.includes('scb')) return 3;
+    if (n.includes('ecobank')) return 4;
+    if (n.includes('gcb bank') || n === 'gcb') return 5;
+    if (n.includes('ghana international bank') || n.includes('ghib')) return 6;
+    if (n.includes('absa')) return 7;
+    if (n.includes('stanbic')) return 8;
+    if (n.includes('fidelity')) return 9;
+    if (n.includes('ghipss')) return 10;
+    return 100;
+  };
+
+  return [...list].sort((a, b) => {
+    const pA = getPriority(a.name);
+    const pB = getPriority(b.name);
+    if (pA !== pB) return pA - pB;
+    return (a.name || '').localeCompare(b.name || '');
+  });
+};
+
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
   if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
@@ -298,11 +322,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.map((s) => ({
-            ...s,
-            type: (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
-            tier: (s.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
-          }));
+          return sortSponsors(
+            parsed.map((s) => ({
+              ...s,
+              type: (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
+              tier: (s.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
+            }))
+          );
         }
       } catch (e) { console.error(e); }
     }
@@ -320,12 +346,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }));
           const existingIds = new Set(migrated.map((m: any) => m.id));
           const newMocks = MOCK_SPONSORS.filter((m) => !existingIds.has(m.id));
-          return [...migrated, ...newMocks];
+          return sortSponsors([...migrated, ...newMocks]);
         }
       } catch (e) { console.error(e); }
     }
 
-    return MOCK_SPONSORS;
+    return sortSponsors(MOCK_SPONSORS);
   });
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
@@ -597,7 +623,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       categoryOrRole: sponsor.categoryOrRole || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
       description: sponsor.description || '',
     };
-    setSponsors((prev) => [newSponsor, ...prev]);
+    setSponsors((prev) => sortSponsors([newSponsor, ...prev]));
 
     // Live Sync to Supabase & Backend API
     const uuid = stringToUuid(newId);
@@ -630,19 +656,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateSponsor = async (id: string, updates: Partial<Sponsor>) => {
     let targetSponsor: Sponsor | null = null;
     setSponsors((prev) =>
-      prev.map((s) => {
-        if (s.id !== id) return s;
-        const newType = updates.type || s.type;
-        const normalizedType = (newType as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : newType;
-        const merged: Sponsor = {
-          ...s,
-          ...updates,
-          type: normalizedType,
-          tier: normalizedType,
-        };
-        targetSponsor = merged;
-        return merged;
-      })
+      sortSponsors(
+        prev.map((s) => {
+          if (s.id !== id) return s;
+          const newType = updates.type || s.type;
+          const normalizedType = (newType as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : newType;
+          const merged: Sponsor = {
+            ...s,
+            ...updates,
+            type: normalizedType,
+            tier: normalizedType,
+          };
+          targetSponsor = merged;
+          return merged;
+        })
+      )
     );
 
     // Live Sync to Supabase & Backend API
@@ -1043,7 +1071,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
 
-      return [...updated, ...toAdd];
+      return sortSponsors([...updated, ...toAdd]);
     });
   };
 

@@ -115,8 +115,8 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
           return (
             <div key={idx} className="flex flex-col items-center flex-1 max-w-[72px] sm:max-w-[84px]">
-              {/* Circular SVG Ring with Plain Glass Disc (Single ring) */}
-              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-md">
+              {/* Circular SVG Ring with Opaque Dark Emerald Disc */}
+              <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-18 md:h-18 flex items-center justify-center rounded-full bg-[#0B2E1B] shadow-2xl border border-white/10">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 84 84">
                   <defs>
                     <linearGradient id={`circleGrad-${idx}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -126,13 +126,13 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
                     </linearGradient>
                   </defs>
 
-                  {/* Subtle Background Circle Track with Clear Glass Fill */}
+                  {/* Opaque Background Circle Track */}
                   <circle
                     cx="42"
                     cy="42"
                     r={radius}
-                    fill="rgba(255, 255, 255, 0.04)"
-                    stroke="rgba(255, 255, 255, 0.3)"
+                    fill="#0B2E1B"
+                    stroke="rgba(255, 255, 255, 0.2)"
                     strokeWidth="2"
                   />
 
@@ -152,13 +152,13 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
                 </svg>
 
                 {/* Bold Number in the center */}
-                <span className="absolute font-sans font-black text-xl sm:text-2xl md:text-2xl text-white tracking-tight">
+                <span className="absolute font-sans font-black text-xl sm:text-2xl md:text-2xl text-white tracking-tight drop-shadow-md">
                   {unit.value}
                 </span>
               </div>
 
               {/* Unit Label below */}
-              <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-white/90 mt-2 text-center uppercase">
+              <span className="text-[10px] sm:text-[11px] font-black tracking-widest text-[#FFE500] mt-2 text-center uppercase drop-shadow-sm">
                 {unit.label}
               </span>
             </div>

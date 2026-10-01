@@ -50,6 +50,24 @@ function DpiScaleManager() {
   return null;
 }
 
+// Prevent browser from auto-restoring mid-page scroll position on page refresh
+if (typeof window !== 'undefined') {
+  if ('scrollRestoration' in window.history) {
+    window.history.scrollRestoration = 'manual';
+  }
+
+  window.addEventListener('beforeunload', () => {
+    if (window.location.pathname === '/') {
+      try {
+        sessionStorage.removeItem('cib_last_home_scroll');
+        sessionStorage.removeItem('cib_home_section');
+        sessionStorage.removeItem('cib_active_section');
+        sessionStorage.removeItem('cib_scroll_path_/');
+      } catch {}
+    }
+  });
+}
+
 // Memory cache of scroll positions by location key
 const scrollHistory = new Map<string, number>();
 
@@ -210,14 +228,49 @@ function ScrollManager() {
 
   // 2. Handle Navigation and Scroll Restoration
   React.useLayoutEffect(() => {
-    // A. Explicit hash is present in URL (e.g. /#corporate-members, /corporate-members redirected)
+    // A. Detect page reload / browser refresh
+    const isReload = (() => {
+      try {
+        const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+        if (navEntries && navEntries.length > 0) {
+          return navEntries[0].type === 'reload';
+        }
+        return (performance as any).navigation?.type === 1;
+      } catch {
+        return false;
+      }
+    })();
+
+    // When refreshing on the Home screen without an explicit hash, always reset to the top
+    if (location.pathname === '/' && isReload && !location.hash) {
+      try {
+        sessionStorage.removeItem('cib_last_home_scroll');
+        sessionStorage.removeItem('cib_home_section');
+        sessionStorage.removeItem('cib_active_section');
+        sessionStorage.removeItem('cib_scroll_path_/');
+      } catch {}
+
+      const resetTop = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      };
+
+      resetTop();
+      requestAnimationFrame(resetTop);
+      setTimeout(resetTop, 50);
+      setTimeout(resetTop, 150);
+      return;
+    }
+
+    // B. Explicit hash is present in URL (e.g. /#corporate-members, /corporate-members redirected)
     if (location.hash) {
       const targetId = location.hash.replace('#', '');
       scrollToElementWithRetry(targetId, { smooth: true, offset: 80 });
       return;
     }
 
-    // B. Returning via browser Back / Forward (POP navigation) or navigate(-1)
+    // C. Returning via browser Back / Forward (POP navigation) or navigate(-1)
     if (navType === 'POP') {
       // If returning to Home ('/') and user left while at corporate-members
       if (location.pathname === '/') {

@@ -20,7 +20,20 @@ export function createApp(): Express {
   // Middleware
   app.use(
     cors({
-      origin: [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          origin === config.clientUrl ||
+          origin.includes('localhost') ||
+          origin.includes('127.0.0.1') ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('cibgh.org') ||
+          origin.includes('cibghana.org')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
     })
   );

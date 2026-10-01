@@ -113,7 +113,29 @@ router.get('/', async (req: Request, res: Response) => {
       };
     });
 
-    return res.json({ success: true, data: mapped });
+    const getSponsorPriority = (name: string): number => {
+      const n = (name || '').toLowerCase().trim();
+      if (n.includes('bank of ghana') || n === 'bog') return 1;
+      if (n.includes('ghana association of banks') || n.includes('gab')) return 2;
+      if (n.includes('standard chartered') || n.includes('scb')) return 3;
+      if (n.includes('ecobank')) return 4;
+      if (n.includes('gcb bank') || n === 'gcb') return 5;
+      if (n.includes('ghana international bank') || n.includes('ghib')) return 6;
+      if (n.includes('absa')) return 7;
+      if (n.includes('stanbic')) return 8;
+      if (n.includes('fidelity')) return 9;
+      if (n.includes('ghipss')) return 10;
+      return 100;
+    };
+
+    const sorted = mapped.slice().sort((a: any, b: any) => {
+      const pA = getSponsorPriority(a.name);
+      const pB = getSponsorPriority(b.name);
+      if (pA !== pB) return pA - pB;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+    return res.json({ success: true, data: sorted });
   } catch (error: any) {
     return res.status(500).json({ success: false, message: error?.message || 'Failed to fetch sponsors' });
   }

@@ -16,6 +16,20 @@ export const MOCK_CATEGORIES: EventCategory[] = [
 
 export const MOCK_SPEAKERS: Speaker[] = [
   {
+    id: 'spk-president',
+    name: 'Dr. Ellen Ohene-Afoakwa',
+    slug: 'dr-ellen-ohene-afoakwa',
+    position: 'President',
+    organization: 'CIB Ghana',
+    country: 'Ghana',
+    photo_url: '/dr-ellen-ohene-afoakwa.png',
+    biography: 'Dr. Ellen Ohene-Afoakwa is the President of the Chartered Institute of Bankers (CIB), Ghana. A visionary financial leader, she champions ethical banking, regulatory governance, and professional excellence across the Ghanaian banking ecosystem.',
+    expertise: ['Executive Leadership', 'Banking Governance', 'Ethics & Compliance', 'Financial Sector Strategy'],
+    is_keynote: true,
+    speaker_type: 'KEYNOTE',
+    linkedin_url: 'https://linkedin.com',
+  },
+  {
     id: 'spk-2',
     name: 'Robert Dzato (FCIB)',
     slug: 'robert-dzato',
@@ -502,26 +516,6 @@ export const MOCK_SPONSORS: Sponsor[] = [
 
   // --- CORPORATE SPONSORS ---
   {
-    id: 'adb_sp',
-    name: 'ADB',
-    type: 'SPONSOR',
-    tier: 'PLATINUM',
-    categoryOrRole: 'Official Platinum Sponsor',
-    website_url: 'https://agricbank.com',
-    description: 'Pioneering Agricultural & Commercial Banking Partner',
-    logo_url: 'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/sponsors/sp-1790848499448-jobj-1790862344806.png',
-  },
-  {
-    id: 'scb',
-    name: 'Standard Chartered Bank',
-    type: 'SPONSOR',
-    tier: 'PLATINUM',
-    categoryOrRole: 'Leading Multinational Financial Institution',
-    website_url: 'https://sc.com/gh',
-    description: 'Leading Multinational Financial Institution',
-    logo_url: 'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/sponsors/scb-1790862436324.png',
-  },
-  {
     id: 'bog_sp',
     name: 'Bank of Ghana',
     type: 'SPONSOR',
@@ -530,6 +524,26 @@ export const MOCK_SPONSORS: Sponsor[] = [
     website_url: 'https://bog.gov.gh',
     description: 'Apex Central Bank & Strategic Event Sponsor',
     logo_url: 'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/sponsors/bog-1790862724719.png',
+  },
+  {
+    id: 'scb',
+    name: 'Standard Chartered Bank',
+    type: 'SPONSOR',
+    tier: 'PLATINUM',
+    categoryOrRole: 'Lead Platinum Sponsor & Trade Finance Partner',
+    website_url: 'https://sc.com/gh',
+    description: 'Leading Multinational Financial Institution',
+    logo_url: 'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/sponsors/scb-1790862436324.png',
+  },
+  {
+    id: 'adb_sp',
+    name: 'ADB',
+    type: 'SPONSOR',
+    tier: 'PLATINUM',
+    categoryOrRole: 'Official Platinum Sponsor',
+    website_url: 'https://agricbank.com',
+    description: 'Pioneering Agricultural & Commercial Banking Partner',
+    logo_url: 'https://ijfjuezgvroyhtwcnlrx.supabase.co/storage/v1/object/public/speaker-photos/sponsors/sp-1790848499448-jobj-1790862344806.png',
   },
   {
     id: 'ecobank',

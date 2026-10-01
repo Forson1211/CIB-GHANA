@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Play, Sparkles, Cpu, Scale, Globe, Landmark, Leaf } from 'lucide-react';
+import { Play, Sparkles, Cpu, Scale, Globe, Landmark, Coins, ShieldAlert } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface ThemeItem {
@@ -93,34 +93,40 @@ export const CoreConferenceThemes: React.FC = () => {
 
   const themes: ThemeItem[] = [
     {
-      id: 'tech',
-      title: 'Technology Rewiring',
-      subtitle: 'Scaling technology, ethical AI & fraud detection',
-      icon: <Cpu className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
-    },
-    {
-      id: 'policy',
-      title: 'Policy Rewiring',
-      subtitle: 'Aligning ethical culture & boardroom accountability',
+      id: 'ethics',
+      title: 'Dialing up Ethics and Trust',
+      subtitle: 'Aligning ethical culture, corporate governance & boardroom accountability',
       icon: <Scale className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
-      id: 'geoeconomic',
-      title: 'Geoeconomic Rewiring',
-      subtitle: 'Building cross-border payments & AfCFTA trade corridors',
-      icon: <Globe className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
+      id: 'virtual-assets',
+      title: 'Understanding Virtual Assets and Tokenization',
+      subtitle: 'Exploring digital assets, CBDCs, tokenized collateral & AI megatrends',
+      icon: <Cpu className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
-      id: 'capital',
-      title: 'Capital Rewiring',
-      subtitle: 'Rebuilding investment priorities & balance sheet resilience',
+      id: 'leveraging-future-money',
+      title: 'Leveraging the Future of Money',
+      subtitle: 'Harnessing digital rails, sovereign payments & financial infrastructure',
       icon: <Landmark className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
-      id: 'sustainability',
-      title: 'Sustainability Rewiring',
-      subtitle: 'Mobilizing ESG & green finance frameworks for African banks',
-      icon: <Leaf className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
+      id: 'reimagining-future-money',
+      title: 'Reimagining the Future of Money',
+      subtitle: 'Transforming programmable currencies, liquidity systems & next-gen banking',
+      icon: <Coins className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
+    },
+    {
+      id: 'regulation',
+      title: 'Navigating, Regulating and Landscape',
+      subtitle: 'Harmonizing compliance, supervisory frameworks & regulatory direction',
+      icon: <Globe className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
+    },
+    {
+      id: 'fraud-cyber',
+      title: 'Preventing Fraud and Cyber Risk',
+      subtitle: 'Deploying AI detection algorithms, cybersecurity defenses & fraud mitigation',
+      icon: <ShieldAlert className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
   ];
 
@@ -134,7 +140,7 @@ export const CoreConferenceThemes: React.FC = () => {
         {/* Top Header Left-Aligned with Navbar & Hero Left Margin */}
         <div className="text-left space-y-2 mb-12 sm:mb-16">
           <p className="text-xs sm:text-sm uppercase tracking-widest font-black text-[#FFE500]">
-            Banking on the Future
+            THEME: BANKING ON THE FUTURE
           </p>
           <h2 className="text-3xl sm:text-5xl lg:text-6xl font-light font-display tracking-tight text-white leading-tight">
             Trust, Technology and Transformation
@@ -379,7 +385,7 @@ export const CoreConferenceThemes: React.FC = () => {
               </p>
             </div>
 
-            {/* List of 5 Themes */}
+            {/* List of 6 Themes */}
             <div>
               {themes.map((theme) => (
                 <div

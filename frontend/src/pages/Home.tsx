@@ -36,6 +36,15 @@ export const Home: React.FC = () => {
   const { events, speakers, refreshSpeakers, registeredUserEmail } = useApp();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
 
+  // Guarantee that refreshing on the Home screen resets scroll position to the top
+  useEffect(() => {
+    if (!window.location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, []);
+
   // Sync live speakers from Supabase on mount
   useEffect(() => {
     if (refreshSpeakers) {
@@ -48,36 +57,92 @@ export const Home: React.FC = () => {
     const v = videoRef.current;
     if (!v) return;
 
-    // Critical for iOS Safari & Android Chrome autoplay:
+    // Critical properties for instant autoplay and smooth loop
     v.defaultMuted = true;
     v.muted = true;
+    v.volume = 0;
+    v.playbackRate = 1.0;
+    v.loop = true;
+    v.autoplay = true;
+    v.playsInline = true;
     v.setAttribute('muted', '');
+    v.setAttribute('autoplay', '');
+    v.setAttribute('loop', '');
     v.setAttribute('playsinline', '');
     v.setAttribute('webkit-playsinline', 'true');
     v.setAttribute('x5-playsinline', 'true');
 
-    const startPlayback = () => {
+    const ensurePlaying = () => {
       if (v.paused) {
         v.play().catch(() => {});
       }
     };
 
-    startPlayback();
-
-    // Unlock playback on first touch/interaction (handles iOS Low Power Mode and strict browser battery savers)
-    const unlockEvents = ['touchstart', 'touchend', 'click', 'scroll', 'pointerdown'];
-    const handleFirstInteraction = () => {
-      startPlayback();
-      unlockEvents.forEach((evt) => window.removeEventListener(evt, handleFirstInteraction));
+    // Seamless loop: seamlessly reset to start right before EOF to prevent browser EOF buffering pause
+    const handleTimeUpdate = () => {
+      if (v.duration && v.currentTime >= v.duration - 0.25) {
+        v.currentTime = 0.01;
+        ensurePlaying();
+      }
     };
 
+    const handleEnded = () => {
+      v.currentTime = 0;
+      ensurePlaying();
+    };
+
+    const handlePause = () => {
+      // Never stop: resume immediately if paused
+      ensurePlaying();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        ensurePlaying();
+      }
+    };
+
+    v.addEventListener('timeupdate', handleTimeUpdate);
+    v.addEventListener('ended', handleEnded);
+    v.addEventListener('pause', handlePause);
+    v.addEventListener('stalled', ensurePlaying);
+    v.addEventListener('waiting', ensurePlaying);
+    v.addEventListener('canplay', ensurePlaying);
+    v.addEventListener('loadeddata', ensurePlaying);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Initial play attempts
+    ensurePlaying();
+
+    // Heartbeat watchdog: checks every 500ms to guarantee it is NEVER stopped
+    const watchdog = setInterval(() => {
+      if (v.paused) {
+        ensurePlaying();
+      }
+    }, 500);
+
+    // Interaction fallback for strict battery saver or low power mode
+    const unlockEvents = ['touchstart', 'touchend', 'click', 'scroll', 'pointerdown'];
+    const handleUnlock = () => {
+      ensurePlaying();
+      unlockEvents.forEach((evt) => window.removeEventListener(evt, handleUnlock));
+    };
     unlockEvents.forEach((evt) => {
-      window.addEventListener(evt, handleFirstInteraction, { passive: true, once: true });
+      window.addEventListener(evt, handleUnlock, { passive: true, once: true });
     });
 
     return () => {
+      clearInterval(watchdog);
+      v.removeEventListener('timeupdate', handleTimeUpdate);
+      v.removeEventListener('ended', handleEnded);
+      v.removeEventListener('pause', handlePause);
+      v.removeEventListener('stalled', ensurePlaying);
+      v.removeEventListener('waiting', ensurePlaying);
+      v.removeEventListener('canplay', ensurePlaying);
+      v.removeEventListener('loadeddata', ensurePlaying);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       unlockEvents.forEach((evt) => {
-        window.removeEventListener(evt, handleFirstInteraction);
+        window.removeEventListener(evt, handleUnlock);
       });
     };
   }, []);
@@ -141,14 +206,15 @@ export const Home: React.FC = () => {
         {/* Full-width Ambient Background Video (Auto-looping, Muted, 100% Full Section Cover) */}
         {/* Full 100% section video — vmax trick ensures no gap regardless of aspect ratio */}
         <div
-          className="absolute inset-0 z-0 pointer-events-none"
+          className="absolute inset-0 z-0 pointer-events-none bg-[#072113]"
           style={{
-            backgroundImage: 'url(/hero-video-poster.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
             overflow: 'hidden',
             width: '100%',
             height: '100%',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
           }}
         >
           <video
@@ -160,25 +226,41 @@ export const Home: React.FC = () => {
             disablePictureInPicture
             disableRemotePlayback
             preload="auto"
-            poster="/hero-video-poster.jpg"
+            onEnded={() => {
+              if (videoRef.current) {
+                videoRef.current.currentTime = 0;
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onPause={() => {
+              if (videoRef.current) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
+            onCanPlay={() => {
+              if (videoRef.current && videoRef.current.paused) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
             style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
-              transform: 'translate(-50%, -50%)',
+              transform: 'translate3d(-50%, -50%, 0)',
+              WebkitTransform: 'translate3d(-50%, -50%, 0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
               width: '100.5%',
               height: '100.5%',
               minWidth: '100%',
               minHeight: '100%',
               objectFit: 'cover',
               objectPosition: 'center center',
+              pointerEvents: 'none',
             }}
           >
-            <source media="(max-width: 768px)" src="/hero-video-mobile.mp4" type="video/mp4" />
-            <source src="/hero-video.mp4" type="video/mp4" />
-            <source src="/hero-video.webm" type="video/webm" />
-            <source src="/hero-video.mov" type="video/quicktime" />
-            <source src="/aqua-safari-video.mp4" type="video/mp4" />
+            <source src="/the-pan-african-bank.mp4" type="video/mp4" />
           </video>
         </div>
 
@@ -188,6 +270,15 @@ export const Home: React.FC = () => {
           style={{
             background:
               'linear-gradient(to right, rgba(7, 33, 19, 0.72) 0%, rgba(13, 58, 33, 0.55) 45%, rgba(13, 58, 33, 0.48) 100%)',
+          }}
+        />
+
+        {/* Perfectly balanced bottom gradient fade — solid dark base behind counter that smoothly feathers into video */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-44 sm:h-52 z-[2] pointer-events-none"
+          style={{
+            background:
+              'linear-gradient(to top, #072113 0%, rgba(7, 33, 19, 0.92) 35%, rgba(7, 33, 19, 0.6) 65%, transparent 100%)',
           }}
         />
 
@@ -206,31 +297,34 @@ export const Home: React.FC = () => {
             </h1>
           </motion.div>
 
-          {/* Subtitle / Dates & Location */}
-          <motion.p
+          {/* Subtitle / Date & Location in Blocks with Dividing Line */}
+          <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            className="text-lg sm:text-xl md:text-2xl text-white/95 font-semibold tracking-wide text-center md:text-left mx-auto md:mx-0"
+            className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 text-left mx-auto md:mx-0"
           >
-            9 - 10 November 2026 | Aqua Safari Resort, Ada
-          </motion.p>
+            {/* Date Block (On One Line) */}
+            <div className="flex items-center text-left font-black select-none whitespace-nowrap">
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
+                9 - 10 NOV, 2026
+              </span>
+            </div>
 
-          {/* Golden Theme & Early Bird Highlight */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
-            className="space-y-1.5 text-center md:text-left max-w-2xl mx-auto md:mx-0"
-          >
-            <p className="text-base sm:text-lg md:text-xl font-normal tracking-wide leading-snug">
-              <span className="text-white">Theme: </span>
-              <span className="text-[#FFE500]">Banking on the Future — Trust, Technology and Transformation</span>
-            </p>
-            <p className="text-sm sm:text-base text-slate-100 font-normal">
-              Early Bird Delegate &amp; Corporate Passes Available
-            </p>
+            {/* Vertical Dividing Line */}
+            <div className="w-[1.5px] sm:w-[2px] h-9 sm:h-12 bg-white/40 shrink-0" />
+
+            {/* Location Block */}
+            <div className="flex flex-col text-left justify-center">
+              <span className="text-base sm:text-lg md:text-xl font-bold text-white tracking-wide leading-tight">
+                Aqua Safari Resort
+              </span>
+              <span className="text-xs sm:text-sm md:text-base text-white/90 font-medium tracking-wide mt-0.5">
+                Volta River in Big Ada
+              </span>
+            </div>
           </motion.div>
+
 
           {/* Two Action Buttons: Stacked full-width & centered on mobile, inline on desktop */}
           <motion.div
@@ -253,26 +347,28 @@ export const Home: React.FC = () => {
 
             {/* Second Button: Full Yellow */}
             <Link
-              to="/contact"
+              to={`/events/${featuredEvent?.slug || '30th-national-banking-ethics-conference-2026'}`}
               className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
-              BECOME A SPONSOR
+              ABOUT EVENT
             </Link>
           </motion.div>
         </div>
 
-        {/* Countdown Bar pinned to the very bottom of the hero — inside the video area */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 w-full px-4 sm:px-6 lg:px-8 pb-5 pt-4 border-t border-emerald-500/20 flex flex-col sm:flex-row items-center justify-center md:justify-between gap-3 text-xs text-white/80 text-center sm:text-left max-w-[1380px] mx-auto" style={{ left: '50%', transform: 'translateX(-50%)', width: '100%' }}>
-          <div className="flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#FFE500] animate-pulse" />
-            <span className="uppercase tracking-widest font-bold text-[#FFE500]">Official Event Countdown</span>
+        {/* Countdown Bar pinned to the very bottom of the hero — floating naturally over the bottom gradient with no hard box or border */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 w-full pb-5 pt-3">
+          <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/90 text-center sm:text-left">
+            <div className="flex items-center justify-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#FFE500] animate-pulse" />
+              <span className="uppercase tracking-widest font-black text-[#FFE500] text-xs sm:text-sm drop-shadow-md">Official Event Countdown</span>
+            </div>
+            <CountdownTimer
+              targetDateStr={featuredEvent?.start_date || '2026-11-09T08:30:00Z'}
+              endDateStr={featuredEvent?.end_date || '2026-11-10T17:30:00Z'}
+              variant="gold"
+              className="scale-90 sm:scale-95 origin-center sm:origin-right"
+            />
           </div>
-          <CountdownTimer
-            targetDateStr={featuredEvent?.start_date || '2026-11-09T08:30:00Z'}
-            endDateStr={featuredEvent?.end_date || '2026-11-10T17:30:00Z'}
-            variant="gold"
-            className="scale-90 sm:scale-95 origin-center sm:origin-right"
-          />
         </div>
       </section>
 
@@ -292,7 +388,7 @@ export const Home: React.FC = () => {
       {/* 2026 SPONSORS - GHANA COMMERCIAL BANKS MARQUEE */}
       <GhanaBanksSponsorsMarquee />
 
-      {/* LEADERSHIP KEYNOTE QUOTE SPOTLIGHT (Robert Dzato) */}
+      {/* LEADERSHIP PRESIDENTIAL SPOTLIGHT (Dr. Ellen Ohene-Afoakwa - President, CIB Ghana) */}
       <div id="leadership" className="scroll-mt-24">
         <LeadershipQuoteSpotlight onSelectSpeaker={(spk) => setSelectedSpeaker(spk)} />
       </div>

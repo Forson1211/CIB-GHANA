@@ -517,19 +517,8 @@ const renderCorporateMemberLogo = (cm: Sponsor): React.ReactNode => {
     );
   }
 
-  const cleanId = cm.id.toLowerCase().replace(/_cm|_sp/g, '');
-  if (BUILTIN_BANK_RENDERERS[cleanId]) {
-    return BUILTIN_BANK_RENDERERS[cleanId]();
-  }
-
-  const nameLower = cm.name.toLowerCase();
-  for (const [key, renderFn] of Object.entries(BUILTIN_BANK_RENDERERS)) {
-    if (nameLower.includes(key)) {
-      return renderFn();
-    }
-  }
-
-  // Fallback card for newly added corporate members without uploaded image
+  // When logo has been removed/deleted by admin, DO NOT force hardcoded SVG logo
+  // Instead show the clean institution name card
   return (
     <div className="flex items-center gap-3 w-full px-2">
       <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg bg-cib-green-50 text-cib-green-700 flex items-center justify-center shrink-0 font-black text-base shadow-sm">
@@ -554,16 +543,18 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
     (s) => s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER'
   );
 
+  // If admin deleted corporate members, do not display deleted institutions
+  if (corporateMembers.length === 0) {
+    return null;
+  }
+
   const dynamicLogos: BankLogo[] = corporateMembers.map((cm) => ({
     id: cm.id,
     name: cm.name,
     renderLogo: () => renderCorporateMemberLogo(cm),
   }));
 
-  const allLogos =
-    dynamicLogos.length > 0
-      ? dynamicLogos
-      : [...GHANA_BANKS_ROW_1, ...GHANA_BANKS_ROW_2, ...GHANA_BANKS_ROW_3];
+  const allLogos = dynamicLogos;
 
   const row1 = allLogos.filter((_, idx) => idx % 3 === 0);
   const row2 = allLogos.filter((_, idx) => idx % 3 === 1);

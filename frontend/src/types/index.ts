@@ -77,6 +77,7 @@ export interface AgendaSession {
 
 export interface Sponsor {
   id: string;
+  dbId?: string;
   name: string;
   logo_url?: string;
   website_url?: string;

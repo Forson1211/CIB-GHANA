@@ -163,11 +163,14 @@ export const AdminSponsors: React.FC = () => {
       originalId: targetId,
     });
 
+    const existingSponsor = editingId ? sponsors.find((s) => s.id === editingId) : null;
+    const targetUuid = existingSponsor?.dbId || uuid;
+
     if (editingId) {
-      updateSponsor(editingId, payload);
+      updateSponsor(editingId, { ...payload, dbId: targetUuid });
       setSuccessNotice(`Updated "${name}" successfully in live database.`);
     } else {
-      addSponsor({ ...payload, id: targetId });
+      addSponsor({ ...payload, id: targetId, dbId: targetUuid });
       setSuccessNotice(
         type === 'CORPORATE_MEMBER'
           ? `Added "${name}" to Corporate Members (syncing live across all devices)!`
@@ -178,76 +181,87 @@ export const AdminSponsors: React.FC = () => {
     // Direct Supabase upsert with service role to guarantee immediate live persistence
     try {
       await supabaseAdmin.from('sponsors').upsert({
-        id: uuid,
+        id: targetUuid,
         name: payload.name,
         logo_url: payload.logo_url || '',
         website_url: payload.website_url || null,
         tier: dbTier,
         description: descJson,
       });
+      if (existingSponsor?.name && existingSponsor.name !== payload.name) {
+        await supabaseAdmin.from('sponsors').update({
+          name: payload.name,
+          logo_url: payload.logo_url || '',
+          website_url: payload.website_url || null,
+          tier: dbTier,
+          description: descJson,
+        }).ilike('name', existingSponsor.name);
+      }
     } catch (sbErr) {
       console.warn('Supabase sponsors upsert failed:', sbErr);
     }
 
     // Also notify backend API if running
     try {
-      await ApiClient.saveSponsor({ ...payload, id: uuid });
+      await ApiClient.saveSponsor({ ...payload, id: targetUuid });
     } catch {}
 
     setIsModalOpen(false);
     // Refresh immediately to show updated logo and entity data without delay
-    refreshSponsors();
+    await refreshSponsors();
     setTimeout(() => {
       refreshSponsors();
       setSuccessNotice(null);
-    }, 1500);
+    }, 1000);
   };
 
   const handleDelete = async (id: string, entityName: string) => {
-    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the live site.`)) {
-      // Capture logo URL before removing from local state
-      const sponsor = sponsors.find((s) => s.id === id);
+    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the live site across all devices.`)) {
+      const sponsor = sponsors.find(
+        (s) => s.id === id || s.dbId === id || s.name.toLowerCase() === entityName.toLowerCase()
+      );
       const logoUrl = sponsor?.logo_url ?? '';
-
-      deleteSponsor(id);
-      setSuccessNotice(`Removed "${entityName}" from live database.`);
-
+      const dbId = sponsor?.dbId;
       const uuid = stringToUuid(id);
 
-      // 1. Delete DB row
+      await deleteSponsor(id, entityName);
+      setSuccessNotice(`Removed "${entityName}" from live database and all devices.`);
+
+      // Extra guarantee direct deletion from Supabase across all matching identifiers
       try {
+        if (dbId) {
+          await supabaseAdmin.from('sponsors').delete().eq('id', dbId);
+        }
+        await supabaseAdmin.from('sponsors').delete().eq('id', id);
         await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+        await supabaseAdmin.from('sponsors').delete().ilike('name', entityName);
+        if (sponsor?.name) {
+          await supabaseAdmin.from('sponsors').delete().ilike('name', sponsor.name);
+        }
       } catch (sbErr) {
         console.warn('Supabase sponsors delete failed:', sbErr);
       }
 
-      // 2. Delete logo from Supabase Storage (only cloud-hosted logos)
+      // Delete logo from Supabase Storage if hosted
       if (logoUrl && logoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
         try {
           const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
           if (storagePath) {
-            const { error: storageError } = await supabaseAdmin.storage
-              .from('speaker-photos')
-              .remove([storagePath]);
-            if (storageError) {
-              console.warn('Storage logo delete error:', storageError);
-            }
+            await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
           }
-        } catch (e) {
-          console.warn('Failed to delete sponsor logo from storage:', e);
-        }
+        } catch {}
       }
 
-      // 3. Fallback API delete
       try {
+        if (dbId) await ApiClient.deleteSponsor(dbId);
         await ApiClient.deleteSponsor(uuid);
       } catch {}
 
-      refreshSponsors();
+      await refreshSponsors();
       setTimeout(() => {
         refreshSponsors();
         setSuccessNotice(null);
-      }, 1500);
+      }, 1000);
     }
   };
 

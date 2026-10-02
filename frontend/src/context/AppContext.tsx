@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { EventItem, Registration, UserProfile, Speaker, SpeakerType, Sponsor, EventResource } from '../types';
+import { EventItem, Registration, UserProfile, Speaker, SpeakerType, Sponsor, SponsorType, SponsorTier, EventResource } from '../types';
 import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSORS } from '../data/mockData';
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
@@ -40,7 +40,7 @@ interface AppContextType {
   deleteSpeaker: (id: string) => Promise<void> | void;
   addSponsor: (sponsor: Partial<Sponsor>) => void;
   updateSponsor: (id: string, updates: Partial<Sponsor>) => void;
-  deleteSponsor: (id: string) => void;
+  deleteSponsor: (id: string, entityName?: string) => Promise<void> | void;
   addResourceToEvent: (eventId: string, resource: Omit<EventResource, 'id'>) => void;
   updateEventResource: (eventId: string, resourceId: string, updates: Partial<EventResource>) => void;
   deleteEventResource: (eventId: string, resourceId: string) => void;
@@ -57,7 +57,30 @@ const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 // v13: Force re-fetch to pick up new CEO portrait
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v13';
 const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v13';
-const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v5';
+// v6: Authoritative Supabase syncing & global deletion support
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v6';
+const STORAGE_KEY_DELETED_SPONSORS = 'cib_ghana_deleted_sponsors_v1';
+
+export const getDeletedSponsorKeys = (): Set<string> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DELETED_SPONSORS);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw);
+    return new Set(Array.isArray(arr) ? arr.map((x: string) => String(x).toLowerCase()) : []);
+  } catch {
+    return new Set();
+  }
+};
+
+export const addDeletedSponsorKey = (keys: string[]) => {
+  try {
+    const existing = getDeletedSponsorKeys();
+    keys.forEach((k) => {
+      if (k && k.trim()) existing.add(k.trim().toLowerCase());
+    });
+    localStorage.setItem(STORAGE_KEY_DELETED_SPONSORS, JSON.stringify(Array.from(existing)));
+  } catch {}
+};
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
   'spk-1',
@@ -239,6 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'cib_ghana_deleted_spk_ids_v7',
         'cib_ghana_events_v6',
         'cib_ghana_events_v5',
+        'cib_ghana_sponsors_v5',
         'cib_ghana_sponsors_v4',
         'cib_ghana_sponsors_v3',
         'cib_ghana_sponsors_v2',
@@ -341,41 +365,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   });
   const [sponsors, setSponsors] = useState<Sponsor[]>(() => {
+    const deletedKeys = getDeletedSponsorKeys();
+    const isNotDeleted = (s: { id?: string; dbId?: string; name?: string }) => {
+      if (!s) return false;
+      const cleanName = (s.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const rawName = (s.name || '').toLowerCase();
+      if (s.id && deletedKeys.has(s.id.toLowerCase())) return false;
+      if (s.dbId && deletedKeys.has(s.dbId.toLowerCase())) return false;
+      if (cleanName && deletedKeys.has(cleanName)) return false;
+      if (rawName && deletedKeys.has(rawName)) return false;
+      return true;
+    };
+
     const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           return sortSponsors(
-            parsed.map((s) => ({
-              ...s,
-              type: (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
-              tier: (s.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
-            }))
+            parsed
+              .filter(isNotDeleted)
+              .map((s) => ({
+                ...s,
+                type: (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
+                tier: (s.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
+              }))
           );
         }
       } catch (e) { console.error(e); }
     }
 
-    // Migration from old v2 storage if available
-    const oldV2 = localStorage.getItem('cib_ghana_sponsors_v2');
-    if (oldV2) {
-      try {
-        const parsed = JSON.parse(oldV2);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const migrated = parsed.map((s: any) => ({
-            ...s,
-            type: s.type === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type,
-            tier: s.tier === 'PARTNER' ? 'CORPORATE_MEMBER' : s.tier,
-          }));
-          const existingIds = new Set(migrated.map((m: any) => m.id));
-          const newMocks = MOCK_SPONSORS.filter((m) => !existingIds.has(m.id));
-          return sortSponsors([...migrated, ...newMocks]);
-        }
-      } catch (e) { console.error(e); }
-    }
-
-    return sortSponsors(MOCK_SPONSORS);
+    return sortSponsors(MOCK_SPONSORS.filter(isNotDeleted));
   });
 
   const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
@@ -727,17 +747,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
   };
 
-  const deleteSponsor = async (id: string) => {
-    setSponsors((prev) => prev.filter((s) => s.id !== id));
-
-    // Live Delete from Supabase & Backend API
+  const deleteSponsor = async (id: string, entityName?: string) => {
+    const target = sponsors.find(
+      (s) => s.id === id || s.dbId === id || (entityName && s.name.toLowerCase() === entityName.toLowerCase())
+    );
+    const finalName = entityName || target?.name || '';
+    const cleanName = finalName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const dbId = target?.dbId;
     const uuid = stringToUuid(id);
+
+    // 1. Remove from local live state immediately
+    setSponsors((prev) =>
+      prev.filter((s) => {
+        if (s.id === id || (dbId && s.dbId === dbId)) return false;
+        if (target && isSameSponsor(s, target)) return false;
+        if (finalName && s.name.toLowerCase() === finalName.toLowerCase()) return false;
+        return true;
+      })
+    );
+
+    // 2. Add to deleted blacklist so it NEVER reappears on refresh or mobile
+    const keysToBlacklist = [id, uuid];
+    if (finalName) keysToBlacklist.push(finalName);
+    if (cleanName) keysToBlacklist.push(cleanName);
+    if (dbId) keysToBlacklist.push(dbId);
+    addDeletedSponsorKey(keysToBlacklist);
+
+    // 3. Update localStorage
     try {
+      const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
+      if (saved) {
+        const list: Sponsor[] = JSON.parse(saved);
+        const filtered = list.filter((s) => {
+          if (s.id === id || (dbId && s.dbId === dbId)) return false;
+          if (target && isSameSponsor(s, target)) return false;
+          if (finalName && s.name.toLowerCase() === finalName.toLowerCase()) return false;
+          return true;
+        });
+        localStorage.setItem(STORAGE_KEY_SPONSORS, JSON.stringify(filtered));
+      }
+    } catch {}
+
+    // 4. Delete DB row from Supabase (by dbId, id, uuid, and name)
+    try {
+      if (dbId) {
+        await supabaseAdmin.from('sponsors').delete().eq('id', dbId);
+      }
+      await supabaseAdmin.from('sponsors').delete().eq('id', id);
       await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+      if (finalName) {
+        await supabaseAdmin.from('sponsors').delete().ilike('name', finalName);
+      }
     } catch (e) {
-      console.warn('Direct Supabase sponsor delete failed:', e);
+      console.warn('Direct Supabase sponsor delete error:', e);
     }
+
+    // 5. Delete logo from Supabase Storage if hosted
+    const logoUrl = target?.logo_url;
+    if (logoUrl && logoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
+      try {
+        const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
+        if (storagePath) {
+          await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
+        }
+      } catch {}
+    }
+
     try {
+      if (dbId) await ApiClient.deleteSponsor(dbId);
       await ApiClient.deleteSponsor(uuid);
     } catch {}
   };
@@ -1006,7 +1083,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Fetch sponsors from backend API / Supabase and merge into local state
   // Guarantees all corporate members and sponsors sync live across localhost and deployed site
   const refreshSponsors = async () => {
-    let remoteSponsors: any[] = [];
+    let remoteSponsors: Sponsor[] = [];
+    const deletedKeys = getDeletedSponsorKeys();
+    const isNotDeleted = (s: { id?: string; dbId?: string; name?: string }) => {
+      if (!s) return false;
+      const cleanName = (s.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const rawName = (s.name || '').toLowerCase();
+      if (s.id && deletedKeys.has(s.id.toLowerCase())) return false;
+      if (s.dbId && deletedKeys.has(s.dbId.toLowerCase())) return false;
+      if (cleanName && deletedKeys.has(cleanName)) return false;
+      if (rawName && deletedKeys.has(rawName)) return false;
+      return true;
+    };
 
     // Always query Supabase directly first for freshest data (same source as deployed)
     const spClient = supabaseAdmin || supabase;
@@ -1016,28 +1104,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .from('sponsors')
           .select('*')
           .order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          remoteSponsors = data.map((row: any) => {
-            let meta: any = {};
-            try {
-              if (row.description && row.description.startsWith('{')) {
-                meta = JSON.parse(row.description);
-              }
-            } catch {}
-            const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
-            const cleanLogo = row.logo_url && !row.logo_url.includes('unsplash.com') ? row.logo_url.trim() : '';
-            return {
-              id: meta.originalId || row.id,
-              dbId: row.id,
-              name: row.name,
-              logo_url: cleanLogo,
-              website_url: row.website_url || '',
-              tier: isMember ? 'CORPORATE_MEMBER' : row.tier,
-              type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
-              categoryOrRole: meta.role || (row.description && !row.description.startsWith('{') ? row.description : '') || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
-              description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
-            };
-          });
+        if (!error && Array.isArray(data)) {
+          remoteSponsors = data
+            .map((row: any) => {
+              let meta: any = {};
+              try {
+                if (row.description && row.description.startsWith('{')) {
+                  meta = JSON.parse(row.description);
+                }
+              } catch {}
+              const isMember = row.tier === 'PARTNER' || meta.type === 'CORPORATE_MEMBER';
+              const cleanLogo = row.logo_url && !row.logo_url.includes('unsplash.com') ? row.logo_url.trim() : '';
+              return {
+                id: meta.originalId || row.id,
+                dbId: row.id,
+                name: row.name,
+                logo_url: cleanLogo,
+                website_url: row.website_url || '',
+                tier: (isMember ? 'CORPORATE_MEMBER' : (row.tier || 'PLATINUM')) as SponsorTier,
+                type: (isMember ? 'CORPORATE_MEMBER' : 'SPONSOR') as SponsorType,
+                categoryOrRole: meta.role || (row.description && !row.description.startsWith('{') ? row.description : '') || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
+                description: meta.desc || (row.description && !row.description.startsWith('{') ? row.description : ''),
+              };
+            })
+            .filter(isNotDeleted);
         }
       } catch (err) {
         console.warn('Supabase sponsors query failed:', err);
@@ -1049,61 +1139,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const res = await ApiClient.getSponsors();
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-          remoteSponsors = res.data;
+          remoteSponsors = res.data.filter(isNotDeleted);
         }
       } catch {
         // ApiClient offline
       }
     }
 
-    if (remoteSponsors.length === 0) return;
-
-    setSponsors((prev) => {
-      // 1. Update existing local sponsors with remote info
-      const updated: Sponsor[] = prev.map((s): Sponsor => {
-        const remote = remoteSponsors.find((d: any) => isSameSponsor(s, d));
-        if (!remote) return s;
-
-        const isMember = remote.type === 'CORPORATE_MEMBER' || remote.tier === 'CORPORATE_MEMBER' || remote.tier === 'PARTNER';
-        const remoteLogo = remote.logo_url && remote.logo_url.trim() !== '' && !remote.logo_url.includes('unsplash.com') ? remote.logo_url : '';
-        const localLogoIsRemote = s.logo_url && (s.logo_url.startsWith('http://') || s.logo_url.startsWith('https://')) && !s.logo_url.includes('unsplash.com');
-        const logoToUse = remoteLogo.startsWith('http')
-          ? remoteLogo
-          : (localLogoIsRemote ? s.logo_url : (remoteLogo || s.logo_url || ''));
-
-        return {
-          ...s,
-          name: remote.name || s.name,
-          logo_url: logoToUse,
-          website_url: remote.website_url || s.website_url,
-          categoryOrRole: remote.categoryOrRole || s.categoryOrRole,
-          description: remote.description || s.description,
-          type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
-          tier: isMember ? 'CORPORATE_MEMBER' : remote.tier,
-        };
+    // Supabase / Cloud is the authoritative source of truth across all devices:
+    if (remoteSponsors.length > 0) {
+      setSponsors((prev) => {
+        // Retain only valid unsynced local-only drafts
+        const localUnsynced = prev.filter((p) => {
+          if (!isNotDeleted(p)) return false;
+          const existsInRemote = remoteSponsors.some((r) => isSameSponsor(p, r));
+          return !existsInRemote && p.id.startsWith('sp-');
+        });
+        const finalMerged = sortSponsors([...remoteSponsors, ...localUnsynced]);
+        try {
+          localStorage.setItem(STORAGE_KEY_SPONSORS, JSON.stringify(finalMerged));
+        } catch {}
+        return finalMerged;
       });
-
-      // 2. Add remote sponsors not in local list
-      const toAdd: Sponsor[] = [];
-      for (const d of remoteSponsors) {
-        const exists = updated.some((p) => isSameSponsor(p, d));
-        if (!exists) {
-          const isMember = d.type === 'CORPORATE_MEMBER' || d.tier === 'CORPORATE_MEMBER' || d.tier === 'PARTNER';
-          toAdd.push({
-            id: d.id,
-            name: d.name,
-            logo_url: d.logo_url && !d.logo_url.includes('unsplash.com') ? d.logo_url : '',
-            website_url: d.website_url || '',
-            type: isMember ? 'CORPORATE_MEMBER' : 'SPONSOR',
-            tier: isMember ? 'CORPORATE_MEMBER' : d.tier,
-            categoryOrRole: d.categoryOrRole || (isMember ? 'Licensed Commercial Bank' : 'Corporate Sponsor'),
-            description: d.description || '',
-          });
-        }
-      }
-
-      return sortSponsors([...updated, ...toAdd]);
-    });
+    }
   };
 
   // Auto-migrate any local base64 photos to cloud storage so they show on all devices

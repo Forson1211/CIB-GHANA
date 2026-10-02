@@ -450,7 +450,9 @@ export const PartnersSponsors: React.FC = () => {
                     className="max-h-full max-w-full object-contain"
                   />
                 ) : (
-                  renderBrandLogo(item.id, item.name)
+                  <div className="flex items-center justify-center font-black text-base sm:text-lg text-slate-800 px-4 text-center">
+                    {item.name}
+                  </div>
                 )}
               </div>
             </a>

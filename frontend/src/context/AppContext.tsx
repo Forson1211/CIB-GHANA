@@ -57,7 +57,7 @@ const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 // v12: Force re-seed to pick up position updates (President / Conference Host)
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v12';
 const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v12';
-const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v4';
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v5';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
   'spk-1',
@@ -237,6 +237,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'cib_ghana_deleted_spk_ids_v11',
         'cib_ghana_events_v6',
         'cib_ghana_events_v5',
+        'cib_ghana_sponsors_v4',
+        'cib_ghana_sponsors_v3',
+        'cib_ghana_sponsors_v2',
       ].forEach((key) => localStorage.removeItem(key));
     } catch {
       /* ignore */
@@ -1002,22 +1005,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Guarantees all corporate members and sponsors sync live across localhost and deployed site
   const refreshSponsors = async () => {
     let remoteSponsors: any[] = [];
-    try {
-      const res = await ApiClient.getSponsors();
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        remoteSponsors = res.data;
-      }
-    } catch {
-      // ApiClient offline
-    }
 
+    // Always query Supabase directly first for freshest data (same source as deployed)
     const spClient = supabaseAdmin || supabase;
-    if (remoteSponsors.length === 0 && spClient) {
+    if (spClient) {
       try {
         const { data, error } = await spClient
           .from('sponsors')
           .select('*')
-          .order('created_at', { ascending: false }); // Latest edits and uploaded logos first
+          .order('created_at', { ascending: false });
         if (!error && Array.isArray(data) && data.length > 0) {
           remoteSponsors = data.map((row: any) => {
             let meta: any = {};
@@ -1043,6 +1039,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       } catch (err) {
         console.warn('Supabase sponsors query failed:', err);
+      }
+    }
+
+    // Fallback to ApiClient if Supabase returned nothing
+    if (remoteSponsors.length === 0) {
+      try {
+        const res = await ApiClient.getSponsors();
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          remoteSponsors = res.data;
+        }
+      } catch {
+        // ApiClient offline
       }
     }
 

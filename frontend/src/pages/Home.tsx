@@ -30,6 +30,7 @@ import { GhanaBanksSponsorsMarquee } from '../components/home/GhanaBanksSponsors
 import { CoreConferenceThemes } from '../components/home/CoreConferenceThemes';
 import { LeadershipQuoteSpotlight } from '../components/home/LeadershipQuoteSpotlight';
 import { SecurePlaceCtaBanner } from '../components/home/SecurePlaceCtaBanner';
+import { CeoQuoteSpotlight } from '../components/home/CeoQuoteSpotlight';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -102,6 +103,7 @@ export const Home: React.FC = () => {
       }
     };
 
+    v.addEventListener('loadedmetadata', ensurePlaying);
     v.addEventListener('timeupdate', handleTimeUpdate);
     v.addEventListener('ended', handleEnded);
     v.addEventListener('pause', handlePause);
@@ -140,6 +142,7 @@ export const Home: React.FC = () => {
       v.removeEventListener('waiting', ensurePlaying);
       v.removeEventListener('canplay', ensurePlaying);
       v.removeEventListener('loadeddata', ensurePlaying);
+      v.removeEventListener('loadedmetadata', ensurePlaying);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       unlockEvents.forEach((evt) => {
         window.removeEventListener(evt, handleUnlock);
@@ -211,6 +214,9 @@ export const Home: React.FC = () => {
             overflow: 'hidden',
             width: '100%',
             height: '100%',
+            backgroundImage: "url('/hero-video-poster.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
             transform: 'translate3d(0, 0, 0)',
             WebkitTransform: 'translate3d(0, 0, 0)',
             backfaceVisibility: 'hidden',
@@ -223,9 +229,15 @@ export const Home: React.FC = () => {
             loop
             muted
             playsInline
+            poster="/hero-video-poster.jpg"
             disablePictureInPicture
             disableRemotePlayback
             preload="auto"
+            onLoadedMetadata={() => {
+              if (videoRef.current && videoRef.current.paused) {
+                videoRef.current.play().catch(() => {});
+              }
+            }}
             onEnded={() => {
               if (videoRef.current) {
                 videoRef.current.currentTime = 0;
@@ -398,7 +410,11 @@ export const Home: React.FC = () => {
         <SecurePlaceCtaBanner />
       </div>
 
-      {/* 5. WHY ATTEND SECTION (Requirement #11 - Updated to Brand Green #0D3A21) */}
+      {/* CEO QUOTE SPOTLIGHT (Robert Dzato - CEO, CIB Ghana) */}
+      <div id="ceo-spotlight" className="scroll-mt-24">
+        <CeoQuoteSpotlight onSelectSpeaker={(spk) => setSelectedSpeaker(spk)} />
+      </div>
+      {/* 5. WHY ATTEND SECTION */}
       <section id="why-attend" className="bg-[#0D3A21] py-16 sm:py-20 text-white overflow-hidden relative border-b border-white/10 scroll-mt-24">
         {/* Subtle ambient lighting */}
         <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />

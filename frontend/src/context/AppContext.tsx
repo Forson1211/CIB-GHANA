@@ -54,9 +54,9 @@ const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-// v12: Force re-seed to pick up position updates (President / Conference Host)
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v12';
-const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v12';
+// v13: Force re-fetch to pick up new CEO portrait
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v13';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v13';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v5';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
@@ -227,14 +227,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     try {
       [
+        'cib_ghana_speakers_v12',
+        'cib_ghana_speakers_v11',
         'cib_ghana_speakers_v8',
         'cib_ghana_speakers_v7',
         'cib_ghana_speakers_v6',
         'cib_ghana_speakers_v5',
-        'cib_ghana_speakers_v11',
+        'cib_ghana_deleted_spk_ids_v12',
+        'cib_ghana_deleted_spk_ids_v11',
         'cib_ghana_deleted_spk_ids_v8',
         'cib_ghana_deleted_spk_ids_v7',
-        'cib_ghana_deleted_spk_ids_v11',
         'cib_ghana_events_v6',
         'cib_ghana_events_v5',
         'cib_ghana_sponsors_v4',

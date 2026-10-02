@@ -9,157 +9,103 @@ export interface GalleryPhoto {
   category?: string;
 }
 
-// 24 authentic Aqua Safari Resort venue, leisure, and CIB Ghana conference photos
+// 15 authentic CIB Ghana previous event, summit, and conference photos from PREVIOUS EVENTS archive
 const ROW_1_PHOTOS: GalleryPhoto[] = [
   {
-    id: 'r1-1',
-    image_url: '/aqua-safari-lawn-night.jpg',
-    caption: 'Aqua Safari Conference Lawns & Illuminated Evening Grounds',
-    category: 'Venue & Grounds'
+    id: 'pe-1',
+    image_url: '/previous-events/event-1.jpg',
+    caption: 'CIB Ghana Executive Leadership Summit & Strategic Plenary',
+    category: 'Leadership Summit'
   },
   {
-    id: 'r1-2',
-    image_url: '/aqua-safari-drone.jpg',
-    caption: 'Aerial Panorama of Aqua Safari Resort Peninsula on the Volta River',
-    category: 'Official Aerial'
+    id: 'pe-2',
+    image_url: '/previous-events/event-2.jpg',
+    caption: 'Delegates & Banking Leaders at the Annual National Conference',
+    category: 'Conference Plenary'
   },
   {
-    id: 'r1-3',
-    image_url: '/aqua-safari-pool-river.png',
-    caption: 'Lagoon Swimming Pool Overlooking Volta River Estuary',
-    category: 'Resort Amenities'
+    id: 'pe-3',
+    image_url: '/previous-events/event-3.jpg',
+    caption: 'CIB Ghana Delegation at DC Fintech Week — Global Financial Dialogues',
+    category: 'International Delegation'
   },
   {
-    id: 'r1-4',
-    image_url: '/cib-conference-hall.jpg',
-    caption: 'CIB Ghana Delegates in Plenary Session at the Grand Hall',
-    category: 'Conference Hall'
+    id: 'pe-4',
+    image_url: '/previous-events/event-4.jpg',
+    caption: 'CIB Ghana at DC Fintech Week — Shaping Global Banking Innovation',
+    category: 'Fintech Leadership'
   },
   {
-    id: 'r1-5',
-    image_url: '/aqua-safari-deck.jpg',
-    caption: 'Waterfront Wooden Pool Promenade & Twilight Sun Loungers',
-    category: 'Resort Deck'
-  },
-  {
-    id: 'r1-6',
-    image_url: '/aqua-safari-waterfront.jpg',
-    caption: 'Waterfront Luxury Chalets & Manicured Tropical Gardens',
-    category: 'Resort Grounds'
-  },
-  {
-    id: 'r1-7',
-    image_url: '/aqua-safari-kayak.jpg',
-    caption: 'Volta River Kayaking & Complimentary Leisure Sports',
-    category: 'Leisure Activities'
-  },
-  {
-    id: 'r1-8',
-    image_url: '/cib-conference-hall-2.jpg',
-    caption: 'Keynote Address & Policy Discourse at National Banking Summit',
-    category: 'Keynote Session'
+    id: 'pe-5',
+    image_url: '/previous-events/event-5.jpg',
+    caption: 'Executive Panel on Virtual Assets, Ethics & Banking Transformation',
+    category: 'Policy Discourse'
   }
 ];
 
 const ROW_2_PHOTOS: GalleryPhoto[] = [
   {
-    id: 'r2-1',
-    image_url: '/aqua-safari-aerial-beach.png',
-    caption: 'Private Sandy Beach & Waterfront Chalets at Aqua Safari',
-    category: 'Waterfront Beach'
+    id: 'pe-6',
+    image_url: '/previous-events/event-6.jpg',
+    caption: 'Strategic Roundtables & Global Industry Partnerships at DC Fintech Week',
+    category: 'Global Partnerships'
   },
   {
-    id: 'r2-2',
-    image_url: '/aqua-safari-night.jpg',
-    caption: 'Twilight Pool Illumination & Executive Clubhouse at Dusk',
-    category: 'Night Ambiance'
+    id: 'pe-7',
+    image_url: '/previous-events/event-7.jpg',
+    caption: 'CIB Ghana Annual Graduation & Induction Ceremony of Chartered Bankers',
+    category: 'Charter Induction'
   },
   {
-    id: 'r2-3',
-    image_url: '/aqua-safari-chalets.jpg',
-    caption: 'Executive Waterfront Lodges & Safari Architecture',
-    category: 'Accommodations'
+    id: 'pe-8',
+    image_url: '/previous-events/event-8.jpg',
+    caption: 'Chartered Bankers Forum — Professional Standards & Ethical Excellence',
+    category: 'Professional Forum'
   },
   {
-    id: 'r2-4',
-    image_url: '/aqua-safari-balcony-palms.png',
-    caption: 'Balcony View Across Tropical Palms & Chalets',
-    category: 'Resort Views'
+    id: 'pe-9',
+    image_url: '/previous-events/event-9.jpg',
+    caption: 'Keynote Address on the Future of Financial Regulation & Integrity',
+    category: 'Keynote Session'
   },
   {
-    id: 'r2-5',
-    image_url: '/aqua-safari-suite.jpg',
-    caption: 'Luxury Suite Interior & Executive Accommodations',
-    category: 'Executive Living'
-  },
-  {
-    id: 'r2-6',
-    image_url: '/aqua-safari-pool-promenade.png',
-    caption: 'Aqua Safari Resort Poolside Terrace & Architectural Clubhouse',
-    category: 'Poolside Terrace'
-  },
-  {
-    id: 'r2-7',
-    image_url: '/cib-conference-hall.jpg',
-    caption: 'Plenary Deliberations & Executive Networking',
-    category: 'Executive Network'
-  },
-  {
-    id: 'r2-8',
-    image_url: '/aqua-safari-drone.jpg',
-    caption: 'The Pristine Natural Setting of Ada Foah, Ghana',
-    category: 'Scenic Location'
+    id: 'pe-10',
+    image_url: '/previous-events/event-10.jpg',
+    caption: 'Fellowship Conferment & Celebrating Banking Excellence in Ghana',
+    category: 'Fellowship Awards'
   }
 ];
 
 const ROW_3_PHOTOS: GalleryPhoto[] = [
   {
-    id: 'r3-1',
-    image_url: '/aqua-safari-pool-promenade.png',
-    caption: 'Sun-drenched Pool Promenade & Tropical Relaxation',
-    category: 'Promenade'
+    id: 'pe-11',
+    image_url: '/previous-events/event-11.jpg',
+    caption: 'Annual Banking Conference Plenary Session with Industry Luminaries',
+    category: 'Annual Conference'
   },
   {
-    id: 'r3-2',
-    image_url: '/aqua-safari-waterfront.jpg',
-    caption: 'Morning Stroll along the Ada Estuary Waterfront',
-    category: 'Waterfront'
+    id: 'pe-12',
+    image_url: '/previous-events/event-12.jpg',
+    caption: 'CIB Ghana Governing Council Address & Institutional Roadmap',
+    category: 'Governing Council'
   },
   {
-    id: 'r3-3',
-    image_url: '/aqua-safari-lawn-night.jpg',
-    caption: 'Evening Dinner Reception Grounds by the Pool',
-    category: 'Evening Gala'
+    id: 'pe-13',
+    image_url: '/previous-events/event-13.jpg',
+    caption: 'Presentation of Charters & Celebrating New Chartered Bankers',
+    category: 'Charter Presentation'
   },
   {
-    id: 'r3-4',
-    image_url: '/aqua-safari-deck.jpg',
-    caption: 'Sunset Deck Overlooking the Calm River Waters',
-    category: 'Sunset Lounge'
+    id: 'pe-14',
+    image_url: '/previous-events/event-14.jpg',
+    caption: 'Distinguished Delegates & Financial Sector Stakeholders Gathering',
+    category: 'Delegates Assembly'
   },
   {
-    id: 'r3-5',
-    image_url: '/aqua-safari-balcony-palms.png',
-    caption: 'Tropical Palm Gardens & Peaceful Executive Retreat',
-    category: 'Resort Gardens'
-  },
-  {
-    id: 'r3-6',
-    image_url: '/aqua-safari-kayak.jpg',
-    caption: 'River Adventures & Executive Leisure Excursions',
-    category: 'River Leisure'
-  },
-  {
-    id: 'r3-7',
-    image_url: '/aqua-safari-night.jpg',
-    caption: 'Architectural Night Illumination at Aqua Safari Resort',
-    category: 'Night View'
-  },
-  {
-    id: 'r3-8',
-    image_url: '/aqua-safari-aerial-beach.png',
-    caption: 'Exclusive Ada Foah Island & Riverfront Retreat',
-    category: 'Panoramic Retreat'
+    id: 'pe-15',
+    image_url: '/previous-events/event-15.jpg',
+    caption: 'CIB Ghana Honors, Excellence in Banking & Professional Awards Ceremony',
+    category: 'Awards & Honors'
   }
 ];
 

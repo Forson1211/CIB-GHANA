@@ -31,6 +31,7 @@ import { CoreConferenceThemes } from '../components/home/CoreConferenceThemes';
 import { LeadershipQuoteSpotlight } from '../components/home/LeadershipQuoteSpotlight';
 import { SecurePlaceCtaBanner } from '../components/home/SecurePlaceCtaBanner';
 import { CeoQuoteSpotlight } from '../components/home/CeoQuoteSpotlight';
+import { VenueImageSlider } from '../components/home/VenueImageSlider';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -553,38 +554,15 @@ export const Home: React.FC = () => {
             <div className="w-16 h-1 bg-[#FFE500] rounded-none mt-2" />
           </motion.div>
 
-          {/* Venue Showcase Card - Left aligned and container-width in line with logo */}
+          {/* Venue Showcase Slider - Left aligned and container-width in line with logo */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={fadeInUp}
-            className="relative rounded-none overflow-hidden border border-white/15 shadow-2xl group w-full"
+            className="w-full"
           >
-            <div className="relative h-[340px] sm:h-[440px] w-full overflow-hidden">
-              <img
-                src="/aqua-safari-deck.jpg"
-                alt="Aqua Safari Resort, Ada"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-
-              {/* Overlaid Badges & Buttons */}
-              <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center px-4 py-2 bg-[#FFE500] text-slate-950 font-black text-xs uppercase tracking-wider shadow-md">
-                  OFFICIAL LOCATION
-                </span>
-                <a
-                  href="https://maps.google.com/?q=Aqua+Safari+Resort+Ada+Foah+Ghana"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2 bg-white hover:bg-slate-100 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95"
-                >
-                  <Navigation className="w-3.5 h-3.5 text-[#008129]" />
-                  <span>Get Directions</span>
-                </a>
-              </div>
-            </div>
+            <VenueImageSlider />
           </motion.div>
         </div>
       </section>

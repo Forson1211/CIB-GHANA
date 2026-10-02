@@ -30,6 +30,7 @@ import { SpeakerModal } from '../components/events/SpeakerModal';
 import { AgendaTimeline } from '../components/events/AgendaTimeline';
 import { GalleryLightbox } from '../components/events/GalleryLightbox';
 import { CountdownTimer } from '../components/ui/CountdownTimer';
+import { VenueImageSlider } from '../components/home/VenueImageSlider';
 import { Speaker } from '../types';
 import { MOCK_EVENTS, MOCK_SPEAKERS } from '../data/mockData';
 
@@ -560,42 +561,16 @@ export const EventDetails: React.FC = () => {
       {/* 6. THE VENUE SHOWCASE */}
       <section className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6">
         <div className="text-left space-y-2 max-w-2xl">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#008129]">
+          <span className="text-xs font-black uppercase tracking-widest text-[#FFE500]">
             THE VENUE
           </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-cib-charcoal-900 font-display text-left">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display text-left tracking-tight">
             Aqua Safari, Ada
           </h2>
-          <div className="w-12 h-1 bg-[#008129] rounded-none" />
         </div>
 
-        {/* Venue Showcase Card */}
-        <div className="relative rounded-none overflow-hidden border border-slate-200 shadow-xl group w-full">
-          <div className="relative h-[340px] sm:h-[440px] w-full overflow-hidden">
-            <img
-              src="/aqua-safari-deck.jpg"
-              alt="Aqua Safari Resort, Ada"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
-
-            {/* Overlaid Badges & Buttons */}
-            <div className="absolute bottom-6 left-6 right-6 flex flex-wrap items-center gap-3">
-              <span className="inline-flex items-center px-3 py-1.5 bg-[#F5A623] text-black font-black text-xs uppercase tracking-wider">
-                OFFICIAL LOCATION
-              </span>
-              <a
-                href="https://maps.google.com/?q=Aqua+Safari+Resort+Ada+Foah+Ghana"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-slate-900 text-xs font-bold transition-all shadow-md active:scale-95"
-              >
-                <Navigation className="w-3.5 h-3.5 text-[#008129]" />
-                <span>Get Directions</span>
-              </a>
-            </div>
-          </div>
-        </div>
+        {/* Venue Showcase Slider */}
+        <VenueImageSlider />
       </section>
 
 

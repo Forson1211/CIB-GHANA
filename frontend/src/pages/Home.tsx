@@ -78,10 +78,10 @@ export const Home: React.FC = () => {
       }
     };
 
-    // Seamless loop: seamlessly reset to start right before EOF to prevent browser EOF buffering pause
+    // Seamless loop: reset back to start well before EOF to prevent browser EOF buffering pause
     const handleTimeUpdate = () => {
-      if (v.duration && v.currentTime >= v.duration - 0.25) {
-        v.currentTime = 0.01;
+      if (v.duration && v.currentTime >= v.duration - 0.8) {
+        v.currentTime = 0;
         ensurePlaying();
       }
     };

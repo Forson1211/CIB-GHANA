@@ -47,7 +47,7 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
           >
             <div
               onClick={() => leader.rawSpeaker && onSelectSpeaker?.(leader.rawSpeaker)}
-              className="relative w-full max-w-[480px] aspect-[4/5] bg-slate-950 border border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
+              className="relative w-[280px] sm:w-full max-w-[480px] aspect-[4/5] bg-slate-950 border border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
             >
               {leader.photo_url ? (
                 <img

@@ -215,7 +215,6 @@ export const Navbar: React.FC = () => {
               backdropFilter: 'blur(24px) saturate(180%)',
               WebkitBackdropFilter: 'blur(24px) saturate(180%)',
               boxShadow: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.18), 0 8px 32px 0 rgba(0, 0, 0, 0.3)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
             }
           : undefined
       }
@@ -347,8 +346,6 @@ export const Navbar: React.FC = () => {
               backgroundColor: 'rgba(13, 58, 33, 0.97)',
               backdropFilter: 'blur(20px) saturate(160%)',
               WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-              borderTop: '1px solid rgba(255,255,255,0.10)',
-              borderBottom: '1px solid rgba(255,255,255,0.10)',
             }}
           >
             {/* Nav items */}

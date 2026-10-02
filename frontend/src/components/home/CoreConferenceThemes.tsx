@@ -106,8 +106,8 @@ export const CoreConferenceThemes: React.FC = () => {
     },
     {
       id: 'leveraging-future-money',
-      title: 'Leveraging the Future of Money',
-      subtitle: 'Harnessing digital rails, sovereign payments & financial infrastructure',
+      title: 'Leveraging AI in Banking',
+      subtitle: 'Harnessing artificial intelligence to drive smarter decisions, fraud prevention & financial innovation',
       icon: <Landmark className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },
     {
@@ -138,7 +138,7 @@ export const CoreConferenceThemes: React.FC = () => {
 
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Top Header Left-Aligned with Navbar & Hero Left Margin */}
-        <div className="text-left space-y-2 mb-12 sm:mb-16">
+        <div className="text-center space-y-2 mb-12 sm:mb-16">
           <p className="text-xs sm:text-sm uppercase tracking-widest font-black text-[#FFE500]">
             THEME: BANKING ON THE FUTURE
           </p>

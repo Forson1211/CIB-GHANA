@@ -599,7 +599,8 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
           Corporate Members
         </h2>
         <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-3xl">
-          Official commercial banks in Ghana, central bank regulators, and financial institutions.
+          Licensed CIB Ghana member institutions committed to professional excellence and ethical banking.
+
         </p>
       </div>
 

@@ -59,6 +59,15 @@ export const Speakers: React.FC = () => {
     return ['ALL', ...Array.from(set)];
   }, [speakers]);
 
+  const SPEAKER_PRIORITY: Record<string, number> = {
+    'spk-president': 1,
+    'spk-asiama': 2,
+    'spk-haruna': 3,
+    'spk-sam-george': 4,
+    'spk-2': 5,
+    'spk-ahiati': 6,
+  };
+
   // Filter and sort speakers
   const filteredSpeakers = useMemo(() => {
     const list = speakers.filter((spk) => {
@@ -80,8 +89,11 @@ export const Speakers: React.FC = () => {
       return matchesExpertise && matchesQuery;
     });
 
-    // Make sure those with pictures show first!
+    // VIP speakers first (in defined order), then photos-first among the rest
     return list.slice().sort((a, b) => {
+      const pA = SPEAKER_PRIORITY[a.id] ?? 999;
+      const pB = SPEAKER_PRIORITY[b.id] ?? 999;
+      if (pA !== pB) return pA - pB;
       const aHasPhoto = Boolean(a.photo_url && a.photo_url.trim() !== '');
       const bHasPhoto = Boolean(b.photo_url && b.photo_url.trim() !== '');
       if (aHasPhoto && !bHasPhoto) return -1;
@@ -177,7 +189,7 @@ export const Speakers: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6 items-stretch"
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6 items-stretch justify-items-center"
           >
             {filteredSpeakers.map((speaker) => (
               <motion.div

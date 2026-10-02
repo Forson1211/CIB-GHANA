@@ -19,7 +19,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     id: 'spk-president',
     name: 'Dr. Ellen Ohene-Afoakwa',
     slug: 'dr-ellen-ohene-afoakwa',
-    position: 'President',
+    position: 'President / Conference Host',
     organization: 'CIB Ghana',
     country: 'Ghana',
     photo_url: '/dr-ellen-ohene-afoakwa.png',

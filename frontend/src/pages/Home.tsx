@@ -283,15 +283,15 @@ export const Home: React.FC = () => {
         />
 
         {/* Hero Content: Centered in the middle on mobile matching reference, clean on desktop */}
-        <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left flex flex-col items-center md:items-start justify-center space-y-6 sm:space-y-7 w-full my-auto">
+        <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center space-y-6 sm:space-y-7 w-full my-auto">
           {/* Main Title */}
           <motion.div
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="space-y-2 text-center md:text-left mx-auto md:mx-0 max-w-4xl"
+            className="space-y-2 text-center mx-auto max-w-4xl"
           >
-            <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center md:text-left font-display">
+            <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center font-display">
               30th National Banking <br className="hidden sm:block" />
               &amp; Ethics Conference
             </h1>
@@ -302,7 +302,7 @@ export const Home: React.FC = () => {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            className="flex flex-wrap items-center justify-center md:justify-start gap-4 sm:gap-6 text-left mx-auto md:mx-0"
+            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-left mx-auto"
           >
             {/* Date Block (On One Line) */}
             <div className="flex items-center text-left font-black select-none whitespace-nowrap">
@@ -331,7 +331,7 @@ export const Home: React.FC = () => {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-            className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3.5 sm:gap-4 pt-3 sm:pt-4 w-full sm:w-auto mx-auto md:mx-0"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 pt-3 sm:pt-4 w-full sm:w-auto mx-auto"
           >
             {/* First Button: Full Green */}
             <Link
@@ -350,7 +350,7 @@ export const Home: React.FC = () => {
               to={`/events/${featuredEvent?.slug || '30th-national-banking-ethics-conference-2026'}`}
               className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
-              ABOUT EVENT
+              PROGRAM OUTLINE
             </Link>
           </motion.div>
         </div>
@@ -416,9 +416,9 @@ export const Home: React.FC = () => {
               Why Attend?
             </h2>
             <p className="text-white/90 text-sm sm:text-base max-w-2xl font-medium">
-              Gain practical industry knowledge, meet banking leaders, and advance your career.
+              Create new connections through networking, understanding mega trends in banking and accelerate in career growth.
             </p>
-            <div className="w-16 h-1 bg-[#FFE500] rounded-none mt-2" />
+
           </motion.div>
 
           <motion.div
@@ -452,7 +452,7 @@ export const Home: React.FC = () => {
               },
               {
                 title: 'GROW',
-                subtitle: 'CPD & Career Mastery',
+                subtitle: 'Career & Business',
                 icon: TrendingUp,
                 color: 'text-emerald-600',
                 border: 'hover:border-emerald-400/40',
@@ -498,15 +498,9 @@ export const Home: React.FC = () => {
           variants={fadeInUp}
           className="text-left max-w-[1380px] mx-auto space-y-2 px-4 sm:px-6 lg:px-8 relative z-10"
         >
-          <span className="text-xs font-black uppercase tracking-widest text-[#FFE500]">
-            EXPLORE IMAGES &amp; ARCHIVE
-          </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display text-left tracking-tight">
-            VENUE HIGHLIGHTS
+            Explore Previous Events &amp; Archives
           </h2>
-          <p className="text-white/85 text-sm sm:text-base max-w-2xl text-left font-normal leading-relaxed">
-            Experience the scenic surroundings, waterfront amenities, and executive ambiance of Aqua Safari Resort, Ada.
-          </p>
         </motion.div>
 
         {/* 3-Row Continuous Swiping Photo Marquee */}

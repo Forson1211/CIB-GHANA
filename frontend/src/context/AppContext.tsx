@@ -54,9 +54,9 @@ const STORAGE_KEY_USER = 'cib_ghana_current_user_v1';
 const STORAGE_KEY_REG_EMAIL = 'cib_ghana_registered_email_v1';
 const STORAGE_KEY_REG_NAME = 'cib_ghana_registered_name_v1';
 const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
-// v11: Unified UUID persistence, zero name-based purging, instant Supabase & localStorage sync
-const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v11';
-const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v11';
+// v12: Force re-seed to pick up position updates (President / Conference Host)
+const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v12';
+const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v12';
 const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v4';
 
 export const PURGED_MOCK_SPEAKER_IDS = new Set([
@@ -133,6 +133,19 @@ export const isSameSponsor = (
   return false;
 };
 
+// Priority order for VIP speakers — lower number = higher priority
+const SPEAKER_PRIORITY: Record<string, number> = {
+  'spk-president': 1,   // President
+  'spk-asiama': 2,      // Governor
+  'spk-haruna': 3,      // Education Minister
+  'spk-sam-george': 4,  // Comm & Tech Minister
+  'spk-2': 5,           // CEO (Dzato)
+  'spk-ahiati': 6,      // Doris Ahiati
+};
+
+const getSpeakerPriority = (s: Speaker): number =>
+  SPEAKER_PRIORITY[s.id] ?? 999;
+
 export const deduplicateSpeakers = (list: Speaker[]): Speaker[] => {
   const result: Speaker[] = [];
   for (const s of list) {
@@ -150,8 +163,12 @@ export const deduplicateSpeakers = (list: Speaker[]): Speaker[] => {
       };
     }
   }
-  // Ensure speakers with photos always show first
+  // Sort: VIP priority first, then photos-first among the rest
   return result.sort((a, b) => {
+    const pA = getSpeakerPriority(a);
+    const pB = getSpeakerPriority(b);
+    if (pA !== pB) return pA - pB;
+    // Among non-priority speakers, photos first
     const aHas = Boolean(a.photo_url && a.photo_url.trim() !== '');
     const bHas = Boolean(b.photo_url && b.photo_url.trim() !== '');
     if (aHas && !bHas) return -1;
@@ -214,8 +231,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         'cib_ghana_speakers_v7',
         'cib_ghana_speakers_v6',
         'cib_ghana_speakers_v5',
+        'cib_ghana_speakers_v11',
         'cib_ghana_deleted_spk_ids_v8',
         'cib_ghana_deleted_spk_ids_v7',
+        'cib_ghana_deleted_spk_ids_v11',
         'cib_ghana_events_v6',
         'cib_ghana_events_v5',
       ].forEach((key) => localStorage.removeItem(key));
@@ -924,12 +943,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         const isKeynote = remote.is_keynote !== undefined ? Boolean(remote.is_keynote) : Boolean(s.is_keynote);
         const speakerType: SpeakerType = isKeynote ? 'KEYNOTE' : 'PANEL';
+        // For known mock speakers, prefer the local position (so code updates win over stale Supabase values)
+        const positionToUse = !isAdminCreatedSpeaker(s.id) ? (s.position || remote.position || '') : (remote.position || s.position || '');
         return {
           ...s,
           id: remote.id || s.id,
           photo_url: photoToUse,
           name: remote.name || s.name || '',
-          position: remote.position || s.position || '',
+          position: positionToUse,
           organization: remote.organization || s.organization || '',
           biography: remote.biography || s.biography || '',
           country: remote.country || s.country || 'Ghana',

@@ -22,7 +22,7 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
     );
     return {
       name: found?.name || 'Dr. Ellen Ohene-Afoakwa',
-      position: found?.position || 'President',
+      position: found?.position || 'President / Conference Host',
       organization: found?.organization || 'CIB Ghana',
       photo_url: found?.photo_url || DEFAULT_PRESIDENT_PHOTO,
       rawSpeaker: found,
@@ -92,8 +92,8 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
                 <h3 className="text-xl sm:text-2xl font-black text-[#FFE500] tracking-tight font-display">
                   {leader.name}
                 </h3>
-                <p className="text-sm sm:text-base font-semibold text-white/95 leading-snug">
-                  {leader.position}
+                <p className="text-sm sm:text-base font-semibold text-white/95 leading-snug font-sans">
+                  President / Conference Host
                 </p>
                 <p className="text-xs sm:text-sm font-medium text-white/75">
                   {leader.organization}

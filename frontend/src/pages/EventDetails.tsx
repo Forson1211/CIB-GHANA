@@ -3,7 +3,6 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp, isPurgedMockSpeaker } from '../context/AppContext';
 import { formatDateRange, formatGHS } from '../lib/utils';
 import {
-  Calendar,
   MapPin,
   Users,
   Award,
@@ -13,9 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
   ArrowRight,
-  Clock,
   Layers,
-  ChevronRight,
   Navigation,
   Copy,
   Check,
@@ -24,7 +21,6 @@ import {
   Ticket
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { Badge, AttendanceTypeBadge, EventStatusBadge } from '../components/ui/Badge';
 import { SpeakerCard } from '../components/events/SpeakerCard';
 import { SpeakerModal } from '../components/events/SpeakerModal';
 import { AgendaTimeline } from '../components/events/AgendaTimeline';
@@ -92,6 +88,46 @@ export const EventDetails: React.FC = () => {
     return pool.filter((s) => !isPurgedMockSpeaker(s));
   }, [speakers]);
 
+  // Clean deduplicated display location
+  const displayLocation = useMemo(() => {
+    if (!event) return '';
+    const v = event.venue?.includes('Kempinski') ? 'Aqua Safari, Ada' : (event.venue || '');
+    const l = event.venue?.includes('Kempinski') ? 'Ada, Ghana' : (event.location || '');
+    if (!l) return v;
+    if (!v) return l;
+    if (v.toLowerCase().includes(l.toLowerCase())) return v;
+    if (l.toLowerCase().includes(v.toLowerCase())) return l;
+    return `${v}, ${l}`;
+  }, [event]);
+
+  // Main conference detection and structured hero labels matching Home screen
+  const isMainConference = useMemo(() => {
+    return (
+      event?.slug?.includes('30th-national-banking') ||
+      event?.title?.toLowerCase().includes('banking') ||
+      event?.title?.toLowerCase().includes('30th')
+    );
+  }, [event]);
+
+  const heroDate = useMemo(() => {
+    if (isMainConference) return '9 – 10 NOV, 2026';
+    return formatDateRange(event?.start_date, event?.end_date).toUpperCase();
+  }, [isMainConference, event]);
+
+  const heroVenue = useMemo(() => {
+    if (isMainConference) {
+      return {
+        title: 'Aqua Safari Resort',
+        subtitle: 'Volta River in Big Ada',
+      };
+    }
+    const venueParts = (event?.venue || 'Aqua Safari Resort').split(',');
+    return {
+      title: venueParts[0]?.trim() || 'Aqua Safari Resort',
+      subtitle: event?.location || 'Ada, Ghana',
+    };
+  }, [isMainConference, event]);
+
   // Determine if the visitor is already a registered delegate for this event
   const userRegistration = useMemo(() => {
     const activeEmail = registeredUserEmail || localStorage.getItem('cib_ghana_registered_email_v1');
@@ -126,9 +162,9 @@ export const EventDetails: React.FC = () => {
   const spotsLeft = Math.max(0, (event?.capacity || 650) - (event?.registered_count || 0));
   const isRegistrationOpen = event?.status === 'OPEN_FOR_REGISTRATION';
 
-  // Ensure rich 2-day conference itinerary is always fully restored & rendered
+  // Ensure rich 3-day conference itinerary is always fully restored & rendered
   const defaultAgenda = MOCK_EVENTS.find((m) => m.id === event?.id)?.agenda || fallbackEvent?.agenda || [];
-  const hasLatestSchedule = event?.agenda && event.agenda.some((s) => s.id === 'ag-d1-1' || s.title === 'REGISTRATION' || s.title?.includes('Deploying AI'));
+  const hasLatestSchedule = event?.agenda && event.agenda.some((s) => s.id?.includes('ag-d0-1') || s.title?.includes('Till Mama Calls') || s.title?.includes('Arrival of participants'));
 
   const effectiveAgenda = (event?.agenda && event.agenda.length > 0 && hasLatestSchedule)
     ? event.agenda
@@ -142,118 +178,111 @@ export const EventDetails: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0D3A21] text-white space-y-16 sm:space-y-24 pb-20">
-      {/* 1. CINEMATIC EVENT HERO (Requirement #16 & #47) */}
-      <section className="relative min-h-[75vh] flex items-center bg-[#032616] text-white overflow-hidden">
-        {/* Background Visual - Aqua Safari Resort Banner (Bright & Clear) */}
-        <div className="absolute inset-0 z-0">
+      {/* 1. CINEMATIC EVENT HERO (Simple & Neat without gradients) */}
+      <section className="relative min-h-[70vh] sm:min-h-[600px] flex flex-col items-center justify-center overflow-hidden bg-slate-950 text-white py-16 sm:py-24 px-4">
+        {/* Background Visual - Aqua Safari Resort Banner (Clean & Natural, No Gradients) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
           <img
             src="/aqua-safari-night.jpg"
             alt={event.title}
-            className="w-full h-full object-cover brightness-[0.82] contrast-105"
+            className="w-full h-full object-cover brightness-[0.65] contrast-105"
           />
-          {/* Subtle soft gradient only on the left/bottom to maintain text legibility while letting the resort image shine */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#021a0f]/65 via-[#021a0f]/30 via-40% to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#021a0f]/40 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-black/35" />
         </div>
 
-        <div className="relative z-10 w-full max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-6 text-left">
-          {/* Breadcrumb Navigation */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-slate-300">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <Link to="/events" className="hover:text-white transition-colors">Events</Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-[#FFE500] truncate max-w-xs">{event.category}</span>
+        {/* Hero Content: Centered on mobile & desktop matching Home reference */}
+        <div className="relative z-10 max-w-[1380px] mx-auto px-2 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center space-y-4 sm:space-y-7 w-full my-auto">
+          {/* Main Title */}
+          <div className="space-y-2 text-center mx-auto max-w-4xl">
+            <h1 className="text-[28px] xs:text-[34px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-black text-white tracking-tight leading-[1.15] text-center font-display">
+              {isMainConference ? (
+                <>
+                  30th National Banking <br />
+                  &amp; Ethics Conference
+                </>
+              ) : (
+                event.title
+              )}
+            </h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="gold" size="md" className="bg-amber-400/20 text-[#FFE500] border-amber-400/30">
-              {event.category}
-            </Badge>
-            <AttendanceTypeBadge type={event.event_type} />
-            <EventStatusBadge status={event.status} />
-          </div>
-
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black font-display tracking-tight text-white max-w-4xl leading-[1.12] drop-shadow-lg">
-            {event.title}
-          </h1>
-
-          {event.tagline && (
-            <p className="text-base sm:text-xl text-emerald-100 font-semibold max-w-3xl leading-relaxed drop-shadow-md">
-              {event.tagline}
-            </p>
-          )}
-
-          {/* Schedule & Location Pills */}
-          <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm font-semibold text-slate-200 pt-2">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-[#FFE500]" />
-              <span>{formatDateRange(event.start_date, event.end_date)}</span>
+          {/* Subtitle / Date & Location in Blocks with Dividing Line (Always side-by-side on all devices) */}
+          <div className="flex flex-nowrap items-center justify-center gap-2.5 xs:gap-3.5 sm:gap-6 text-left mx-auto max-w-full px-1">
+            {/* Date Block */}
+            <div className="flex items-center text-left font-black select-none whitespace-nowrap shrink-0">
+              <span className="text-[15px] xs:text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight">
+                {heroDate}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#FFE500]" />
-              <span>{event.start_time} – {event.end_time} GMT</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#FFE500]" />
-              <span>
-                {event.venue?.includes('Kempinski') ? 'Aqua Safari, Ada' : event.venue}, {event.venue?.includes('Kempinski') ? 'Ada, Ghana' : event.location}
+
+            {/* Vertical Dividing Line */}
+            <div className="w-[1.5px] sm:w-[2px] h-8 sm:h-12 bg-white/40 shrink-0" />
+
+            {/* Location Block */}
+            <div className="flex flex-col text-left justify-center shrink-0">
+              <span className="text-[13px] xs:text-base sm:text-lg md:text-xl font-bold text-white tracking-wide leading-tight whitespace-nowrap">
+                {heroVenue.title}
+              </span>
+              <span className="text-[10px] xs:text-xs sm:text-sm md:text-base text-white/90 font-medium tracking-wide mt-0.5 whitespace-nowrap">
+                {heroVenue.subtitle}
               </span>
             </div>
           </div>
 
-          {/* Hero Action Row (Conditional on whether user is already registered) */}
-          <div className="pt-4 flex flex-wrap items-center gap-4">
+          {/* Two Action Buttons: Stacked full-width on mobile, inline on desktop */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-2 sm:pt-4 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-none sm:w-auto mx-auto">
+            {/* First Button: Full Green */}
             {isUserRegistered ? (
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigate(ticketUrl)}
-                  className="inline-flex flex-row items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-105 active:scale-95 text-white font-bold text-sm shadow-md transition-all duration-200 cursor-pointer whitespace-nowrap"
-                >
-                  <Ticket className="w-4 h-4 text-white shrink-0" />
-                  <span>View Ticket</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-white shrink-0" />
-                </button>
-                <div className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-300" />
-                  <span>
-                    Accredited:{' '}
-                    <strong className="font-mono text-amber-300">
-                      {userRegistration?.registration_number || effectiveRegNumber}
-                    </strong>
-                  </span>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => navigate(ticketUrl)}
+                className="w-full sm:w-auto px-6 sm:px-10 py-3.5 bg-[#008129] hover:bg-[#006e22] active:scale-95 text-white font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap cursor-pointer"
+              >
+                ACCESS EVENT PASS
+              </button>
             ) : (
-              isRegistrationOpen && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button
-                    variant="accent"
-                    size="xl"
-                    showArrow
-                    onClick={() => navigate(`/events/${event.slug}/register`)}
-                  >
-                    Register Now &bull; {formatGHS(event.registration_fee)}
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => setShowUnlockModal(true)}
-                    className="inline-flex items-center gap-2 px-5 py-4 rounded-xl border border-white/30 hover:border-emerald-400 bg-white/10 hover:bg-emerald-600/30 text-white font-bold transition-all text-sm backdrop-blur-md cursor-pointer"
-                  >
-                    <KeyRound className="w-4 h-4 text-emerald-300" />
-                    <span>Already Registered? Unlock</span>
-                  </button>
-                </div>
-              )
+              <Link
+                to={`/events/${event.slug}/register`}
+                className="w-full sm:w-auto px-6 sm:px-10 py-3.5 bg-[#008129] hover:bg-[#006e22] active:scale-95 text-white font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
+              >
+                REGISTER NOW
+              </Link>
             )}
+
+            {/* Second Button: Full Yellow */}
             <a
               href="#agenda"
-              className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border border-white/20 hover:border-white text-white text-base font-bold transition-colors bg-white/5"
+              className="w-full sm:w-auto px-6 sm:px-10 py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
-              View Agenda
+              PROGRAM OUTLINE
             </a>
           </div>
+
+          {/* Subtle Unlock / Credential indicator underneath buttons */}
+          {isUserRegistered ? (
+            <div className="flex items-center justify-center gap-2 pt-1 text-xs text-white/80">
+              <ShieldCheck className="w-4 h-4 text-emerald-300" />
+              <span>
+                Accredited Pass:{' '}
+                <strong className="font-mono text-[#FFE500]">
+                  {userRegistration?.registration_number || effectiveRegNumber}
+                </strong>
+              </span>
+            </div>
+          ) : (
+            isRegistrationOpen && (
+              <button
+                type="button"
+                onClick={() => setShowUnlockModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 text-xs text-white/80 hover:text-white pt-1 font-medium tracking-wide transition-colors cursor-pointer"
+              >
+                <KeyRound className="w-3.5 h-3.5 text-[#FFE500]" />
+                <span className="underline underline-offset-4 decoration-white/40 hover:decoration-white">
+                  Already Registered? Unlock Ticket
+                </span>
+              </button>
+            )
+          )}
         </div>
       </section>
 
@@ -544,7 +573,7 @@ export const EventDetails: React.FC = () => {
               CONFERENCE AGENDA
             </h2>
             <p className="text-emerald-100 text-xs sm:text-sm max-w-2xl font-medium">
-              Explore keynotes, regulatory addresses, CEO panel debates, and executive sessions scheduled across Day One and Day Two.
+              Explore keynotes, regulatory addresses, masterclasses, mentorship sessions, and executive networking scheduled across Sunday Arrival, Day One, and Day Two.
             </p>
           </div>
 

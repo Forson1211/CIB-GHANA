@@ -111,7 +111,7 @@ export const VenueImageSlider: React.FC<VenueImageSliderProps> = ({ className = 
 
   return (
     <div
-      className={`relative w-full rounded-none overflow-hidden border border-white/15 shadow-2xl group select-none bg-black ${className}`}
+      className={`relative w-full rounded-none overflow-hidden border-0 sm:border sm:border-white/15 shadow-2xl group select-none bg-black ${className}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={() => setIsHovered(true)}

@@ -141,7 +141,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
               </div>
 
               {/* Center Active Photo (Square Image sliding to left) */}
-              <div className="relative z-10 w-[72%] max-w-[280px] aspect-square shrink-0 overflow-hidden shadow-2xl border border-white/20 rounded-none bg-white flex items-center justify-center">
+              <div className="relative z-10 w-[72%] max-w-[280px] aspect-square shrink-0 overflow-hidden shadow-2xl rounded-none bg-white flex items-center justify-center">
                 <AnimatePresence mode="popLayout" custom={direction}>
                   <motion.div
                     key={currentSpeaker.id}

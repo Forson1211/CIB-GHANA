@@ -828,7 +828,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const merged = targetList.map((be) => {
             const local = prev.find((pe) => pe.id === be.id);
             const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
-            const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id === 'ag-d1-1' || s.title === 'REGISTRATION' || s.title?.includes('Deploying AI'));
+            const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id?.includes('ag-d0-1') || s.title?.includes('Till Mama Calls') || s.title?.includes('Arrival of participants'));
             if (!local) {
               return {
                 ...be,
@@ -873,7 +873,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const merged = targetList.map((be) => {
               const local = prev.find((pe) => pe.id === be.id);
               const defaultAgenda = MOCK_EVENTS.find((m) => m.id === be.id)?.agenda || MOCK_EVENTS[0].agenda;
-              const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id === 'ag-d1-1' || s.title === 'REGISTRATION' || s.title?.includes('Deploying AI'));
+              const isUpToDate = (ag?: any[]) => ag && ag.some((s) => s.id?.includes('ag-d0-1') || s.title?.includes('Till Mama Calls') || s.title?.includes('Arrival of participants'));
               if (!local) {
                 return {
                   ...be,

@@ -199,19 +199,19 @@ export const Navbar: React.FC = () => {
 
   return (
     <header
-      className={`transition-all duration-300 z-50 ${
+      className={`z-50 ${
         isHomePage
-          ? `fixed top-0 left-0 right-0 ${
+          ? `fixed top-0 left-0 right-0 transition-[background-color,box-shadow] duration-200 ${
               isScrolled || mobileMenuOpen
-                ? 'py-2 sm:py-2.5'
-                : 'bg-transparent border-none py-4 sm:py-5'
+                ? 'py-2.5 lg:py-2.5'
+                : 'bg-transparent border-none py-2.5 lg:py-4 xl:py-5'
             }`
           : 'sticky top-0 py-2.5 sm:py-3'
       }`}
       style={
         isScrolled || mobileMenuOpen || !isHomePage
           ? {
-              backgroundColor: 'rgba(13, 58, 33, 0.70)',
+              backgroundColor: 'rgba(13, 58, 33, 0.97)',
               backdropFilter: 'blur(24px) saturate(180%)',
               WebkitBackdropFilter: 'blur(24px) saturate(180%)',
               boxShadow: 'inset 0 1px 1px 0 rgba(255, 255, 255, 0.18), 0 8px 32px 0 rgba(0, 0, 0, 0.3)',
@@ -230,7 +230,7 @@ export const Navbar: React.FC = () => {
             <img
               src="/cib-official-logo.png"
               alt="Chartered Institute of Bankers, Ghana"
-              className="h-16 sm:h-16 md:h-16 lg:h-[68px] w-auto max-h-[72px] object-contain hover:brightness-105 transition-all"
+              className="h-14 sm:h-16 lg:h-[68px] w-auto max-h-[72px] object-contain hover:brightness-105 transition-opacity"
             />
           </Link>
 
@@ -274,7 +274,7 @@ export const Navbar: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 3 }}
                         transition={{ duration: 0.12, ease: 'easeOut' }}
-                        className="bg-[#0D3A21] border border-[#1b5835] shadow-2xl py-1 rounded-none"
+                        className="bg-[#0D3A21] shadow-2xl py-1 rounded-none"
                       >
                         {menu.links.map((link) => (
                           <Link
@@ -321,7 +321,7 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="p-2 sm:p-2.5 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] active:scale-95 rounded-none shadow-md focus:outline-none transition-all flex items-center justify-center cursor-pointer"
+              className="w-10 h-10 sm:w-11 sm:h-11 text-slate-950 bg-[#FFE500] hover:bg-[#fad800] rounded-none shadow-md focus:outline-none transition-colors flex items-center justify-center cursor-pointer shrink-0"
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
             >
               {mobileMenuOpen

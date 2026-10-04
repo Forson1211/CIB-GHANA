@@ -51,14 +51,14 @@ export const SecurePlaceCtaBanner: React.FC<SecurePlaceCtaBannerProps> = ({
 
       {/* Content Container */}
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 lg:gap-10">
+        <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 lg:gap-10 text-center md:text-left">
           {/* Left Text Block */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.5, ease: [0.25, 1, 0.5, 1] }}
-            className="text-left space-y-2 max-w-3xl"
+            className="text-center md:text-left space-y-2 max-w-3xl mx-auto md:mx-0"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black font-display text-white tracking-tight leading-tight">
               Secure your Place at 2026 Conference
@@ -76,7 +76,7 @@ export const SecurePlaceCtaBanner: React.FC<SecurePlaceCtaBannerProps> = ({
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true, amount: 0.4 }}
             transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
-            className="shrink-0 self-start md:self-center"
+            className="shrink-0 self-center md:self-center mx-auto md:mx-0"
           >
             <Link
               to={`/register?event=${featuredEvent?.id || eventId}`}

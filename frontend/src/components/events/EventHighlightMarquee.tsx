@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 
@@ -143,6 +143,26 @@ export const EventHighlightMarquee: React.FC = () => {
     setSelectedPhoto(ALL_PHOTOS[newIdx]);
   };
 
+  // Keyboard navigation & scroll lock when lightbox is active
+  useEffect(() => {
+    if (!selectedPhoto) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') prevPhoto();
+      if (e.key === 'ArrowRight') nextPhoto();
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selectedPhoto, currentIndex]);
+
   return (
     <div className="relative w-full overflow-hidden py-4 space-y-4 sm:space-y-6">
       {/* ROW 1: SWIPES TO RIGHT */}
@@ -152,7 +172,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r1-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
+              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -180,7 +200,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r2-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-48 sm:w-60 md:w-72 h-60 sm:h-[300px] md:h-[360px] aspect-[4/5] shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
+              className="w-48 sm:w-60 md:w-72 h-60 sm:h-[300px] md:h-[360px] aspect-[4/5] shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -208,7 +228,7 @@ export const EventHighlightMarquee: React.FC = () => {
             <div
               key={`r3-${idx}`}
               onClick={() => openLightbox(photo)}
-              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border border-white/10 hover:border-emerald-400/50 group relative"
+              className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
                 src={photo.image_url}
@@ -232,57 +252,83 @@ export const EventHighlightMarquee: React.FC = () => {
       {/* Lightbox Modal */}
       <AnimatePresence>
         {selectedPhoto && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/95 backdrop-blur-md">
-            {/* Close Button */}
-            <button
-              onClick={closeLightbox}
-              className="absolute top-5 right-5 p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-              aria-label="Close Lightbox"
-            >
-              <X className="w-6 h-6" />
-            </button>
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeLightbox();
+            }}
+            className="fixed inset-0 z-[99999] flex flex-col items-center justify-between p-3 sm:p-6 md:p-8 bg-black/95 backdrop-blur-xl select-none"
+          >
+            {/* Top Bar with Counter & Prominent Close Button */}
+            <div className="w-full max-w-5xl flex items-center justify-between z-30 pt-1 pb-2">
+              <span className="text-xs sm:text-sm font-bold text-white/90 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15">
+                Photo {currentIndex + 1} of {ALL_PHOTOS.length}
+              </span>
 
-            {/* Left Prev Arrow */}
-            <button
-              onClick={prevPhoto}
-              className="absolute left-4 sm:left-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-              aria-label="Previous image"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+              {/* Close Button - Highly visible on both mobile & desktop */}
+              <button
+                type="button"
+                onClick={closeLightbox}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-slate-950 hover:bg-[#FFE500] hover:text-slate-950 font-black text-xs sm:text-sm shadow-2xl transition-all active:scale-95 cursor-pointer border border-white"
+                aria-label="Close Lightbox"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                <span>Close</span>
+              </button>
+            </div>
 
-            {/* Right Next Arrow */}
-            <button
-              onClick={nextPhoto}
-              className="absolute right-4 sm:right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-              aria-label="Next image"
+            {/* Main Center Area with Nav Arrows + Image */}
+            <div
+              onClick={(e) => {
+                if (e.target === e.currentTarget) closeLightbox();
+              }}
+              className="relative w-full flex-1 flex items-center justify-center min-h-0 py-2 sm:py-4"
             >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+              {/* Left Prev Arrow */}
+              <button
+                type="button"
+                onClick={prevPhoto}
+                className="absolute left-1 sm:left-4 md:left-6 p-2.5 sm:p-3.5 rounded-full bg-black/60 hover:bg-[#008129] border border-white/20 text-white transition-all z-20 shadow-xl active:scale-95 cursor-pointer"
+                aria-label="Previous image"
+              >
+                <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+              </button>
 
-            {/* Main Lightbox Image & Caption */}
-            <motion.div
-              key={selectedPhoto.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="relative max-w-4xl max-h-[85vh] flex flex-col items-center z-10"
-            >
-              <img
-                src={selectedPhoto.image_url}
-                alt={selectedPhoto.caption}
-                className="max-h-[75vh] w-auto object-contain rounded-2xl shadow-2xl border border-white/10"
-              />
-              <div className="mt-4 text-center px-4">
-                <p className="text-white font-bold text-base sm:text-lg">
-                  {selectedPhoto.caption}
-                </p>
-                <p className="text-xs text-[#F5A623] font-semibold mt-1">
-                  Photo {currentIndex + 1} of {ALL_PHOTOS.length} &bull; CIB Ghana Archive
-                </p>
-              </div>
-            </motion.div>
+              {/* Right Next Arrow */}
+              <button
+                type="button"
+                onClick={nextPhoto}
+                className="absolute right-1 sm:right-4 md:right-6 p-2.5 sm:p-3.5 rounded-full bg-black/60 hover:bg-[#008129] border border-white/20 text-white transition-all z-20 shadow-xl active:scale-95 cursor-pointer"
+                aria-label="Next image"
+              >
+                <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+              </button>
+
+              {/* Main Image Container */}
+              <motion.div
+                key={selectedPhoto.id}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.2 }}
+                className="relative max-w-4xl max-h-full flex flex-col items-center z-10 px-2 sm:px-4"
+              >
+                <img
+                  src={selectedPhoto.image_url}
+                  alt={selectedPhoto.caption}
+                  className="max-h-[62vh] sm:max-h-[70vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                />
+              </motion.div>
+            </div>
+
+            {/* Bottom Caption Bar */}
+            <div className="w-full max-w-3xl text-center px-4 pt-2 pb-3 z-20 space-y-1">
+              <p className="text-white font-bold text-sm sm:text-base md:text-lg leading-snug">
+                {selectedPhoto.caption}
+              </p>
+              <p className="text-xs text-[#FFE500] font-bold">
+                CIB Ghana Official Archive &bull; Ada, Ghana
+              </p>
+            </div>
           </div>
         )}
       </AnimatePresence>

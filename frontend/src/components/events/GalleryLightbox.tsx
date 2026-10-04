@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EventGalleryItem } from '../../types';
 import { X, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,6 +24,26 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ items }) => {
     if (selectedIndex === null) return;
     setSelectedIndex((selectedIndex + 1) % items.length);
   };
+
+  // Keyboard navigation & scroll lock when lightbox is active
+  useEffect(() => {
+    if (selectedIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === 'ArrowRight') nextImage();
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selectedIndex, items.length]);
 
   return (
     <div>
@@ -57,61 +77,87 @@ export const GalleryLightbox: React.FC<GalleryLightboxProps> = ({ items }) => {
       {/* Lightbox Modal */}
       <AnimatePresence>
         {selectedIndex !== null && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/90 backdrop-blur-md">
-            {/* Close Button */}
-            <button
-              onClick={closeLightbox}
-              className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-              aria-label="Close Lightbox"
-            >
-              <X className="w-6 h-6" />
-            </button>
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeLightbox();
+            }}
+            className="fixed inset-0 z-[99999] flex flex-col items-center justify-between p-3 sm:p-6 md:p-8 bg-black/95 backdrop-blur-xl select-none"
+          >
+            {/* Top Bar with Counter & Prominent Close Button */}
+            <div className="w-full max-w-5xl flex items-center justify-between z-30 pt-1 pb-2">
+              <span className="text-xs sm:text-sm font-bold text-white/90 bg-white/10 px-3.5 py-1.5 rounded-full border border-white/15">
+                Photo {selectedIndex + 1} of {items.length}
+              </span>
 
-            {/* Left Prev Arrow */}
-            {items.length > 1 && (
+              {/* Close Button - Highly visible on both mobile & desktop */}
               <button
-                onClick={prevImage}
-                className="absolute left-4 sm:left-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-                aria-label="Previous image"
+                type="button"
+                onClick={closeLightbox}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-slate-950 hover:bg-[#FFE500] hover:text-slate-950 font-black text-xs sm:text-sm shadow-2xl transition-all active:scale-95 cursor-pointer border border-white"
+                aria-label="Close Lightbox"
               >
-                <ChevronLeft className="w-6 h-6" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                <span>Close</span>
               </button>
-            )}
+            </div>
 
-            {/* Main Lightbox Image & Caption */}
-            <motion.div
-              key={selectedIndex}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="relative max-w-4xl max-h-[85vh] flex flex-col items-center z-10"
+            {/* Main Center Area with Nav Arrows + Image */}
+            <div
+              onClick={(e) => {
+                if (e.target === e.currentTarget) closeLightbox();
+              }}
+              className="relative w-full flex-1 flex items-center justify-center min-h-0 py-2 sm:py-4"
             >
-              <img
-                src={items[selectedIndex].image_url}
-                alt={items[selectedIndex].caption}
-                className="max-h-[75vh] w-auto object-contain rounded-xl shadow-2xl"
-              />
-              <div className="mt-3 text-center px-4">
-                <p className="text-white font-medium text-sm sm:text-base">
-                  {items[selectedIndex].caption}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Photo {selectedIndex + 1} of {items.length}
-                </p>
-              </div>
-            </motion.div>
+              {/* Left Prev Arrow */}
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={prevImage}
+                  className="absolute left-1 sm:left-4 md:left-6 p-2.5 sm:p-3.5 rounded-full bg-black/60 hover:bg-[#008129] border border-white/20 text-white transition-all z-20 shadow-xl active:scale-95 cursor-pointer"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                </button>
+              )}
 
-            {/* Right Next Arrow */}
-            {items.length > 1 && (
-              <button
-                onClick={nextImage}
-                className="absolute right-4 sm:right-8 p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-20"
-                aria-label="Next image"
+              {/* Right Next Arrow */}
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={nextImage}
+                  className="absolute right-1 sm:right-4 md:right-6 p-2.5 sm:p-3.5 rounded-full bg-black/60 hover:bg-[#008129] border border-white/20 text-white transition-all z-20 shadow-xl active:scale-95 cursor-pointer"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+                </button>
+              )}
+
+              {/* Main Lightbox Image */}
+              <motion.div
+                key={selectedIndex}
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.2 }}
+                className="relative max-w-4xl max-h-full flex flex-col items-center z-10 px-2 sm:px-4"
               >
-                <ChevronRight className="w-6 h-6" />
-              </button>
-            )}
+                <img
+                  src={items[selectedIndex].image_url}
+                  alt={items[selectedIndex].caption}
+                  className="max-h-[62vh] sm:max-h-[70vh] w-auto max-w-full object-contain rounded-2xl shadow-2xl border border-white/10"
+                />
+              </motion.div>
+            </div>
+
+            {/* Bottom Caption Bar */}
+            <div className="w-full max-w-3xl text-center px-4 pt-2 pb-3 z-20 space-y-1">
+              <p className="text-white font-bold text-sm sm:text-base md:text-lg leading-snug">
+                {items[selectedIndex].caption}
+              </p>
+              <p className="text-xs text-[#FFE500] font-bold">
+                CIB Ghana Official Archive &bull; Ada, Ghana
+              </p>
+            </div>
           </div>
         )}
       </AnimatePresence>

@@ -23,7 +23,7 @@ export const MOCK_SPEAKERS: Speaker[] = [
     organization: 'CIB Ghana',
     country: 'Ghana',
     photo_url: '/dr-ellen-ohene-afoakwa.png',
-    biography: 'Dr. Ellen Ohene-Afoakwa is the President of the Chartered Institute of Bankers (CIB), Ghana. A visionary financial leader, she champions ethical banking, regulatory governance, and professional excellence across the Ghanaian banking ecosystem.',
+    biography: 'Dr. Ellen Ohene-Afoakwa is the President of the Chartered Institute of Bankers Ghana. A visionary financial leader, she champions ethical banking, regulatory governance, and professional excellence across the Ghanaian banking ecosystem.',
     expertise: ['Executive Leadership', 'Banking Governance', 'Ethics & Compliance', 'Financial Sector Strategy'],
     is_keynote: true,
     speaker_type: 'KEYNOTE',
@@ -624,7 +624,7 @@ Over three intensive days, participants will examine ethical governance amidst m
     category_id: 'cat-1',
     featured_image: '/aqua-safari-night.jpg',
     banner_image: '/aqua-safari-night.jpg',
-    start_date: '2026-11-09',
+    start_date: '2026-11-08',
     end_date: '2026-11-10',
     start_time: '08:30',
     end_time: '17:30',
@@ -668,7 +668,37 @@ Over three intensive days, participants will examine ethical governance amidst m
     speakers: MOCK_SPEAKERS,
     agenda: [
       // ==========================================
-      // DAY 1 — 9 November 2026: Masterclass & Mentorship Corner
+      // Sunday, 8 November — Arrival of Participants
+      // ==========================================
+      {
+        id: 'ag-d0-1',
+        event_id: 'evt-1',
+        day_number: 0,
+        date: '2026-11-08',
+        start_time: '08:00',
+        end_time: '18:00',
+        title: 'Arrival of participants',
+        description: 'Arrival and reception of conference delegates and dignitaries at Aqua Safari Resort.',
+        session_type: 'NETWORKING',
+        room: 'Resort Welcome Reception & Grand Foyer',
+        speaker_ids: []
+      },
+      {
+        id: 'ag-d0-2',
+        event_id: 'evt-1',
+        day_number: 0,
+        date: '2026-11-08',
+        start_time: '18:30',
+        end_time: '21:00',
+        title: 'Till Mama Calls',
+        description: 'Dress code — Oldschool | Vibe: Highlife /Afrobeats/hiplife/80s/90s classics/Throwbacks. Welcome evening cocktail and retro musical mixer.',
+        session_type: 'CEREMONY',
+        room: 'Waterfront Lawn & Terrace',
+        speaker_ids: []
+      },
+
+      // ==========================================
+      // Day 1 — 9 November 2026: Masterclass & Mentorship Corner
       // ==========================================
       {
         id: 'ag-d1-1',
@@ -677,8 +707,8 @@ Over three intensive days, participants will examine ethical governance amidst m
         date: '2026-11-09',
         start_time: '09:00',
         end_time: '10:00',
-        title: 'REGISTRATION & COFFEE RECEPTION',
-        description: 'Badge collection, digital check-in, coffee reception, and exhibition tour.',
+        title: 'REGISTRATION',
+        description: 'Delegate badge pickup, accreditation check-in, and morning coffee reception.',
         session_type: 'NETWORKING',
         room: 'Grand Foyer & Registration Desk',
         speaker_ids: []
@@ -689,59 +719,59 @@ Over three intensive days, participants will examine ethical governance amidst m
         day_number: 1,
         date: '2026-11-09',
         start_time: '10:00',
-        end_time: '10:30',
-        title: 'Megatrends: Virtual Asset, Tokenization and AI',
-        description: 'Keynote Address — Frank Tawiah. Strategic briefing analyzing digital asset evolution, tokenization of banking collateral, and the rise of autonomous financial agents.',
-        session_type: 'KEYNOTE',
-        room: 'Main Conference Hall',
-        speaker_ids: ['spk-tawiah']
+        end_time: '12:00',
+        title: 'Deploying AI to Combat Modern Fraud in International Trade Finance',
+        description: 'Clifford Duke Mettle,FCIB , Rita Elumelu ,FCIB. Executive masterclass on utilizing artificial intelligence and automated fraud detection algorithms within cross-border trade rails.',
+        session_type: 'MASTERCLASS',
+        room: 'Syndicate Hall A',
+        speaker_ids: ['spk-mettle', 'spk-elumelu']
       },
       {
         id: 'ag-d1-3',
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '10:30',
-        end_time: '11:40',
-        title: 'PANEL/Q&A: Megatrends, Tokenization & AI Governance',
-        description: 'Philip Twum, ACIB, Frank Tawiah, Philip Kwaw Sebuabe, Gillian Darko. Interactive panel examination and delegate Q&A exploring virtual asset integration and compliance.',
-        session_type: 'PANEL',
-        room: 'Main Conference Hall',
-        speaker_ids: ['spk-twum', 'spk-tawiah', 'spk-sebuabe']
+        start_time: '10:00',
+        end_time: '12:00',
+        title: 'Cybersecurity and Fraud Detection',
+        description: 'Dr Albert Antwi-Bosiako, Fabiola Amedo (KPMG), Nina Korley (DELOITTE). Advanced defensive strategies, threat intelligence, and banking infrastructure protection.',
+        session_type: 'MASTERCLASS',
+        room: 'Syndicate Hall B',
+        speaker_ids: ['spk-antwi']
       },
       {
         id: 'ag-d1-4',
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '11:40',
-        end_time: '12:40',
-        title: 'Deploying AI to Combat Modern Fraud in International Trade Finance',
-        description: 'Clifford Duke Mettle, FCIB & Rita Elumelu, FCIB lead an executive breakout masterclass on utilizing artificial intelligence and automated fraud detection algorithms within cross-border trade rails.',
-        session_type: 'MASTERCLASS',
-        room: 'Syndicate Hall A',
-        speaker_ids: ['spk-mettle', 'spk-elumelu']
+        start_time: '10:00',
+        end_time: '10:30',
+        title: 'Megatrends: Virtual Asset, Tokenization and AI',
+        description: 'Presentation -Frank Tawiah. Strategic briefing on digital asset evolution, tokenization of banking collateral, and algorithmic rails.',
+        session_type: 'KEYNOTE',
+        room: 'Main Conference Hall',
+        speaker_ids: ['spk-tawiah']
       },
       {
         id: 'ag-d1-5',
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '11:40',
-        end_time: '12:40',
-        title: 'Cybersecurity and Fraud Detection',
-        description: 'Dr. Albert Antwi-Bosiako, Fabiola Amedo (KPMG), Nina Korley (DELOITTE). Advanced cybersecurity briefing and fraud mitigation strategies for banking networks and core transactional infrastructure.',
-        session_type: 'MASTERCLASS',
-        room: 'Syndicate Hall B',
-        speaker_ids: ['spk-antwi']
+        start_time: '10:30',
+        end_time: '11:40',
+        title: 'PANEL/Q&A',
+        description: 'Philip Twum,ACIB, Frank Tawiah, Philip Kwaw Sebuabe, Gillian Darko. Interactive panel examination and delegate Q&A exploring virtual asset integration and compliance.',
+        session_type: 'PANEL',
+        room: 'Main Conference Hall',
+        speaker_ids: ['spk-twum', 'spk-tawiah', 'spk-sebuabe']
       },
       {
         id: 'ag-d1-6',
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '12:40',
-        end_time: '13:40',
+        start_time: '12:00',
+        end_time: '13:00',
         title: 'Networking Lunch',
         description: 'Executive luncheon and bilateral networking exchange at the waterfront dining terrace.',
         session_type: 'NETWORKING',
@@ -753,9 +783,9 @@ Over three intensive days, participants will examine ethical governance amidst m
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '13:40',
+        start_time: '13:00',
         end_time: '14:00',
-        title: 'Delegates Prepare for Fun Activities',
+        title: 'Delegates prepare for Fun Activities',
         description: 'Delegates transition to suites and recreation venues to prepare for afternoon team bonding and outdoor activities.',
         session_type: 'NETWORKING',
         room: 'Resort Grounds & Promenade',
@@ -769,7 +799,7 @@ Over three intensive days, participants will examine ethical governance amidst m
         start_time: '14:00',
         end_time: '16:00',
         title: 'Mentorship Corner',
-        description: '1. Woman: Rising to the Top — Tea, Tales and Trailblazers | 2. Men’s Talk: Stress and Sex. Dual-track executive mentorship session.',
+        description: '1. Woman: Rising to the Top — Tea, Tales and Trailblazers\n2. Men’s Talk: Stress and Sex',
         session_type: 'WORKSHOP',
         room: 'Executive Pavilion A & B',
         speaker_ids: []
@@ -793,8 +823,8 @@ Over three intensive days, participants will examine ethical governance amidst m
         day_number: 1,
         date: '2026-11-09',
         start_time: '18:00',
-        end_time: '19:30',
-        title: 'Sunset Delegate Dinner',
+        end_time: '19:00',
+        title: 'Dinner',
         description: 'Sunset delegate dinner reception overlooking the scenic Volta River estuary.',
         session_type: 'NETWORKING',
         room: 'Lagoon Deck & Dining Terrace',
@@ -805,17 +835,17 @@ Over three intensive days, participants will examine ethical governance amidst m
         event_id: 'evt-1',
         day_number: 1,
         date: '2026-11-09',
-        start_time: '19:30',
+        start_time: '20:00',
         end_time: '21:00',
-        title: 'By the Fireside Chat – Kwanpa Group',
-        description: 'Paul Baah Sackey, FCIB & Charles Ofori Acquah, FCIB. Evening cultural storytelling, acoustic musical networking, and reflections.',
+        title: 'By the Fireside Chat — Kwanpa Group',
+        description: 'Paul Baah Sackey,FCIB , Charles Ofori Acquah ,FCIB. Evening cultural storytelling, acoustic musical networking, and reflections.',
         session_type: 'CEREMONY',
         room: 'Bonfire Beach Arena',
         speaker_ids: ['spk-baah-sackey', 'spk-ofori-acquah']
       },
 
       // ==========================================
-      // DAY 2 — 10 November 2026: 3T Conference
+      // Day 2 — 10 November 2026: 3T Conference
       // ==========================================
       {
         id: 'ag-d2-1',
@@ -851,10 +881,10 @@ Over three intensive days, participants will examine ethical governance amidst m
         start_time: '10:00',
         end_time: '10:15',
         title: 'Welcome Address — President',
-        description: 'Presidential opening declaration and strategic state of the banking sector address.',
+        description: 'Presidential welcome declaration and opening state of the banking sector address by Dr. Ellen Ohene-Afoakwa.',
         session_type: 'CEREMONY',
         room: 'Main Ball Room',
-        speaker_ids: []
+        speaker_ids: ['spk-president']
       },
       {
         id: 'ag-d2-4',
@@ -876,8 +906,8 @@ Over three intensive days, participants will examine ethical governance amidst m
         date: '2026-11-10',
         start_time: '10:40',
         end_time: '11:00',
-        title: 'Hon Samuel Nartey George',
-        description: 'Minister for Communication, Digital Technology and Innovations. Keynote on national digital infrastructure, telecommunications backbone, and banking technology adoption.',
+        title: 'Hon Samuel Nartey George (Minister for Communication, Digital Technology and Innovations)',
+        description: 'Keynote ministerial address on national digital infrastructure, telecommunications backbone, and banking technology adoption.',
         session_type: 'KEYNOTE',
         room: 'Main Ball Room',
         speaker_ids: ['spk-sam-george']
@@ -941,7 +971,7 @@ Over three intensive days, participants will examine ethical governance amidst m
         date: '2026-11-10',
         start_time: '12:20',
         end_time: '13:00',
-        title: 'PANEL - Philip Kwaw Sebuabe, Dr Stephane Nwolley',
+        title: 'PANEL -Philip Kwaw Sebuabe, Dr Stephane Nwolley',
         description: 'In-depth panel debate on navigating stablecoin adoption, fintech interoperability, and monetary sovereignty in West Africa.',
         session_type: 'PANEL',
         room: 'Main Ball Room',

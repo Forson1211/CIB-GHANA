@@ -118,7 +118,7 @@ export const CoreConferenceThemes: React.FC = () => {
     },
     {
       id: 'regulation',
-      title: 'Navigating, Regulating and Landscape',
+      title: 'Navigating, Regulatory Landscape',
       subtitle: 'Harmonizing compliance, supervisory frameworks & regulatory direction',
       icon: <Globe className="w-10 h-10 sm:w-12 sm:h-12 text-white stroke-[1.8]" />,
     },

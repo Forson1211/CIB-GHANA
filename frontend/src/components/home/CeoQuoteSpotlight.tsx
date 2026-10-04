@@ -46,16 +46,20 @@ export const CeoQuoteSpotlight: React.FC<CeoQuoteSpotlightProps> = ({
             className="lg:col-span-7 text-left order-2 lg:order-1"
           >
             <div className="border-l-[3px] border-[#FFE500] pl-5 sm:pl-6 space-y-6 sm:space-y-8">
-              {/* Decorative quotation mark */}
-              <span className="text-[140px] sm:text-[180px] leading-[0.75] text-[#FFE500] font-black font-display select-none block -mb-10 sm:-mb-14">&ldquo;</span>
-              <p className="text-white/90 text-base sm:text-lg lg:text-[19px] font-normal leading-relaxed text-justify">
-                The Chartered Institute of Bankers, Ghana remains committed to building a
-                world-class community of banking professionals who are not only technically
-                sound but deeply grounded in ethics, integrity, and innovation. Our annual
-                conference is a strategic platform for charting the future of banking in Ghana —
-                bringing together the brightest minds to shape policy, drive technology adoption,
-                and uphold the highest standards of professional excellence.
-              </p>
+              <div>
+                {/* Decorative quotation mark */}
+                <span className="text-[90px] sm:text-[150px] lg:text-[180px] leading-[0.35] sm:leading-[0.55] text-[#FFE500] font-black font-display select-none block -mb-2 sm:-mb-6 lg:-mb-10">
+                  &ldquo;
+                </span>
+                <p className="text-white/90 text-base sm:text-lg lg:text-[19px] font-normal leading-relaxed text-justify">
+                  The Chartered Institute of Bankers, Ghana remains committed to building a
+                  world-class community of banking professionals who are not only technically
+                  sound but deeply grounded in ethics, integrity, and innovation. Our annual
+                  conference is a strategic platform for charting the future of banking in Ghana —
+                  bringing together the brightest minds to shape policy, drive technology adoption,
+                  and uphold the highest standards of professional excellence.
+                </p>
+              </div>
 
               {/* Attribution */}
               <div className="space-y-1">
@@ -82,7 +86,7 @@ export const CeoQuoteSpotlight: React.FC<CeoQuoteSpotlightProps> = ({
           >
             <div
               onClick={() => leader.rawSpeaker && onSelectSpeaker?.(leader.rawSpeaker)}
-              className="relative w-[280px] sm:w-full max-w-[480px] aspect-[4/5] bg-[#072113] border border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
+              className="relative w-[280px] sm:w-full max-w-[480px] aspect-[4/5] bg-[#072113] border-0 sm:border sm:border-white/15 shadow-2xl overflow-hidden group cursor-pointer"
             >
               {leader.photo_url ? (
                 <img

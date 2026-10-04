@@ -206,7 +206,7 @@ export const Home: React.FC = () => {
   return (
     <div className="flex flex-col">
       {/* 1. CINEMATIC HERO SECTION (In Official CIB Ghana Green #0D3A21) */}
-      <section id="hero-section" className="relative h-screen min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#072113] text-white pt-24 sm:pt-28 pb-16 px-4">
+      <section id="hero-section" className="relative min-h-[100dvh] sm:h-screen sm:min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#072113] text-white pt-20 pb-24 sm:pt-28 sm:pb-16 px-4">
         {/* Full-width Ambient Background Video (Auto-looping, Muted, 100% Full Section Cover) */}
         {/* Full 100% section video — vmax trick ensures no gap regardless of aspect ratio */}
         <div
@@ -296,7 +296,7 @@ export const Home: React.FC = () => {
         />
 
         {/* Hero Content: Centered in the middle on mobile matching reference, clean on desktop */}
-        <div className="relative z-10 max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center space-y-6 sm:space-y-7 w-full my-auto">
+        <div className="relative z-10 max-w-[1380px] mx-auto px-2 sm:px-6 lg:px-8 text-center flex flex-col items-center justify-center space-y-4 sm:space-y-7 w-full my-auto">
           {/* Main Title */}
           <motion.div
             initial={{ opacity: 0, y: 22 }}
@@ -304,47 +304,46 @@ export const Home: React.FC = () => {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="space-y-2 text-center mx-auto max-w-4xl"
           >
-            <h1 className="text-[34px] xs:text-[40px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-extrabold text-white tracking-tight leading-[1.12] text-center font-display">
-              30th National Banking <br className="hidden sm:block" />
+            <h1 className="text-[28px] xs:text-[34px] sm:text-5xl md:text-6xl lg:text-[66px] xl:text-[72px] font-black text-white tracking-tight leading-[1.15] text-center font-display">
+              30th National Banking <br />
               &amp; Ethics Conference
             </h1>
           </motion.div>
 
-          {/* Subtitle / Date & Location in Blocks with Dividing Line */}
+          {/* Subtitle / Date & Location in Blocks with Dividing Line (Always side-by-side on all mobile devices) */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
-            className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-left mx-auto"
+            className="flex flex-nowrap items-center justify-center gap-2.5 xs:gap-3.5 sm:gap-6 text-left mx-auto max-w-full px-1"
           >
             {/* Date Block (On One Line) */}
-            <div className="flex items-center text-left font-black select-none whitespace-nowrap">
-              <span className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
-                9 - 10 NOV, 2026
+            <div className="flex items-center text-left font-black select-none whitespace-nowrap shrink-0">
+              <span className="text-[15px] xs:text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight">
+                9 – 10 NOV, 2026
               </span>
             </div>
 
             {/* Vertical Dividing Line */}
-            <div className="w-[1.5px] sm:w-[2px] h-9 sm:h-12 bg-white/40 shrink-0" />
+            <div className="w-[1.5px] sm:w-[2px] h-8 sm:h-12 bg-white/40 shrink-0" />
 
             {/* Location Block */}
-            <div className="flex flex-col text-left justify-center">
-              <span className="text-base sm:text-lg md:text-xl font-bold text-white tracking-wide leading-tight">
+            <div className="flex flex-col text-left justify-center shrink-0">
+              <span className="text-[13px] xs:text-base sm:text-lg md:text-xl font-bold text-white tracking-wide leading-tight whitespace-nowrap">
                 Aqua Safari Resort
               </span>
-              <span className="text-xs sm:text-sm md:text-base text-white/90 font-medium tracking-wide mt-0.5">
+              <span className="text-[10px] xs:text-xs sm:text-sm md:text-base text-white/90 font-medium tracking-wide mt-0.5 whitespace-nowrap">
                 Volta River in Big Ada
               </span>
             </div>
           </motion.div>
-
 
           {/* Two Action Buttons: Stacked full-width & centered on mobile, inline on desktop */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 pt-3 sm:pt-4 w-full sm:w-auto mx-auto"
+            className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 pt-2 sm:pt-4 w-full max-w-[320px] xs:max-w-[360px] sm:max-w-none sm:w-auto mx-auto"
           >
             {/* First Button: Full Green */}
             <Link
@@ -353,7 +352,7 @@ export const Home: React.FC = () => {
                   ? '/my-portal'
                   : `/events/${featuredEvent?.slug || '30th-national-banking-ethics-conference-2026'}/register`
               }
-              className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#008129] hover:bg-[#006e22] active:scale-95 text-white font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
+              className="w-full sm:w-auto px-6 sm:px-10 py-3.5 bg-[#008129] hover:bg-[#006e22] active:scale-95 text-white font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
               {registeredUserEmail ? 'ACCESS EVENT PASS' : 'REGISTER NOW'}
             </Link>
@@ -361,7 +360,7 @@ export const Home: React.FC = () => {
             {/* Second Button: Full Yellow */}
             <Link
               to={`/events/${featuredEvent?.slug || '30th-national-banking-ethics-conference-2026'}`}
-              className="w-full max-w-sm sm:max-w-none sm:w-auto px-8 sm:px-10 py-4 sm:py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
+              className="w-full sm:w-auto px-6 sm:px-10 py-3.5 bg-[#FFE500] hover:bg-[#ebd300] active:scale-95 text-slate-950 font-black uppercase text-sm sm:text-[14px] tracking-wider rounded-none shadow-2xl transition-all duration-200 text-center whitespace-nowrap"
             >
               PROGRAM OUTLINE
             </Link>
@@ -551,7 +550,6 @@ export const Home: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display text-left tracking-tight">
               Aqua Safari, Ada
             </h2>
-            <div className="w-16 h-1 bg-[#FFE500] rounded-none mt-2" />
           </motion.div>
 
           {/* Venue Showcase Slider - Left aligned and container-width in line with logo */}
@@ -569,7 +567,7 @@ export const Home: React.FC = () => {
 
       {/* 10. EARLY BIRD PACKAGE (Book Early & Save) */}
       <section id="early-bird" className="w-full bg-[#008129] py-16 sm:py-20 text-white scroll-mt-24">
-        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-left">
+        <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 text-center lg:text-left">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             {/* Left Column: Heading, Description, and Amounts */}
             <motion.div
@@ -577,16 +575,16 @@ export const Home: React.FC = () => {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeInUp}
-              className="lg:col-span-7 space-y-6 text-left"
+              className="lg:col-span-7 space-y-6 text-center lg:text-left"
             >
-              <div className="space-y-3 max-w-xl text-left">
+              <div className="space-y-3 max-w-xl text-center lg:text-left mx-auto lg:mx-0">
                 <span className="inline-block px-3 py-1 text-[11px] font-black uppercase tracking-widest text-[#FFE500] bg-white/10">
                   BOOK EARLY &amp; SAVE
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight text-left">
+                <h2 className="text-3xl sm:text-4xl font-black text-white font-display tracking-tight text-center lg:text-left">
                   Early Bird Package
                 </h2>
-                <p className="text-white/90 text-xs sm:text-sm leading-relaxed text-left">
+                <p className="text-white/90 text-xs sm:text-sm leading-relaxed text-center lg:text-left">
                   Accommodation for two nights, conference and masterclass fee, dinner for two nights and other complimentary activities.
                 </p>
               </div>
@@ -594,25 +592,25 @@ export const Home: React.FC = () => {
               {/* Amounts (Single & Double Occupancy Cards - No Strokes) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2">
                 {/* Single Occupancy */}
-                <div className="p-6 bg-black/15 transition-all text-left space-y-2">
-                  <span className="text-xs font-black uppercase tracking-widest text-[#FFE500] block text-left">
+                <div className="p-6 bg-black/15 transition-all text-center sm:text-left space-y-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#FFE500] block text-center sm:text-left">
                     SINGLE OCCUPANCY
                   </span>
-                  <div className="text-3xl sm:text-4xl font-black font-display text-white text-left">
+                  <div className="text-3xl sm:text-4xl font-black font-display text-white text-center sm:text-left">
                     GHS 5,600
                   </div>
-                  <p className="text-xs text-white/80 font-medium text-left">Early bird rate</p>
+                  <p className="text-xs text-white/80 font-medium text-center sm:text-left">Early bird rate</p>
                 </div>
 
                 {/* Double Occupancy */}
-                <div className="p-6 bg-black/15 transition-all text-left space-y-2">
-                  <span className="text-xs font-black uppercase tracking-widest text-[#FFE500] block text-left">
+                <div className="p-6 bg-black/15 transition-all text-center sm:text-left space-y-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#FFE500] block text-center sm:text-left">
                     DOUBLE OCCUPANCY
                   </span>
-                  <div className="text-3xl sm:text-4xl font-black font-display text-white text-left">
+                  <div className="text-3xl sm:text-4xl font-black font-display text-white text-center sm:text-left">
                     GHS 4,000
                   </div>
-                  <p className="text-xs text-white/80 font-medium text-left">Early bird rate, per person</p>
+                  <p className="text-xs text-white/80 font-medium text-center sm:text-left">Early bird rate, per person</p>
                 </div>
               </div>
             </motion.div>
@@ -623,25 +621,25 @@ export const Home: React.FC = () => {
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
               variants={fadeInUp}
-              className="lg:col-span-5 flex flex-col justify-center lg:items-end space-y-6 text-left lg:text-right"
+              className="lg:col-span-5 flex flex-col justify-center items-center lg:items-end space-y-6 text-center lg:text-right"
             >
               {/* Top Box: Deadline & Countdown Timer */}
-              <div className="space-y-3 text-left lg:text-right flex flex-col lg:items-end">
-                <p className="text-xs sm:text-sm text-white/90">
+              <div className="space-y-3 text-center lg:text-right flex flex-col items-center lg:items-end w-full">
+                <p className="text-xs sm:text-sm text-white/90 text-center lg:text-right">
                   Book before <strong className="text-[#FFE500] font-bold">20th October 2026</strong> to lock in this rate
                 </p>
-                <div className="flex justify-start lg:justify-end w-full">
+                <div className="flex justify-center lg:justify-end w-full">
                   <CountdownTimer
                     targetDateStr="2026-10-20T23:59:59Z"
                     variant="circular"
-                    className="justify-start lg:justify-end"
+                    className="justify-center lg:justify-end"
                   />
                 </div>
               </div>
 
               {/* Bottom Box: Register Button & Post-Deadline Rates */}
-              <div className="space-y-3 text-left lg:text-right flex flex-col lg:items-end">
-                <div>
+              <div className="space-y-3 text-center lg:text-right flex flex-col items-center lg:items-end w-full">
+                <div className="flex justify-center lg:justify-end w-full">
                   {registeredUserEmail ? (
                     <Link
                       to="/my-portal"
@@ -659,7 +657,7 @@ export const Home: React.FC = () => {
                     </Link>
                   )}
                 </div>
-                <p className="text-[11px] text-white/70">
+                <p className="text-[11px] text-white/70 text-center lg:text-right">
                   Standard rate after the deadline is GHS 6,200 single / GHS 4,500 double
                 </p>
               </div>

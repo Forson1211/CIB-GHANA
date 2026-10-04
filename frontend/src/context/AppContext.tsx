@@ -424,6 +424,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    // If initialized on any public route, admin authentication must never be active
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/admin')) {
+      try {
+        localStorage.removeItem(STORAGE_KEY_ADMIN_AUTH);
+        sessionStorage.removeItem(STORAGE_KEY_ADMIN_AUTH);
+      } catch {}
+      return false;
+    }
     return localStorage.getItem(STORAGE_KEY_ADMIN_AUTH) === 'true';
   });
 
@@ -431,7 +439,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const trimmed = password.trim();
     if (trimmed === 'cibghana') {
       setIsAdminAuthenticated(true);
-      localStorage.setItem(STORAGE_KEY_ADMIN_AUTH, 'true');
+      try {
+        localStorage.setItem(STORAGE_KEY_ADMIN_AUTH, 'true');
+        sessionStorage.setItem(STORAGE_KEY_ADMIN_AUTH, 'true');
+      } catch {}
       setCurrentUser(DEMO_USERS[0]);
       try {
         await fetch('/api/admin/login', {
@@ -449,7 +460,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const adminLogout = () => {
     setIsAdminAuthenticated(false);
-    localStorage.removeItem(STORAGE_KEY_ADMIN_AUTH);
+    try {
+      localStorage.removeItem(STORAGE_KEY_ADMIN_AUTH);
+      sessionStorage.removeItem(STORAGE_KEY_ADMIN_AUTH);
+    } catch {}
   };
 
   const setRegisteredUserName = (name: string | null) => {

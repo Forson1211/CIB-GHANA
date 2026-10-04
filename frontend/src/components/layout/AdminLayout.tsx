@@ -82,7 +82,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       >
         {/* Sidebar Brand Header */}
         <div className="p-5 border-b border-white/20 flex items-center justify-between shrink-0">
-          <Link to="/" className="flex items-center gap-3">
+          <Link
+            to="/"
+            onClick={() => adminLogout()}
+            className="flex items-center gap-3"
+            title="Return to Public Site"
+          >
             <div className="bg-white p-1.5 rounded-none shadow-xs">
               <img
                 src={CIB_LOGO_URL}
@@ -153,7 +158,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         <div className="border-t border-white/20 p-3 sm:p-3.5 pb-6 sm:pb-3.5 bg-[#0F4722] shrink-0">
           <Link
             to="/"
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => {
+              setSidebarOpen(false);
+              adminLogout();
+            }}
             className="flex items-center justify-center gap-2 w-full py-3.5 px-4 rounded-none bg-white hover:bg-emerald-50 active:scale-[0.98] text-[#1B7E3E] text-xs sm:text-sm font-black transition-all cursor-pointer border border-white"
           >
             <ArrowLeft className="w-4 h-4 text-[#1B7E3E] shrink-0" />
@@ -190,6 +198,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
               <Link
                 to="/"
+                onClick={() => adminLogout()}
                 className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-none border border-slate-200 hover:border-cib-green-600 text-slate-700 hover:text-cib-green-700 hover:bg-emerald-50/50 text-xs font-bold transition-all shrink-0 cursor-pointer"
                 title="Return to Public Site"
               >

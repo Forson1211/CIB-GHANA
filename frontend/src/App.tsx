@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType, Navigate } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 
@@ -372,6 +372,35 @@ function ScrollManager() {
   return null;
 }
 
+// Automatically terminates admin authentication when navigating to any public site page.
+// Returning to the admin dashboard will require the administrator to log in again.
+function AdminSessionManager() {
+  const location = useLocation();
+  const { isAdminAuthenticated, adminLogout } = useApp();
+
+  useEffect(() => {
+    // If the active route is any public page (does not start with '/admin')
+    if (!location.pathname.startsWith('/admin')) {
+      if (isAdminAuthenticated) {
+        adminLogout();
+      }
+    }
+  }, [location.pathname, isAdminAuthenticated, adminLogout]);
+
+  // Synchronize across tabs if admin session is terminated
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cib_admin_auth_v1' && !e.newValue && isAdminAuthenticated) {
+        adminLogout();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [isAdminAuthenticated, adminLogout]);
+
+  return null;
+}
+
 // Layout wrapper that excludes public Navbar and Footer on admin paths
 function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -403,6 +432,7 @@ export function App() {
       <Router>
         <DpiScaleManager />
         <ScrollManager />
+        <AdminSessionManager />
         <LayoutWrapper>
           <Routes>
             {/* Public Pages */}

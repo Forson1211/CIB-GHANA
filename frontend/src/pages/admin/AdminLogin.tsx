@@ -17,7 +17,10 @@ export const AdminLogin: React.FC = () => {
   // If already authenticated, redirect immediately
   React.useEffect(() => {
     if (isAdminAuthenticated) {
-      const destination = (location.state as any)?.from?.pathname || '/admin/dashboard';
+      const stateFrom = (location.state as any)?.from?.pathname;
+      const destination = (stateFrom && stateFrom.startsWith('/admin') && stateFrom !== '/admin/login')
+        ? stateFrom
+        : '/admin/dashboard';
       navigate(destination, { replace: true });
     }
   }, [isAdminAuthenticated, navigate, location]);
@@ -30,7 +33,10 @@ export const AdminLogin: React.FC = () => {
     try {
       const success = await adminLogin(password);
       if (success) {
-        const destination = (location.state as any)?.from?.pathname || '/admin/dashboard';
+        const stateFrom = (location.state as any)?.from?.pathname;
+        const destination = (stateFrom && stateFrom.startsWith('/admin') && stateFrom !== '/admin/login')
+          ? stateFrom
+          : '/admin/dashboard';
         navigate(destination, { replace: true });
       } else {
         setError('Incorrect administrator password. Please try again.');

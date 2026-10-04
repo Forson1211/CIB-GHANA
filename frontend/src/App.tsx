@@ -346,28 +346,69 @@ function ScrollManager() {
 
     // D. Fresh page navigation (e.g. user clicks /speakers, /contact, or /events): reliably open from the very top
     if (location.pathname !== '/') {
-      document.documentElement.style.scrollBehavior = 'auto';
+      // Forcefully disable smooth scrolling during reset (iOS Safari ignores 'instant' when html has scroll-behavior:smooth)
+      document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+      document.body.style.setProperty('scroll-behavior', 'auto', 'important');
+
       const resetTop = () => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        window.scrollTo(0, 0);
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
+        // Remove stored position for this path so POP never restores a stale mid-page position
+        try {
+          sessionStorage.removeItem('cib_scroll_path_' + location.pathname);
+          sessionStorage.removeItem('cib_scroll_' + location.key);
+        } catch {}
+        scrollHistory.delete(location.key);
       };
 
       resetTop();
       requestAnimationFrame(resetTop);
-      setTimeout(resetTop, 20);
-      setTimeout(resetTop, 60);
-      setTimeout(resetTop, 150);
+      setTimeout(resetTop, 30);
+      setTimeout(resetTop, 80);
+      setTimeout(resetTop, 180);
       setTimeout(() => {
-        document.documentElement.style.scrollBehavior = '';
-      }, 200);
-
-      const scrollContainers = document.querySelectorAll('.overflow-y-auto, [data-scroll-container]');
-      scrollContainers.forEach((el) => {
-        el.scrollTop = 0;
-      });
+        document.documentElement.style.removeProperty('scroll-behavior');
+        document.body.style.removeProperty('scroll-behavior');
+      }, 250);
     }
   }, [location.pathname, location.hash, location.key, navType]);
+
+  // Post-mount scroll reset: fires AFTER new page content has rendered.
+  // This is critical on mobile (iOS Safari) where the browser restores scroll position
+  // AFTER useLayoutEffect runs (i.e., after React commits but before paint completes).
+  useEffect(() => {
+    // Only apply to fresh PUSH navigations to non-home non-admin pages
+    if (navType === 'POP' || location.pathname === '/' || location.hash || location.pathname.startsWith('/admin')) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const forceTop = () => {
+      if (cancelled) return;
+      if (window.scrollY > 5 || document.documentElement.scrollTop > 5 || document.body.scrollTop > 5) {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }
+    };
+
+    // Fire a cascade of resets across the first 500ms after route change
+    const timers = [
+      setTimeout(forceTop, 0),
+      setTimeout(forceTop, 50),
+      setTimeout(forceTop, 120),
+      setTimeout(forceTop, 250),
+      setTimeout(forceTop, 400),
+      setTimeout(forceTop, 500),
+    ];
+
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
+  }, [location.pathname, location.key, navType, location.hash]);
 
   return null;
 }

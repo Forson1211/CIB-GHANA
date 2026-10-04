@@ -12,7 +12,9 @@
   }
 
   html {
-    scroll-behavior: smooth;
+    /* Note: scroll-behavior:smooth is intentionally omitted here.
+       iOS Safari & Android Chrome ignore window.scrollTo({ behavior:'instant' })
+       when html has CSS scroll-behavior:smooth. Smooth scrolling is handled in JS. */
     font-size: 16px;
   }
 

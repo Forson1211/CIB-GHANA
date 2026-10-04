@@ -7,6 +7,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { saveCurrentHomeSection } from '../../utils/scrollSections';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -99,9 +100,11 @@ export const Navbar: React.FC = () => {
     setActiveDropdown(null);
 
     if (location.pathname === '/') {
+      // Already on the Home page -> smoothly scroll to top and clear saved section
+      document.documentElement.style.scrollBehavior = 'smooth';
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      document.body.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
       try {
         sessionStorage.removeItem('cib_home_section');
         sessionStorage.removeItem('cib_active_section');
@@ -109,15 +112,43 @@ export const Navbar: React.FC = () => {
         sessionStorage.removeItem('last_home_section');
         sessionStorage.removeItem('last_home_scroll');
       } catch { /* ignore */ }
+      if (location.hash) {
+        navigate('/', { replace: true });
+      }
     } else {
+      // Returning to Home from another page (e.g., Contact, Speakers, etc.)
       const lastSection =
         sessionStorage.getItem('cib_home_section') ||
         sessionStorage.getItem('cib_active_section') ||
         sessionStorage.getItem('last_home_section');
-      if (lastSection === 'corporate-members') {
-        navigate('/#corporate-members');
+
+      if (lastSection && lastSection !== 'hero-section') {
+        navigate(`/#${lastSection}`);
       } else {
         navigate('/');
+      }
+    }
+  };
+
+  const handleNavClick = (path: string) => {
+    setMobileMenuOpen(false);
+    setActiveDropdown(null);
+
+    // If currently on Home, lock in the active section before navigating away
+    if (location.pathname === '/') {
+      saveCurrentHomeSection();
+    }
+
+    if (path.includes('#')) {
+      const parts = path.split('#');
+      const hash = parts[1];
+      if (hash) {
+        setTimeout(() => {
+          const el = document.getElementById(hash);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 120);
       }
     }
   };
@@ -280,15 +311,7 @@ export const Navbar: React.FC = () => {
                           <Link
                             key={link.label}
                             to={link.path}
-                            onClick={() => {
-                              setActiveDropdown(null);
-                              if (link.path.includes('#corporate-members')) {
-                                const el = document.getElementById('corporate-members');
-                                if (el) {
-                                  el.scrollIntoView({ behavior: 'smooth' });
-                                }
-                              }
-                            }}
+                            onClick={() => handleNavClick(link.path)}
                             className="block px-4 py-2.5 rounded-none text-[13.5px] font-semibold text-white/95 hover:text-[#FFE500] hover:bg-[#144f2e] transition-colors whitespace-nowrap cursor-pointer"
                           >
                             {link.label}
@@ -310,6 +333,11 @@ export const Navbar: React.FC = () => {
                   ? '/my-portal'
                   : '/events/30th-national-banking-ethics-conference-2026/register'
               }
+              onClick={() => {
+                if (location.pathname === '/') {
+                  saveCurrentHomeSection();
+                }
+              }}
               className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 rounded-none bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-xs sm:text-[13px] uppercase tracking-wider transition-all duration-200 shadow-md"
             >
               <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>
@@ -388,14 +416,7 @@ export const Navbar: React.FC = () => {
                             <Link
                               key={link.label}
                               to={link.path}
-                              onClick={() => {
-                                setMobileMenuOpen(false);
-                                setActiveDropdown(null);
-                                if (link.path.includes('#corporate-members')) {
-                                  const el = document.getElementById('corporate-members');
-                                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                                }
-                              }}
+                              onClick={() => handleNavClick(link.path)}
                               className="block py-2 text-[14px] text-white/75 hover:text-[#FFE500] transition-colors"
                             >
                               {link.label}
@@ -417,7 +438,12 @@ export const Navbar: React.FC = () => {
                     ? '/my-portal'
                     : '/events/30th-national-banking-ethics-conference-2026/register'
                 }
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (location.pathname === '/') {
+                    saveCurrentHomeSection();
+                  }
+                }}
                 className="flex items-center justify-center w-full py-3 bg-gradient-to-r from-[#088d01] via-[#72ac00] to-[#dccb00] hover:brightness-110 active:scale-95 text-white font-black text-sm uppercase tracking-wider shadow-md transition-all"
               >
                 <span>{registeredUserEmail ? 'ACCESS PASS' : 'REGISTER NOW'}</span>

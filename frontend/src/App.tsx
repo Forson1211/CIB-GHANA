@@ -38,6 +38,7 @@ import { AdminGuard } from './components/auth/AdminGuard';
 import { ScrollProgressBar } from './components/ui/ScrollProgressBar';
 import { WhatsAppWidget } from './components/chat/WhatsAppWidget';
 import { ChatbotWidget } from './components/chat/ChatbotWidget';
+import { saveCurrentHomeSection, setRestorationInProgress } from './utils/scrollSections';
 
 // Ensures all screens render at full natural scale (100%)
 function DpiScaleManager() {
@@ -76,29 +77,54 @@ function scrollToElementWithRetry(
   targetId: string,
   options: { smooth?: boolean; maxTries?: number; offset?: number } = {}
 ) {
-  const { smooth = false, maxTries = 15, offset = 80 } = options;
+  const { smooth = false, maxTries = 35, offset = 80 } = options;
+  setRestorationInProgress(true);
   let tries = 0;
+  let stableCount = 0;
+  let lastTop = -9999;
 
   const attempt = () => {
     const el = document.getElementById(targetId);
     if (el) {
+      // 1. Native scrollIntoView handles scroll-mt-24 perfectly
+      el.scrollIntoView({ behavior: 'instant', block: 'start' });
+
+      // 2. Fine-tune with exact bounding rect to guarantee 80px navbar offset
       const rect = el.getBoundingClientRect();
-      const targetY = Math.max(0, window.scrollY + rect.top - offset);
+      const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const targetY = Math.max(0, currentScrollY + rect.top - offset);
       const diff = Math.abs(rect.top - offset);
 
-      window.scrollTo({
-        top: targetY,
-        behavior: tries === 0 ? 'instant' : (smooth ? 'smooth' : 'instant'),
-      });
+      if (diff > 8) {
+        window.scrollTo({
+          top: targetY,
+          behavior: 'instant',
+        });
+        document.documentElement.scrollTop = targetY;
+        document.body.scrollTop = targetY;
+        stableCount = 0;
+      } else {
+        if (Math.abs(rect.top - lastTop) < 3) {
+          stableCount++;
+        } else {
+          stableCount = 0;
+        }
+      }
+      lastTop = rect.top;
 
       tries++;
-      if (tries < maxTries && diff > 15) {
-        setTimeout(attempt, 80);
+      // Keep verifying position until stable across layout shifts
+      if (tries < maxTries && (stableCount < 5 || diff > 8)) {
+        setTimeout(attempt, tries < 8 ? 40 : 80);
+      } else {
+        setTimeout(() => setRestorationInProgress(false), 800);
       }
     } else {
       tries++;
       if (tries < maxTries) {
-        setTimeout(attempt, 60);
+        setTimeout(attempt, 50);
+      } else {
+        setRestorationInProgress(false);
       }
     }
   };
@@ -145,22 +171,9 @@ function ScrollManager() {
             sessionStorage.setItem('cib_scroll_' + location.key, String(y));
             sessionStorage.setItem('cib_scroll_path_' + location.pathname, String(y));
 
-            // If on homepage, track if corporate-members or other sections are in view
+            // If on homepage, track active section and scroll position
             if (location.pathname === '/') {
-              sessionStorage.setItem('cib_last_home_scroll', String(y));
-
-              const corpEl = document.getElementById('corporate-members');
-              if (corpEl) {
-                const rect = corpEl.getBoundingClientRect();
-                // If any significant part of corporate-members is visible in the viewport
-                if (rect.top <= window.innerHeight * 0.85 && rect.bottom >= 80) {
-                  sessionStorage.setItem('cib_home_section', 'corporate-members');
-                  sessionStorage.setItem('cib_active_section', 'corporate-members');
-                } else if (y < 250) {
-                  sessionStorage.removeItem('cib_home_section');
-                  sessionStorage.removeItem('cib_active_section');
-                }
-              }
+              saveCurrentHomeSection();
             }
           } catch {
             // Ignore potential storage quota errors
@@ -263,23 +276,23 @@ function ScrollManager() {
       return;
     }
 
-    // B. Explicit hash is present in URL (e.g. /#corporate-members, /corporate-members redirected)
+    // B. Explicit hash is present in URL (e.g. /#speakers, /#corporate-members)
     if (location.hash) {
       const targetId = location.hash.replace('#', '');
-      scrollToElementWithRetry(targetId, { smooth: true, offset: 80 });
+      scrollToElementWithRetry(targetId, { smooth: false, offset: 80 });
       return;
     }
 
     // C. Returning via browser Back / Forward (POP navigation) or navigate(-1)
     if (navType === 'POP') {
-      // If returning to Home ('/') and user left while at corporate-members
+      // If returning to Home ('/') and user left while at a specific section (e.g. speakers)
       if (location.pathname === '/') {
         const savedSection =
           sessionStorage.getItem('cib_home_section') ||
           sessionStorage.getItem('cib_active_section');
 
-        if (savedSection === 'corporate-members') {
-          scrollToElementWithRetry('corporate-members', { smooth: false, offset: 80 });
+        if (savedSection && savedSection !== 'hero-section') {
+          scrollToElementWithRetry(savedSection, { smooth: false, offset: 80 });
           return;
         }
 
@@ -319,8 +332,8 @@ function ScrollManager() {
         sessionStorage.getItem('cib_home_section') ||
         sessionStorage.getItem('cib_active_section');
 
-      if (savedSection === 'corporate-members') {
-        scrollToElementWithRetry('corporate-members', { smooth: true, offset: 80 });
+      if (savedSection && savedSection !== 'hero-section') {
+        scrollToElementWithRetry(savedSection, { smooth: false, offset: 80 });
         return;
       }
 
@@ -331,15 +344,29 @@ function ScrollManager() {
       }
     }
 
-    // D. Fresh page navigation (e.g. user clicks /contact or /events for first time): start at top
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    // D. Fresh page navigation (e.g. user clicks /speakers, /contact, or /events): reliably open from the very top
+    if (location.pathname !== '/') {
+      document.documentElement.style.scrollBehavior = 'auto';
+      const resetTop = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      };
 
-    const scrollContainers = document.querySelectorAll('.overflow-y-auto, [data-scroll-container]');
-    scrollContainers.forEach((el) => {
-      el.scrollTop = 0;
-    });
+      resetTop();
+      requestAnimationFrame(resetTop);
+      setTimeout(resetTop, 20);
+      setTimeout(resetTop, 60);
+      setTimeout(resetTop, 150);
+      setTimeout(() => {
+        document.documentElement.style.scrollBehavior = '';
+      }, 200);
+
+      const scrollContainers = document.querySelectorAll('.overflow-y-auto, [data-scroll-container]');
+      scrollContainers.forEach((el) => {
+        el.scrollTop = 0;
+      });
+    }
   }, [location.pathname, location.hash, location.key, navType]);
 
   return null;

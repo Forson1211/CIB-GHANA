@@ -85,7 +85,12 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
           </h2>
           <Link
             to="/speakers"
-            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] border border-emerald-400/30 active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-start sm:self-auto"
+            onClick={() => {
+              sessionStorage.setItem('cib_home_section', 'speakers');
+              sessionStorage.setItem('cib_active_section', 'speakers');
+              sessionStorage.setItem('cib_last_home_scroll', String(window.scrollY));
+            }}
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] border border-emerald-400/30 active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-start sm:self-auto cursor-pointer"
           >
             VIEW MORE SPEAKERS
           </Link>

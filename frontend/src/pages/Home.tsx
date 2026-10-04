@@ -38,9 +38,14 @@ export const Home: React.FC = () => {
   const { events, speakers, refreshSpeakers, registeredUserEmail } = useApp();
   const [selectedSpeaker, setSelectedSpeaker] = useState<Speaker | null>(null);
 
-  // Guarantee that refreshing on the Home screen resets scroll position to the top
+  // Guarantee that fresh visits / refreshes on the Home screen start at top, while returning visits respect the saved section
   useEffect(() => {
-    if (!window.location.hash) {
+    const hasSavedHome =
+      sessionStorage.getItem('cib_home_section') ||
+      sessionStorage.getItem('cib_active_section') ||
+      sessionStorage.getItem('cib_last_home_scroll');
+
+    if (!window.location.hash && !hasSavedHome) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;

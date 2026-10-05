@@ -91,19 +91,19 @@
 /* 3-Row Infinite Gallery Marquee Animations */
 @keyframes marquee-left {
   0% {
-    transform: translateX(0%);
+    transform: translate3d(0%, 0, 0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 @keyframes marquee-right {
   0% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
   100% {
-    transform: translateX(0%);
+    transform: translate3d(0%, 0, 0);
   }
 }
 
@@ -112,6 +112,9 @@
   width: max-content;
   animation: marquee-left 40s linear infinite;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .animate-marquee-right {
@@ -119,6 +122,9 @@
   width: max-content;
   animation: marquee-right 40s linear infinite;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .animate-marquee-speakers {
@@ -126,6 +132,9 @@
   width: max-content;
   animation: marquee-left 60s linear infinite;
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .marquee-container:hover .animate-marquee-left,

@@ -6,116 +6,211 @@ import { X, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 export interface GalleryPhoto {
   id: string;
   image_url: string;
+  thumb_url?: string;
   caption: string;
   category?: string;
 }
 
+// Vite dynamic asset loader for full display photos placed in src/assets/PE
+const peImageModules = import.meta.glob<{ default: string }>(
+  '../../assets/PE/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
+  { eager: true }
+);
+
+// Vite dynamic asset loader for lightweight 640px thumbnail photos for smooth 60fps marquee
+const peThumbModules = import.meta.glob<{ default: string }>(
+  '../../assets/PE/thumbs/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG}',
+  { eager: true }
+);
+
+// Build quick lookup map by base filename
+const peThumbMap: Record<string, string> = {};
+for (const [thumbPath, mod] of Object.entries(peThumbModules)) {
+  const thumbFilename = thumbPath.split('/').pop();
+  if (thumbFilename) {
+    peThumbMap[thumbFilename] = mod.default;
+  }
+}
+
+const formatPhotoDetails = (filename: string): { caption: string; category: string } => {
+  const clean = filename.replace(/\.(jpg|jpeg|png|webp)$/i, '');
+  if (/CIB@60/i.test(clean)) {
+    return {
+      caption: 'CIB Ghana 60th Anniversary Gala & Executive Luncheon',
+      category: '60th Anniversary',
+    };
+  }
+  if (/CIBGD/i.test(clean)) {
+    return {
+      caption: 'CIB Ghana Governance & Digital Banking Summit',
+      category: 'Digital Banking',
+    };
+  }
+  if (/CIB_Con/i.test(clean)) {
+    return {
+      caption: 'Annual National Banking Conference Plenary & Deliberations',
+      category: 'Annual Conference',
+    };
+  }
+  if (/IMG_BL/i.test(clean)) {
+    return {
+      caption: 'Chartered Bankers Leadership Forum & Executive Networking',
+      category: 'Leadership Forum',
+    };
+  }
+  if (/CIBGAM/i.test(clean)) {
+    return {
+      caption: 'CIB Ghana Annual General Meeting & Strategic Session',
+      category: 'General Meeting',
+    };
+  }
+  if (/imgcgr/i.test(clean)) {
+    return {
+      caption: 'Banking Ethics, Compliance & Regulatory Dialogue',
+      category: 'Ethics & Compliance',
+    };
+  }
+  if (/IE6A/i.test(clean)) {
+    return {
+      caption: 'Executive Leadership Keynotes & Strategic Banking Panels',
+      category: 'Executive Plenary',
+    };
+  }
+  return {
+    caption: 'Distinguished Delegates & Banking Industry Assembly',
+    category: 'Conference Archive',
+  };
+};
+
 // 15 authentic CIB Ghana previous event, summit, and conference photos from PREVIOUS EVENTS archive
-const ROW_1_PHOTOS: GalleryPhoto[] = [
+const BASE_ARCHIVE_PHOTOS: GalleryPhoto[] = [
   {
     id: 'pe-1',
     image_url: '/previous-events/event-1.jpg',
+    thumb_url: '/previous-events/thumbs/event-1.jpg',
     caption: 'CIB Ghana Executive Leadership Summit & Strategic Plenary',
-    category: 'Leadership Summit'
+    category: 'Leadership Summit',
   },
   {
     id: 'pe-2',
     image_url: '/previous-events/event-2.jpg',
+    thumb_url: '/previous-events/thumbs/event-2.jpg',
     caption: 'Delegates & Banking Leaders at the Annual National Conference',
-    category: 'Conference Plenary'
+    category: 'Conference Plenary',
   },
   {
     id: 'pe-3',
     image_url: '/previous-events/event-3.jpg',
+    thumb_url: '/previous-events/thumbs/event-3.jpg',
     caption: 'CIB Ghana Delegation at DC Fintech Week — Global Financial Dialogues',
-    category: 'International Delegation'
+    category: 'International Delegation',
   },
   {
     id: 'pe-4',
     image_url: '/previous-events/event-4.jpg',
+    thumb_url: '/previous-events/thumbs/event-4.jpg',
     caption: 'CIB Ghana at DC Fintech Week — Shaping Global Banking Innovation',
-    category: 'Fintech Leadership'
+    category: 'Fintech Leadership',
   },
   {
     id: 'pe-5',
     image_url: '/previous-events/event-5.jpg',
+    thumb_url: '/previous-events/thumbs/event-5.jpg',
     caption: 'Executive Panel on Virtual Assets, Ethics & Banking Transformation',
-    category: 'Policy Discourse'
-  }
-];
-
-const ROW_2_PHOTOS: GalleryPhoto[] = [
+    category: 'Policy Discourse',
+  },
   {
     id: 'pe-6',
     image_url: '/previous-events/event-6.jpg',
+    thumb_url: '/previous-events/thumbs/event-6.jpg',
     caption: 'Strategic Roundtables & Global Industry Partnerships at DC Fintech Week',
-    category: 'Global Partnerships'
+    category: 'Global Partnerships',
   },
   {
     id: 'pe-7',
     image_url: '/previous-events/event-7.jpg',
+    thumb_url: '/previous-events/thumbs/event-7.jpg',
     caption: 'CIB Ghana Annual Graduation & Induction Ceremony of Chartered Bankers',
-    category: 'Charter Induction'
+    category: 'Charter Induction',
   },
   {
     id: 'pe-8',
     image_url: '/previous-events/event-8.jpg',
+    thumb_url: '/previous-events/thumbs/event-8.jpg',
     caption: 'Chartered Bankers Forum — Professional Standards & Ethical Excellence',
-    category: 'Professional Forum'
+    category: 'Professional Forum',
   },
   {
     id: 'pe-9',
     image_url: '/previous-events/event-9.jpg',
+    thumb_url: '/previous-events/thumbs/event-9.jpg',
     caption: 'Keynote Address on the Future of Financial Regulation & Integrity',
-    category: 'Keynote Session'
+    category: 'Keynote Session',
   },
   {
     id: 'pe-10',
     image_url: '/previous-events/event-10.jpg',
+    thumb_url: '/previous-events/thumbs/event-10.jpg',
     caption: 'Fellowship Conferment & Celebrating Banking Excellence in Ghana',
-    category: 'Fellowship Awards'
-  }
-];
-
-const ROW_3_PHOTOS: GalleryPhoto[] = [
+    category: 'Fellowship Awards',
+  },
   {
     id: 'pe-11',
     image_url: '/previous-events/event-11.jpg',
+    thumb_url: '/previous-events/thumbs/event-11.jpg',
     caption: 'Annual Banking Conference Plenary Session with Industry Luminaries',
-    category: 'Annual Conference'
+    category: 'Annual Conference',
   },
   {
     id: 'pe-12',
     image_url: '/previous-events/event-12.jpg',
+    thumb_url: '/previous-events/thumbs/event-12.jpg',
     caption: 'CIB Ghana Governing Council Address & Institutional Roadmap',
-    category: 'Governing Council'
+    category: 'Governing Council',
   },
   {
     id: 'pe-13',
     image_url: '/previous-events/event-13.jpg',
+    thumb_url: '/previous-events/thumbs/event-13.jpg',
     caption: 'Presentation of Charters & Celebrating New Chartered Bankers',
-    category: 'Charter Presentation'
+    category: 'Charter Presentation',
   },
   {
     id: 'pe-14',
     image_url: '/previous-events/event-14.jpg',
+    thumb_url: '/previous-events/thumbs/event-14.jpg',
     caption: 'Distinguished Delegates & Financial Sector Stakeholders Gathering',
-    category: 'Delegates Assembly'
+    category: 'Delegates Assembly',
   },
   {
     id: 'pe-15',
     image_url: '/previous-events/event-15.jpg',
+    thumb_url: '/previous-events/thumbs/event-15.jpg',
     caption: 'CIB Ghana Honors, Excellence in Banking & Professional Awards Ceremony',
-    category: 'Awards & Honors'
-  }
+    category: 'Awards & Honors',
+  },
 ];
 
-// All photos combined for lightbox navigation
-const ALL_PHOTOS: GalleryPhoto[] = [
-  ...ROW_1_PHOTOS,
-  ...ROW_2_PHOTOS,
-  ...ROW_3_PHOTOS
-];
+// 42 dynamic photos loaded from src/assets/PE with lightweight thumbnail fallback
+const PE_ASSET_PHOTOS: GalleryPhoto[] = Object.entries(peImageModules).map(([path, mod], idx) => {
+  const filename = path.split('/').pop() || `photo-${idx}`;
+  const details = formatPhotoDetails(filename);
+  return {
+    id: `pe-asset-${idx + 1}`,
+    image_url: mod.default,
+    thumb_url: peThumbMap[filename] || mod.default,
+    caption: details.caption,
+    category: details.category,
+  };
+});
+
+// All 57+ photos combined for lightbox navigation & balanced 3-tier marquee distribution
+export const ALL_PHOTOS: GalleryPhoto[] = [...BASE_ARCHIVE_PHOTOS, ...PE_ASSET_PHOTOS];
+
+// Evenly interleaved across 3 rows
+const ROW_1_PHOTOS: GalleryPhoto[] = ALL_PHOTOS.filter((_, idx) => idx % 3 === 0);
+const ROW_2_PHOTOS: GalleryPhoto[] = ALL_PHOTOS.filter((_, idx) => idx % 3 === 1);
+const ROW_3_PHOTOS: GalleryPhoto[] = ALL_PHOTOS.filter((_, idx) => idx % 3 === 2);
 
 export const EventHighlightMarquee: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<GalleryPhoto | null>(null);
@@ -168,7 +263,7 @@ export const EventHighlightMarquee: React.FC = () => {
     <div className="relative w-full overflow-hidden py-4 space-y-4 sm:space-y-6">
       {/* ROW 1: SWIPES TO RIGHT */}
       <div className="marquee-container overflow-hidden flex select-none">
-        <div className="animate-marquee-right flex gap-3 sm:gap-4">
+        <div className="animate-marquee-right flex gap-3 sm:gap-4" style={{ animationDuration: '90s' }}>
           {[...ROW_1_PHOTOS, ...ROW_1_PHOTOS].map((photo, idx) => (
             <div
               key={`r1-${idx}`}
@@ -176,12 +271,18 @@ export const EventHighlightMarquee: React.FC = () => {
               className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
-                src={photo.image_url}
+                src={photo.thumb_url || photo.image_url}
                 alt={photo.caption}
                 loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
+                {photo.category && (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FFE500] mb-0.5">
+                    {photo.category}
+                  </span>
+                )}
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
@@ -196,7 +297,7 @@ export const EventHighlightMarquee: React.FC = () => {
 
       {/* ROW 2: SWIPES TO LEFT (Instagram Portrait 4:5 Size matching user reference) */}
       <div className="marquee-container overflow-hidden flex select-none">
-        <div className="animate-marquee-left flex gap-3 sm:gap-4">
+        <div className="animate-marquee-left flex gap-3 sm:gap-4" style={{ animationDuration: '95s' }}>
           {[...ROW_2_PHOTOS, ...ROW_2_PHOTOS].map((photo, idx) => (
             <div
               key={`r2-${idx}`}
@@ -204,12 +305,18 @@ export const EventHighlightMarquee: React.FC = () => {
               className="w-48 sm:w-60 md:w-72 h-60 sm:h-[300px] md:h-[360px] aspect-[4/5] shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
-                src={photo.image_url}
+                src={photo.thumb_url || photo.image_url}
                 alt={photo.caption}
                 loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-top group-hover:scale-108 transition-transform duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
+                {photo.category && (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FFE500] mb-0.5">
+                    {photo.category}
+                  </span>
+                )}
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
@@ -224,7 +331,7 @@ export const EventHighlightMarquee: React.FC = () => {
 
       {/* ROW 3: SWIPES TO RIGHT */}
       <div className="marquee-container overflow-hidden flex select-none">
-        <div className="animate-marquee-right flex gap-3 sm:gap-4">
+        <div className="animate-marquee-right flex gap-3 sm:gap-4" style={{ animationDuration: '88s' }}>
           {[...ROW_3_PHOTOS, ...ROW_3_PHOTOS].map((photo, idx) => (
             <div
               key={`r3-${idx}`}
@@ -232,12 +339,18 @@ export const EventHighlightMarquee: React.FC = () => {
               className="w-64 sm:w-80 md:w-96 h-44 sm:h-56 shrink-0 rounded-none overflow-hidden shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer bg-slate-900 border-0 sm:border border-white/10 hover:border-emerald-400/50 group relative"
             >
               <img
-                src={photo.image_url}
+                src={photo.thumb_url || photo.image_url}
                 alt={photo.caption}
                 loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-center group-hover:scale-108 transition-transform duration-500 ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-4">
+                {photo.category && (
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FFE500] mb-0.5">
+                    {photo.category}
+                  </span>
+                )}
                 <span className="text-white text-xs sm:text-sm font-bold line-clamp-2">
                   {photo.caption}
                 </span>
@@ -319,7 +432,12 @@ export const EventHighlightMarquee: React.FC = () => {
                   />
 
                   {/* Caption directly underneath the photo */}
-                  <div className="mt-3.5 sm:mt-4 text-center px-4 max-w-2xl space-y-1">
+                  <div className="mt-3.5 sm:mt-4 text-center px-4 max-w-2xl space-y-1.5">
+                    {selectedPhoto.category && (
+                      <span className="inline-block px-2.5 py-0.5 rounded text-[11px] font-black uppercase tracking-wider bg-[#008129] text-white">
+                        {selectedPhoto.category}
+                      </span>
+                    )}
                     <p className="text-white font-bold text-sm sm:text-base md:text-lg leading-snug">
                       {selectedPhoto.caption}
                     </p>

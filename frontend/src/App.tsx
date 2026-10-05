@@ -16,6 +16,7 @@ import { Resources } from './pages/Resources';
 import { Contact } from './pages/Contact';
 
 import { PartnersSponsors } from './pages/PartnersSponsors';
+import { CorporateMembers } from './pages/CorporateMembers';
 import { MyPortal } from './pages/MyPortal';
 import { NotFound } from './pages/NotFound';
 
@@ -478,7 +479,7 @@ export function App() {
           <Routes>
             {/* Public Pages */}
             <Route path="/" element={<Home />} />
-            <Route path="/corporate-members" element={<Navigate to="/#corporate-members" replace />} />
+            <Route path="/corporate-members" element={<CorporateMembers />} />
             <Route path="/events" element={<Events />} />
             <Route path="/events/:slug" element={<EventDetails />} />
             <Route path="/events/:slug/register" element={<Register />} />

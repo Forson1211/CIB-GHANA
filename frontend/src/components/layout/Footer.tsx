@@ -223,8 +223,8 @@ export const Footer: React.FC = () => {
                 <li><Link to="/speakers" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Keynote Speakers</Link></li>
                 <li><Link to="/events/30th-national-banking-ethics-conference-2026#agenda" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Agendas &amp; Schedules</Link></li>
                 <li><Link to="/resources" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Conference Resources</Link></li>
-                <li><Link to="/#corporate-members" className="hover:text-white transition-colors block py-0.5">Corporate Members</Link></li>
-                <li><Link to="/sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Corporate Sponsors</Link></li>
+                <li><Link to="/corporate-members" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Corporate Members</Link></li>
+                <li><Link to="/#sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Corporate Sponsors</Link></li>
                 <li><Link to="/contact" onClick={handleLinkClick} className="hover:text-white transition-colors block py-0.5">Become a Sponsor</Link></li>
               </ul>
             )}
@@ -377,12 +377,12 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/#corporate-members" className="hover:text-white transition-colors">
+                <Link to="/corporate-members" onClick={handleLinkClick} className="hover:text-white transition-colors">
                   Corporate Members
                 </Link>
               </li>
               <li>
-                <Link to="/sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors">
+                <Link to="/#sponsors" onClick={handleLinkClick} className="hover:text-white transition-colors">
                   Corporate Sponsors
                 </Link>
               </li>

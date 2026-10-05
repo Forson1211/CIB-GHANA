@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Phone, Mail, Send, CheckCircle2, ExternalLink } from 'lucide-react';
 
 export const Contact: React.FC = () => {
+  const location = useLocation();
   const [submitted, setSubmitted] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapVisible, setMapVisible] = useState(false);
@@ -21,6 +23,20 @@ export const Contact: React.FC = () => {
     if (mapSectionRef.current) observer.observe(mapSectionRef.current);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const subjectParam = params.get('subject');
+    if (subjectParam) {
+      setFormData((prev) => ({
+        ...prev,
+        subject: subjectParam,
+        message: prev.message || (subjectParam.toLowerCase().includes('sponsor')
+          ? 'Hello CIB Ghana Secretariat, we would like to explore corporate sponsorship opportunities for upcoming CIB Ghana conferences and executive events.'
+          : prev.message),
+      }));
+    }
+  }, [location.search]);
 
 
 

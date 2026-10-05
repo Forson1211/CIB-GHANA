@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { Calendar, MapPin, ArrowRight, FileText, Camera, Award } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { formatDateRange } from '../lib/utils';
+import { EventHighlightMarquee } from '../components/events/EventHighlightMarquee';
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -189,6 +190,25 @@ export const PastEvents: React.FC = () => {
             );
           })}
         </motion.div>
+
+        {/* Photo Stream & Conference Archive from Previous Events */}
+        <div className="pt-10 sm:pt-14 space-y-6">
+          <div className="border-t border-white/10 pt-8 text-left space-y-2">
+            <span className="text-xs font-black uppercase tracking-widest text-[#FFE500]">
+              MOMENTS &amp; ARCHIVES
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
+              Previous Event Highlights &amp; Gallery
+            </h2>
+            <p className="text-white/80 text-xs sm:text-sm max-w-2xl font-medium">
+              Explore authentic moments from previous CIB Ghana conferences, executive symposiums, and gala awards. Click any photo to expand.
+            </p>
+          </div>
+
+          <div className="-mx-4 sm:-mx-6 lg:-mx-8">
+            <EventHighlightMarquee />
+          </div>
+        </div>
       </div>
     </div>
   );

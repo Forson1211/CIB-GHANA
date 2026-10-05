@@ -197,11 +197,11 @@ export const Navbar: React.FC = () => {
       links: [
         {
           label: 'Corporate Members',
-          path: '/#corporate-members',
+          path: '/corporate-members',
         },
         {
           label: 'Corporate Sponsors',
-          path: '/sponsors',
+          path: '/#sponsors',
         },
         {
           label: 'Become a Sponsor',

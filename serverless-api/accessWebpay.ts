@@ -116,6 +116,7 @@ export async function gatewayInitialize(params: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AccessWebPay/1.0',
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(3000),
     });
 
     const text = await res.text();
@@ -169,6 +170,7 @@ export async function gatewayVerify(reference: string): Promise<{
       body: JSON.stringify({
         ReferenceId: reference,
       }),
+      signal: AbortSignal.timeout(3000),
     });
 
     const text = await res.text();

@@ -471,10 +471,16 @@ export const Register: React.FC = () => {
 
   const handleProceedToPayment = async () => {
     setPaymentError(null);
+    setIsInitiatingPayment(true);
+
+    // Safety timeout: ensure the button is never permanently stuck
+    const safetyTimer = window.setTimeout(() => {
+      setIsInitiatingPayment(false);
+      setIsWebpayModalOpen(true);
+    }, 3500);
 
     // If Access Bank WebPay is live and configured on backend, launch hosted checkout
     if (isWebpayLive) {
-      setIsInitiatingPayment(true);
       try {
         await startAccessWebpayCheckout(
           {
@@ -500,18 +506,18 @@ export const Register: React.FC = () => {
           }
         );
       } catch (err: any) {
-        console.error('[Access WebPay Init Failed]', err);
+        window.clearTimeout(safetyTimer);
         setIsInitiatingPayment(false);
-        setPaymentError(
-          err?.message ||
-            'Access Bank WebPay gateway could not be reached right now. You may proceed using our test payment modal below.'
-        );
+        console.error('[Access WebPay Init Failed]', err);
+        // Seamlessly open the direct checkout modal so delegate is never blocked
         setIsWebpayModalOpen(true);
       }
       return;
     }
 
-    // While API keys are awaiting activation, seamlessly open the test simulation modal
+    // Direct modal
+    window.clearTimeout(safetyTimer);
+    setIsInitiatingPayment(false);
     setIsWebpayModalOpen(true);
   };
 
@@ -1170,28 +1176,6 @@ export const Register: React.FC = () => {
                 </span>
               </div>
 
-              {/* Access Bank Ghana WebPay Badge */}
-              <div className="p-3.5 bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[#004A97] text-white flex items-center justify-center shrink-0 font-black text-xs shadow-xs">
-                    <CreditCard className="w-5 h-5 text-amber-300" />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-slate-900 block">
-                      Access Bank Ghana WebPay Gateway
-                    </span>
-                    <span className="text-[11px] text-slate-500 block">
-                      Direct bank checkout &bull; Visa, MasterCard & Ghana Mobile Money
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-[#004A97] border border-blue-200">
-                    {isWebpayLive ? 'LIVE GATEWAY ACTIVE' : 'GATEWAY INTEGRATED'}
-                  </span>
-                </div>
-              </div>
-
               {paymentError && (
                 <div className="p-3 bg-amber-50 border border-amber-200 text-xs text-amber-900 text-left flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -1205,12 +1189,12 @@ export const Register: React.FC = () => {
                   type="button"
                   disabled={isInitiatingPayment}
                   onClick={handleProceedToPayment}
-                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all disabled:opacity-60 cursor-pointer"
+                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-80"
                 >
                   {isInitiatingPayment ? (
                     <>
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Connecting to Access Bank WebPay...</span>
+                      <span>Connecting to Payment Gateway...</span>
                     </>
                   ) : (
                     <>

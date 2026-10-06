@@ -14,6 +14,7 @@ export class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
+        signal: options?.signal || AbortSignal.timeout(6000),
       });
 
       const json = await response.json();

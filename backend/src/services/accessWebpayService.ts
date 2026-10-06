@@ -102,6 +102,7 @@ export class AccessWebpayService {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AccessWebPay/1.0',
         },
         body: JSON.stringify(requestBody),
+        signal: AbortSignal.timeout(3000),
       });
 
       const responseText = await response.text();
@@ -179,6 +180,7 @@ export class AccessWebpayService {
         body: JSON.stringify({
           ReferenceId: reference,
         }),
+        signal: AbortSignal.timeout(3000),
       });
 
       const responseText = await response.text();

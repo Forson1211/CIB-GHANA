@@ -21,7 +21,19 @@ export const PaymentCallback: React.FC = () => {
   const [reference, setReference] = useState<string>('');
 
   const pending = readPendingWebpayCheckout();
-  const refFromUrl = searchParams.get('reference') || searchParams.get('ref') || searchParams.get('transaction_id') || pending?.reference || '';
+  const codeFromUrl = searchParams.get('code');
+  const messageFromUrl = searchParams.get('message');
+  const txnIdFromUrl = searchParams.get('txnId') || searchParams.get('transaction_id') || '';
+  const narrationFromUrl = searchParams.get('narration') || '';
+  const refFromUrl =
+    searchParams.get('referenceId') ||
+    searchParams.get('reference') ||
+    searchParams.get('ref') ||
+    pending?.reference ||
+    txnIdFromUrl ||
+    '';
+
+  const [transactionId, setTransactionId] = useState<string>(txnIdFromUrl);
 
   const triggerConfetti = () => {
     confetti({
@@ -39,6 +51,21 @@ export const PaymentCallback: React.FC = () => {
       return;
     }
 
+    // If Access Bank returned a failure response code in URL
+    if (codeFromUrl && codeFromUrl !== '000') {
+      const codeMessages: Record<string, string> = {
+        '001': 'Payment was cancelled or declined by your provider.',
+        '002': 'Invalid merchant or service configuration.',
+        '003': 'Invalid request parameters.',
+        '004': 'Invalid authorization.',
+        '005': 'Bank connection refused or insufficient permissions.',
+      };
+      setState('failed');
+      setErrorMessage(messageFromUrl || codeMessages[codeFromUrl] || `Transaction returned code ${codeFromUrl}`);
+      setReference(ref);
+      return;
+    }
+
     setState('verifying');
     setReference(ref);
 
@@ -49,6 +76,9 @@ export const PaymentCallback: React.FC = () => {
         if (res.data.status === 'SUCCESSFUL') {
           const reg = res.data.registration;
           setRegistration(reg);
+          if (res.data.gateway?.transactionId) {
+            setTransactionId(res.data.gateway.transactionId);
+          }
           setState('success');
           clearPendingWebpayCheckout();
 
@@ -155,9 +185,15 @@ export const PaymentCallback: React.FC = () => {
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="text-slate-500 font-medium">Gateway:</span>
                 <span className="font-bold text-[#004A97] text-xs">
-                  Access Bank Ghana WebPay
+                  Access Bank Ghana WebPay (Collections WEB_ACQ)
                 </span>
               </div>
+              {transactionId && (
+                <div className="flex items-center justify-between text-xs sm:text-sm">
+                  <span className="text-slate-500 font-medium">Bank Transaction ID:</span>
+                  <span className="font-mono text-xs text-[#004A97] font-semibold">{transactionId}</span>
+                </div>
+              )}
             </div>
 
             <p className="text-xs text-slate-500">

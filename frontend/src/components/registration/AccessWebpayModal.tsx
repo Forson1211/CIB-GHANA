@@ -25,11 +25,11 @@ export const AccessWebpayModal: React.FC<AccessWebpayModalProps> = ({
   onSuccess,
 }) => {
   const [tab, setTab] = useState<'card' | 'momo'>('momo');
-  const [momoPhone, setMomoPhone] = useState('0244123456');
+  const [momoPhone, setMomoPhone] = useState('0243144993');
   const [momoNetwork, setMomoNetwork] = useState<'MTN' | 'VODAFONE' | 'AIRTELTIGO'>('MTN');
-  const [cardNumber, setCardNumber] = useState('4084 0012 3456 7890');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvv, setCardCvv] = useState('892');
+  const [cardNumber, setCardNumber] = useState('4111 1111 1111 1111');
+  const [cardExpiry, setCardExpiry] = useState('01/27');
+  const [cardCvv, setCardCvv] = useState('100');
   const [isProcessing, setIsProcessing] = useState(false);
   const [promptSent, setPromptSent] = useState(false);
 

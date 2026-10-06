@@ -227,6 +227,8 @@ export class ApiClient {
       reference: string;
       amount_mismatch?: boolean;
       registration: Registration;
+      ticket?: any;
+      gateway?: any;
     };
   }> {
     return this.request(`/payments/verify/${encodeURIComponent(reference)}`);

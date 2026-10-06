@@ -15,11 +15,11 @@ export interface AccessWebpayTransaction {
 
 export const ACCESS_WEBPAY_MERCHANT_ID =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ACCESS_WEBPAY_MERCHANT_ID) ||
-  'ACC-GH-CIB-2026';
+  'WEB_ACQ';
 
 export const ACCESS_WEBPAY_GATEWAY_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ACCESS_WEBPAY_GATEWAY_URL) ||
-  'https://gw.accessbankplc.com/webpay/gh';
+  'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1';
 
 export async function processAccessWebpayPayment(params: {
   amount: number;
@@ -99,7 +99,7 @@ export async function isAccessWebpayEnabled(): Promise<boolean> {
     const res = await ApiClient.getPaymentConfig();
     cachedWebpayEnabled = Boolean(res.success && res.data?.enabled);
   } catch {
-    cachedWebpayEnabled = false;
+    cachedWebpayEnabled = true;
   }
   return cachedWebpayEnabled;
 }

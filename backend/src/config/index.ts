@@ -21,11 +21,23 @@ export const config = {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqZmp1ZXpndnJveWh0d2NubHJ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDMyMjM3NCwiZXhwIjoyMTA1ODk4Mzc0fQ.LKsElhVQb7kY4Xek5SvoTwTpZ1rsuWbjSBX7-SlMP9k',
   },
 
-  // Access Bank Ghana WebPay Gateway
+  // Access Bank Ghana WebPay Gateway (Collections WEB_ACQ)
   accessWebpay: {
-    merchantId: process.env.ACCESS_WEBPAY_MERCHANT_ID || process.env.VITE_ACCESS_WEBPAY_MERCHANT_ID || 'ACC-GH-CIB-2026',
-    apiKey: process.env.ACCESS_WEBPAY_API_KEY || process.env.ACCESS_WEBPAY_SECRET_KEY || '',
-    gatewayUrl: process.env.ACCESS_WEBPAY_GATEWAY_URL || 'https://gw.accessbankplc.com/webpay/gh',
+    serviceCode:
+      process.env.ACCESS_WEBPAY_SERVICE_CODE ||
+      process.env.ACCESS_WEBPAY_API_KEY ||
+      'TjBFMmVscGxlVmRhUjI0eC5kZXYuTW5sM05FNXhWamxhY1dkUQ==',
+    isTest: process.env.ACCESS_WEBPAY_IS_TEST !== 'false',
+    initUrl:
+      process.env.ACCESS_WEBPAY_INIT_URL ||
+      (process.env.ACCESS_WEBPAY_IS_TEST === 'false'
+        ? 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Init'
+        : 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Test/Init'),
+    statusUrl:
+      process.env.ACCESS_WEBPAY_STATUS_URL ||
+      'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Transaction/Status',
+    merchantService: process.env.ACCESS_WEBPAY_MERCHANT_SERVICE || 'WEB_ACQ',
+    merchantId: process.env.ACCESS_WEBPAY_MERCHANT_ID || 'WEB_ACQ',
   },
 
   // Email Service (Resend or SMTP via Nodemailer)

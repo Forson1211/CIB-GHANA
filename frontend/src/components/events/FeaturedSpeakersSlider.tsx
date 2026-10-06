@@ -79,8 +79,8 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
     >
       <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8 lg:space-y-10">
         {/* Section Title & View More Speakers Button */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-left">
+        <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 text-center sm:text-left">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-center sm:text-left">
             Featured Speakers
           </h2>
           <Link
@@ -90,7 +90,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
               sessionStorage.setItem('cib_active_section', 'speakers');
               sessionStorage.setItem('cib_last_home_scroll', String(window.scrollY));
             }}
-            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] border border-emerald-400/30 active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-start sm:self-auto cursor-pointer"
+            className="inline-flex items-center justify-center px-6 sm:px-8 py-3 bg-[#008129] hover:bg-[#006e23] border border-emerald-400/30 active:scale-95 text-white font-black text-xs sm:text-sm uppercase tracking-wider rounded-none transition-all duration-150 shadow-md text-center shrink-0 self-center sm:self-auto cursor-pointer"
           >
             VIEW MORE SPEAKERS
           </Link>
@@ -103,7 +103,7 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
           {/* Pure Green Brand Card Container (Sharp Edges) */}
           <div className="bg-[#008129] border border-[#006e23] rounded-none p-5 sm:p-7 shadow-xl space-y-5 sm:space-y-6 overflow-hidden text-white">
             {/* Top Speaker Details - Stable height prevents card from jumping/resizing */}
-            <div className="text-left min-h-[120px] sm:min-h-[135px] relative">
+            <div className="text-center sm:text-left min-h-[120px] sm:min-h-[135px] relative">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSpeaker.id}
@@ -111,15 +111,15 @@ export const FeaturedSpeakersSlider: React.FC<FeaturedSpeakersSliderProps> = ({
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
-                  className="flex flex-col justify-start space-y-1.5"
+                  className="flex flex-col items-center sm:items-start justify-center sm:justify-start space-y-1.5"
                 >
-                  <h3 className="text-lg sm:text-2xl font-black font-display text-white tracking-tight leading-tight line-clamp-2">
+                  <h3 className="text-lg sm:text-2xl font-black font-display text-white tracking-tight leading-tight line-clamp-2 text-center sm:text-left">
                     {currentSpeaker.name}
                   </h3>
-                  <p className="text-sm sm:text-base font-bold text-white/95 leading-snug line-clamp-2">
+                  <p className="text-sm sm:text-base font-bold text-white/95 leading-snug line-clamp-2 text-center sm:text-left">
                     {currentSpeaker.position}
                   </p>
-                  <p className="text-xs sm:text-sm font-bold text-white/80 line-clamp-2">
+                  <p className="text-xs sm:text-sm font-bold text-white/80 line-clamp-2 text-center sm:text-left">
                     {currentSpeaker.organization}
                   </p>
                 </motion.div>

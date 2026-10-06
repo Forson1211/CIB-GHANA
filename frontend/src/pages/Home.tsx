@@ -621,7 +621,7 @@ export const Home: React.FC = () => {
             {/* COLUMN 1: MEMBERS */}
             <div className="flex flex-col space-y-4">
               {/* Green Header Pill (no stroke) */}
-              <div className="inline-flex self-start px-5 py-2 bg-[#006e23] text-white text-base sm:text-lg font-black tracking-wide shadow-md">
+              <div className="inline-flex self-center sm:self-start px-5 py-2 bg-[#006e23] text-white text-base sm:text-lg font-black tracking-wide shadow-md">
                 Members
               </div>
 
@@ -629,7 +629,7 @@ export const Home: React.FC = () => {
               <div className="space-y-4 flex-1">
                 {/* Single Occupancy */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display leading-tight">
                       Single
                     </span>
@@ -637,11 +637,11 @@ export const Home: React.FC = () => {
                       Occupancy
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 5,600
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">2 Night All-Inclusive Package</p>
                       <p className="text-white/80">• Lunch &amp; Dinner</p>
                       <p className="text-white/80">• Conference &amp; Masterclass Access</p>
@@ -651,7 +651,7 @@ export const Home: React.FC = () => {
 
                 {/* Double Occupancy */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display leading-tight">
                       Double
                     </span>
@@ -659,11 +659,11 @@ export const Home: React.FC = () => {
                       Occupancy
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 4,000 <span className="text-xs font-semibold text-white/80 font-sans">per person</span>
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">2 Night All-Inclusive Package</p>
                       <p className="text-white/80">• Lunch &amp; Dinner</p>
                       <p className="text-white/80">• Conference &amp; Masterclass Access</p>
@@ -673,7 +673,7 @@ export const Home: React.FC = () => {
 
                 {/* Non Residence Conference Only */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 font-display leading-tight">
                       Non Residence
                     </span>
@@ -681,11 +681,11 @@ export const Home: React.FC = () => {
                       Conference Only
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 2,000
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">Accommodation not included</p>
                       <p className="text-white/80">• Full Conference &amp; Masterclass Access</p>
                       <p className="text-white/80">• Luncheons &amp; Networking Sessions</p>
@@ -698,7 +698,7 @@ export const Home: React.FC = () => {
             {/* COLUMN 2: NON-MEMBERS */}
             <div className="flex flex-col space-y-4">
               {/* Clean Green Header Pill (no stroke) */}
-              <div className="inline-flex self-start px-5 py-2 bg-[#006e23] text-white text-base sm:text-lg font-black tracking-wide shadow-md">
+              <div className="inline-flex self-center sm:self-start px-5 py-2 bg-[#006e23] text-white text-base sm:text-lg font-black tracking-wide shadow-md">
                 Non-Members
               </div>
 
@@ -706,7 +706,7 @@ export const Home: React.FC = () => {
               <div className="space-y-4 flex-1">
                 {/* Single Occupancy */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display leading-tight">
                       Single
                     </span>
@@ -714,11 +714,11 @@ export const Home: React.FC = () => {
                       Occupancy
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 6,000
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">2 Night All-Inclusive Package</p>
                       <p className="text-white/80">• Lunch &amp; Dinner</p>
                       <p className="text-white/80">• Conference &amp; Masterclass Access</p>
@@ -728,7 +728,7 @@ export const Home: React.FC = () => {
 
                 {/* Double Occupancy */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-2xl sm:text-3xl font-black text-slate-900 font-display leading-tight">
                       Double
                     </span>
@@ -736,11 +736,11 @@ export const Home: React.FC = () => {
                       Occupancy
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 4,600 <span className="text-xs font-semibold text-white/80 font-sans">per person</span>
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">2 Night All-Inclusive Package</p>
                       <p className="text-white/80">• Lunch &amp; Dinner</p>
                       <p className="text-white/80">• Conference &amp; Masterclass Access</p>
@@ -750,7 +750,7 @@ export const Home: React.FC = () => {
 
                 {/* Non Residence Conference Only */}
                 <div className="grid grid-cols-1 sm:grid-cols-12 overflow-hidden shadow-lg">
-                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col justify-center">
+                  <div className="sm:col-span-5 bg-white p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left">
                     <span className="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 font-display leading-tight">
                       Non Residence
                     </span>
@@ -758,11 +758,11 @@ export const Home: React.FC = () => {
                       Conference Only
                     </span>
                   </div>
-                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col justify-center space-y-1.5">
+                  <div className="sm:col-span-7 bg-[#006e23] p-5 sm:p-6 flex flex-col items-center sm:items-start justify-center text-center sm:text-left space-y-1.5">
                     <div className="text-2xl sm:text-3xl font-black text-white font-display">
                       GH₵ 2,500
                     </div>
-                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5">
+                    <div className="text-xs sm:text-[13px] text-white/90 font-medium space-y-0.5 text-center sm:text-left">
                       <p className="font-semibold text-[#FFE500]">Accommodation not included</p>
                       <p className="text-white/80">• Full Conference &amp; Masterclass Access</p>
                       <p className="text-white/80">• Luncheons &amp; Networking Sessions</p>

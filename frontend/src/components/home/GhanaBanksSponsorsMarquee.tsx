@@ -686,20 +686,20 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
     <section id="sponsors" className="w-full bg-[#0D3A21] text-white py-16 sm:py-24 lg:py-28 overflow-hidden relative border-y border-white/10 shadow-2xl scroll-mt-24">
       <span id="corporate-members" className="absolute -top-24 pointer-events-none" />
 
-      {/* Header with Title on Left & "SPONSOR NOW" Button on Right */}
-      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="text-left space-y-1.5">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight">
+      {/* Header with Title on Left & "SPONSOR NOW" Button on Right (Centered on mobile devices) */}
+      <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-8 flex flex-col sm:flex-row items-center sm:items-center justify-between gap-4 text-center sm:text-left">
+        <div className="text-center sm:text-left space-y-1.5 mx-auto sm:mx-0">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white font-display tracking-tight text-center sm:text-left">
             Sponsors
           </h2>
-          <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-2xl">
+          <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-2xl mx-auto sm:mx-0 text-center sm:text-left">
             Official sponsors and partner institutions powering the 28th National Banking Conference.
           </p>
         </div>
 
         <Link
           to="/contact?subject=Corporate+Sponsorship+Inquiry"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-none bg-[#FFE500] hover:bg-white text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-xl active:scale-95 shrink-0 whitespace-nowrap self-start sm:self-auto cursor-pointer border border-[#FFE500] hover:border-white group"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-none bg-[#FFE500] hover:bg-white text-slate-950 font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 shadow-md hover:shadow-xl active:scale-95 shrink-0 whitespace-nowrap self-center sm:self-auto cursor-pointer border border-[#FFE500] hover:border-white group"
         >
           <span>Sponsor Now</span>
           <ArrowRight className="w-4 h-4 stroke-[2.5] transition-transform duration-200 group-hover:translate-x-1" />

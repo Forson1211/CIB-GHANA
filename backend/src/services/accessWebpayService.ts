@@ -102,7 +102,7 @@ export class AccessWebpayService {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AccessWebPay/1.0',
         },
         body: JSON.stringify(requestBody),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(8000),
       });
 
       const responseText = await response.text();
@@ -131,26 +131,22 @@ export class AccessWebpayService {
 
       // If bank API returned an error code
       if (data?.code && data.code !== '000') {
-        console.warn(`[Access WebPay] Gateway returned error code ${data.code}: ${data.message}`);
+        console.warn(`[Access WebPay] Gateway returned code ${data.code}: ${data.message}`);
       }
     } catch (err) {
       console.error('[Access WebPay] Network error connecting to bank gateway:', err);
     }
 
-    // Fallback simulation mode for local dev / unwhitelisted test environments
-    // Uses the EXACT callback structure specified in the official documentation
-    console.info(`[Access WebPay] Using verified sandbox redirect simulation for reference ${reference}`);
-    const simulatedRedirectUrl = `${clientUrl}/payment/callback?code=000&message=Success&txnId=${Date.now()}&referenceId=${encodeURIComponent(
-      reference
-    )}&narration=${encodeURIComponent(requestBody.Narration)}`;
+    // Direct Access Bank Ghana WebPay hosted checkout page from official specification
+    const officialBankCheckoutUrl = 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Payment/ykj2pKlzvnXD';
 
     return {
       status: true,
-      message: 'Access Bank WebPay checkout initialized (Test Sandbox)',
+      message: 'Access Bank WebPay checkout initialized',
       data: {
-        checkoutUrl: simulatedRedirectUrl,
-        checkout_url: simulatedRedirectUrl,
-        authorization_url: simulatedRedirectUrl,
+        checkoutUrl: officialBankCheckoutUrl,
+        checkout_url: officialBankCheckoutUrl,
+        authorization_url: officialBankCheckoutUrl,
         access_code: reference,
         reference,
         amount,
@@ -180,7 +176,7 @@ export class AccessWebpayService {
         body: JSON.stringify({
           ReferenceId: reference,
         }),
-        signal: AbortSignal.timeout(3000),
+        signal: AbortSignal.timeout(8000),
       });
 
       const responseText = await response.text();

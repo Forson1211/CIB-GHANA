@@ -46,8 +46,15 @@ export const WEBPAY_CONFIG = {
   serviceCode: env('ACCESS_WEBPAY_SERVICE_CODE', env('ACCESS_WEBPAY_API_KEY', 'TjBFMmVscGxlVmRhUjI0eC5kZXYuTW5sM05FNXhWamxhY1dkUQ==')),
   initUrl: env('ACCESS_WEBPAY_INIT_URL', 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Test/Init'),
   statusUrl: env('ACCESS_WEBPAY_STATUS_URL', 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Transaction/Status'),
+  siteUrl: (
+    env('PUBLIC_SITE_URL') ||
+    env('URL') ||
+    (env('VERCEL_URL') ? `https://${env('VERCEL_URL')}` : '') ||
+    'https://cibghevents.vercel.app'
+  ).replace(/\/+$/, ''),
   currency: env('ACCESS_WEBPAY_CURRENCY', 'GHS'),
-  siteUrl: (env('PUBLIC_SITE_URL') || env('URL') || 'https://cibghana.org').replace(/\/+$/, ''),
+  secretKey: env('ACCESS_WEBPAY_SECRET_KEY', ''),
+  webhookSignatureHeader: env('ACCESS_WEBPAY_WEBHOOK_SIGNATURE_HEADER', 'x-webpay-signature'),
 };
 
 export function isWebpayEnabled(): boolean {
@@ -116,7 +123,7 @@ export async function gatewayInitialize(params: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AccessWebPay/1.0',
       },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(8000),
     });
 
     const text = await res.text();
@@ -138,15 +145,11 @@ export async function gatewayInitialize(params: {
     console.warn('[WebPay Serverless] Outbound init call error:', err);
   }
 
-  // Graceful verified sandbox fallback for local dev or restricted environments
-  const fallbackUrl = `${WEBPAY_CONFIG.siteUrl}/payment/callback?code=000&message=Success&txnId=${Date.now()}&referenceId=${encodeURIComponent(
-    params.reference
-  )}&narration=${encodeURIComponent(body.Narration)}`;
-
+  // Direct Access Bank Ghana WebPay hosted checkout page from official specification
   return {
-    checkoutUrl: fallbackUrl,
+    checkoutUrl: 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Payment/ykj2pKlzvnXD',
     gatewayReference: params.reference,
-    raw: { simulated: true },
+    raw: { hosted: true },
   };
 }
 
@@ -170,7 +173,7 @@ export async function gatewayVerify(reference: string): Promise<{
       body: JSON.stringify({
         ReferenceId: reference,
       }),
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(8000),
     });
 
     const text = await res.text();

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { AccessWebpayModal } from '../components/registration/AccessWebpayModal';
 import { sendEmailNotification } from '../lib/email';
 import { isAccessWebpayEnabled, startAccessWebpayCheckout } from '../lib/payments';
 
@@ -228,21 +227,13 @@ export const Register: React.FC = () => {
   const [selectedMasterclass, setSelectedMasterclass] = useState<string>(
     () => savedDraft?.selectedMasterclass || 'Deploying AI to Combat Modern Fraud in International Trade Finance'
   );
-  const [isWebpayModalOpen, setIsWebpayModalOpen] = useState(false);
   const [completedRegistration, setCompletedRegistration] = useState<Registration | null>(null);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [emailResentSuccess, setEmailResentSuccess] = useState(false);
 
   // Access Bank Ghana WebPay gateway state
-  const [isWebpayLive, setIsWebpayLive] = useState(false);
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-
-  useEffect(() => {
-    isAccessWebpayEnabled()
-      .then((enabled) => setIsWebpayLive(enabled))
-      .catch(() => {});
-  }, []);
 
   const handleResendEmail = async () => {
     if (!completedRegistration) return;
@@ -473,52 +464,37 @@ export const Register: React.FC = () => {
     setPaymentError(null);
     setIsInitiatingPayment(true);
 
-    // Safety timeout: ensure the button is never permanently stuck
-    const safetyTimer = window.setTimeout(() => {
+    try {
+      await startAccessWebpayCheckout(
+        {
+          event_id: event.id,
+          event_title: event.title,
+          package: selectedPackage,
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          organization,
+          job_title: jobTitle,
+          country,
+          cib_member_id: cibMemberId,
+          membership_category: membershipCategory,
+          attendance_type: attendanceType,
+          dietary_requirements: dietaryRequirements,
+          special_assistance: `Package: ${selectedPackage} | Masterclass: ${selectedMasterclass}`,
+        },
+        {
+          eventSlug: event.slug,
+          draftKey: STORAGE_KEY_FORM,
+        }
+      );
+    } catch (err: any) {
       setIsInitiatingPayment(false);
-      setIsWebpayModalOpen(true);
-    }, 3500);
-
-    // If Access Bank WebPay is live and configured on backend, launch hosted checkout
-    if (isWebpayLive) {
-      try {
-        await startAccessWebpayCheckout(
-          {
-            event_id: event.id,
-            event_title: event.title,
-            package: selectedPackage,
-            first_name: firstName,
-            last_name: lastName,
-            email,
-            phone,
-            organization,
-            job_title: jobTitle,
-            country,
-            cib_member_id: cibMemberId,
-            membership_category: membershipCategory,
-            attendance_type: attendanceType,
-            dietary_requirements: dietaryRequirements,
-            special_assistance: `Package: ${selectedPackage} | Masterclass: ${selectedMasterclass}`,
-          },
-          {
-            eventSlug: event.slug,
-            draftKey: STORAGE_KEY_FORM,
-          }
-        );
-      } catch (err: any) {
-        window.clearTimeout(safetyTimer);
-        setIsInitiatingPayment(false);
-        console.error('[Access WebPay Init Failed]', err);
-        // Seamlessly open the direct checkout modal so delegate is never blocked
-        setIsWebpayModalOpen(true);
-      }
-      return;
+      console.error('[Access WebPay Init Failed]', err);
+      setPaymentError(
+        err.message || 'Unable to connect to Access Bank payment gateway. Please check your network and try again.'
+      );
     }
-
-    // Direct modal
-    window.clearTimeout(safetyTimer);
-    setIsInitiatingPayment(false);
-    setIsWebpayModalOpen(true);
   };
 
   const stepTitles = [
@@ -1183,37 +1159,34 @@ export const Register: React.FC = () => {
                 </div>
               )}
 
-              {/* Proceed to Payment CTA */}
-              <div className="space-y-3 pt-2">
+              {/* Navigation Action Buttons (matched to Step 3 layout) */}
+              <div className="flex items-center justify-between gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(3)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-none text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition-colors shrink-0 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Back</span>
+                </button>
                 <button
                   type="button"
                   disabled={isInitiatingPayment}
                   onClick={handleProceedToPayment}
-                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-80"
+                  className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer disabled:opacity-80"
                 >
                   {isInitiatingPayment ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Connecting to Payment Gateway...</span>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                      <span className="whitespace-nowrap">Connecting...</span>
                     </>
                   ) : (
                     <>
-                      <span>Proceed to Payment (GH₵ {finalPayable.toLocaleString()})</span>
-                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                      <span className="whitespace-nowrap">Continue to Payment</span>
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
                     </>
                   )}
                 </button>
-
-                <div className="flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(3)}
-                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors inline-flex items-center gap-1 py-1"
-                  >
-                    <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    <span>Back to Attendance</span>
-                  </button>
-                </div>
               </div>
             </div>
           )}
@@ -1325,25 +1298,6 @@ export const Register: React.FC = () => {
         </div>
       </div>
 
-      {/* Access Bank WebPay Checkout Modal */}
-      {isWebpayModalOpen && (
-        <AccessWebpayModal
-          isOpen={isWebpayModalOpen}
-          onClose={() => setIsWebpayModalOpen(false)}
-          amount={finalPayable}
-          currency="GHS"
-          email={email}
-          eventTitle={event.title}
-          registrationId={`reg-${Date.now()}`}
-          onSuccess={(tx) => {
-            setIsWebpayModalOpen(false);
-            handleFinalizeRegistration(
-              tx.channel === 'card' ? 'WEBPAY_CARD' : 'WEBPAY_MOMO',
-              tx.reference
-            );
-          }}
-        />
-      )}
     </div>
   );
 };

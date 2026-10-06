@@ -33,7 +33,10 @@ export class PaymentController {
   static async initializePayment(req: Request, res: Response, next: NextFunction) {
     try {
       const body = req.body;
-      const clientUrl = config.clientUrl || `${req.protocol}://${req.get('host')}`;
+      const host = req.get('x-forwarded-host') || req.get('host');
+      const proto = req.get('x-forwarded-proto') || req.protocol || 'https';
+      const requestOrigin = host ? `${proto}://${host}` : 'https://cibghevents.vercel.app';
+      const clientUrl = (config.clientUrl && !config.clientUrl.includes('localhost')) ? config.clientUrl : requestOrigin;
 
       // Mode A: Hosted checkout initiated from Register page (creates pending registration)
       if (body.package && body.first_name && body.email) {

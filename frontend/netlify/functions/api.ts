@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
+import { handleWebpayRoute, WEBPAY_CONFIG } from './_shared/accessWebpay';
 
 // Configuration
 const SMTP_CONFIG = {
@@ -324,6 +325,37 @@ export const handler = async (event: any, _context?: any) => {
         }),
       };
     }
+
+    // -------------------------------------------------------------
+    // 1b. Access Bank WebPay payments (/payments/config|initialize|verify|webhook)
+    // -------------------------------------------------------------
+    const webpayResponse = await handleWebpayRoute(pathname, method, event, {
+      supabase,
+      corsHeaders: CORS_HEADERS,
+      mapRegistration: mapDbRegistration,
+      sendConfirmationEmail: (reg: any) => {
+        const regNumber = reg.registration_number;
+        const eventTitle = reg.event_title || '30th National Banking & Ethics Conference 2026';
+        return dispatchEmail({
+          recipient: reg.email,
+          subject: `Payment Confirmed & Pass Issued: ${eventTitle} (Ref: ${regNumber})`,
+          htmlContent: buildConfirmationHtml({
+            attendeeName: `${reg.first_name} ${reg.last_name || ''}`.trim(),
+            eventTitle,
+            eventDate: 'November 9 - 10, 2026',
+            eventVenue: 'Aqua Safari Resort Convention Pavilion, Ada Foah',
+            regNumber,
+            amount: reg.total_amount,
+            reference: reg.payment_reference,
+            paymentMethod: 'Access Bank WebPay (Card / Mobile Money)',
+            ticketUrl: `${WEBPAY_CONFIG.siteUrl}/ticket/${regNumber}`,
+            qrImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`,
+          }),
+          plainText: `Payment confirmed for ${reg.first_name}. Registration Number: ${regNumber}. Reference: ${reg.payment_reference}`,
+        });
+      },
+    });
+    if (webpayResponse) return webpayResponse;
 
     // -------------------------------------------------------------
     // 2. Admin Authentication & Stats

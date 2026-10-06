@@ -76,16 +76,25 @@ export const LeadershipQuoteSpotlight: React.FC<LeadershipQuoteSpotlightProps> =
             transition={{ duration: 0.6, delay: 0.15, ease: [0.25, 1, 0.5, 1] }}
             className="lg:col-span-7 text-left"
           >
-            <div className="border-l-[3px] border-[#FFE500] pl-5 sm:pl-6 space-y-6 sm:space-y-8">
-              {/* Quote text matching layout & tone */}
-              <p className="text-white/90 text-base sm:text-lg lg:text-[19px] font-normal leading-relaxed text-justify">
-                Our expanding banking and financial technology ecosystem has brought
-                innovative solutions, greater convenience, and wider access to retail and
-                corporate institutions across Ghana. The National Banking and Ethics Conference
-                is our shared journey of ethical leadership and governance. As we shape the
-                future of banking with AI, digital currencies, and new regulatory standards,
-                we can only progress by walking this journey of innovation and collaboration together.
-              </p>
+            <div className="border-l-[3px] border-[#FFE500] pl-5 sm:pl-6 space-y-5 sm:space-y-6">
+              {/* Presidential Spotlight Message */}
+              <div className="space-y-3.5 sm:space-y-4 text-white/90 text-sm sm:text-base lg:text-[17px] font-normal leading-relaxed text-justify">
+                <p>
+                  Welcome to the 30th National Banking and Ethics Conference, organised by the Chartered Institute of Bankers, Ghana (CIB Ghana), under the theme &ldquo;Trust, Technology and Transformation.&rdquo;
+                </p>
+                <p>
+                  The 30th edition comes at a pivotal time for banking and financial services. As technology, artificial intelligence, digital finance and emerging innovations reshape our industry, the importance of trust, ethics, professionalism and responsible leadership has never been greater.
+                </p>
+                <p>
+                  For three decades, the Conference has provided a platform for thought leadership, industry dialogue and professional development. This year, we bring together regulators, policymakers, industry leaders and professionals to explore the opportunities and challenges shaping the future of banking.
+                </p>
+                <p>
+                  Join us on 9&ndash;10 November 2026 at Aqua Safari Resort for two days of insightful conversations, engaging masterclasses and meaningful connections as we work together to build a trusted, innovative and future-ready financial sector.
+                </p>
+                <p className="font-semibold text-white">
+                  We look forward to welcoming you.
+                </p>
+              </div>
 
               {/* Attribution */}
               <div className="space-y-1">

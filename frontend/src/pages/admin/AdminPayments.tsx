@@ -22,7 +22,7 @@ export const AdminPayments: React.FC = () => {
   return (
     <AdminLayout
       title="Payments & Revenue Ledger"
-      subtitle="Audited transaction records processed via Paystack (Cards & Ghana Mobile Money)."
+      subtitle="Audited transaction records processed via Access Bank Ghana WebPay (Cards & Ghana Mobile Money)."
       actions={
         <Button
           variant="outline"
@@ -47,13 +47,13 @@ export const AdminPayments: React.FC = () => {
               {formatGHS(totalRevenue)}
             </h2>
             <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-              <ShieldCheck className="w-4 h-4" /> 100% Verified via Paystack Gateway
+              <ShieldCheck className="w-4 h-4" /> Verified Settlement &bull; Access Bank WebPay
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1.5 rounded-xl bg-cib-green-50 text-cib-green-800 text-xs font-bold border border-cib-green-200">
-              Active Gateway: Paystack Live / Testbed
+            <span className="px-3 py-1.5 rounded-xl bg-blue-50 text-[#004A97] text-xs font-bold border border-blue-200">
+              Gateway: Access Bank WebPay
             </span>
           </div>
         </div>
@@ -81,7 +81,7 @@ export const AdminPayments: React.FC = () => {
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-500 font-semibold border-y border-slate-100 uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-4">Paystack Ref</th>
+                  <th className="py-3 px-4">Payment Ref</th>
                   <th className="py-3 px-4">Registration ID</th>
                   <th className="py-3 px-4">Payer / Delegate</th>
                   <th className="py-3 px-4">Channel</th>
@@ -107,7 +107,7 @@ export const AdminPayments: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
-                        {reg.payment_method || 'PAYSTACK'}
+                        {reg.payment_method?.replace(/_/g, ' ') || 'WEBPAY'}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">

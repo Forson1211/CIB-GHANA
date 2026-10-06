@@ -591,14 +591,31 @@ export const MovingBankLogosMarquee: React.FC<MovingBankLogosMarqueeProps> = ({ 
     renderLogo: () => renderCorporateMemberLogo(cm),
   }));
 
-  const row1 = dynamicLogos.filter((_, idx) => idx % 3 === 0);
-  const row2 = dynamicLogos.filter((_, idx) => idx % 3 === 1);
-  const row3 = dynamicLogos.filter((_, idx) => idx % 3 === 2);
+  let row1: BankLogo[];
+  let row2: BankLogo[];
+  let row3: BankLogo[];
+
+  if (dynamicLogos.length <= 8) {
+    // For smaller lists (like the 6 official sponsors), include all items across rows with staggered offsets
+    // so every sponsor gets prime visibility in motion across the marquee
+    row1 = [...dynamicLogos];
+    const offset1 = Math.max(1, Math.floor(dynamicLogos.length / 3));
+    const offset2 = Math.max(2, Math.floor((dynamicLogos.length * 2) / 3));
+    row2 = [...dynamicLogos.slice(offset1), ...dynamicLogos.slice(0, offset1)];
+    row3 = [...dynamicLogos.slice(offset2), ...dynamicLogos.slice(0, offset2)];
+  } else {
+    row1 = dynamicLogos.filter((_, idx) => idx % 3 === 0);
+    row2 = dynamicLogos.filter((_, idx) => idx % 3 === 1);
+    row3 = dynamicLogos.filter((_, idx) => idx % 3 === 2);
+  }
 
   const padRow = (rowItems: BankLogo[]): BankLogo[] => {
     if (rowItems.length === 0) return dynamicLogos;
-    if (rowItems.length < 5) return [...rowItems, ...rowItems, ...rowItems];
-    return rowItems;
+    let padded = [...rowItems];
+    while (padded.length < 6) {
+      padded = [...padded, ...rowItems];
+    }
+    return padded;
   };
 
   const finalRow1 = padRow(row1);
@@ -652,12 +669,16 @@ export const MovingBankLogosMarquee: React.FC<MovingBankLogosMarqueeProps> = ({ 
 export const GhanaBanksSponsorsMarquee: React.FC = () => {
   const { sponsors } = useApp();
 
+  // Filter actual sponsors configured in admin dashboard (type === 'SPONSOR')
+  const actualSponsors = sponsors.filter((s) => s.type === 'SPONSOR');
   const corporateMembers = sponsors.filter(
     (s) => s.type === 'CORPORATE_MEMBER' || (s.type as any) === 'PARTNER'
   );
 
-  // If admin deleted corporate members, do not display deleted institutions
-  if (corporateMembers.length === 0) {
+  // Show the actual sponsors (currently 6). Fallback to corporate members only if sponsors list is empty.
+  const displayItems = actualSponsors.length > 0 ? actualSponsors : corporateMembers;
+
+  if (displayItems.length === 0) {
     return null;
   }
 
@@ -672,7 +693,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
             Sponsors
           </h2>
           <p className="text-xs sm:text-sm lg:text-base text-slate-300 font-medium max-w-2xl">
-            Licensed CIB Ghana member institutions committed to professional excellence and ethical banking.
+            Official sponsors and partner institutions powering the 28th National Banking Conference.
           </p>
         </div>
 
@@ -686,7 +707,7 @@ export const GhanaBanksSponsorsMarquee: React.FC = () => {
       </div>
 
       {/* Edge-to-Edge 3-Tier Marquee Rows with Big Cards & Crisp Vector Logos moving RIGHT */}
-      <MovingBankLogosMarquee items={corporateMembers} />
+      <MovingBankLogosMarquee items={displayItems} />
     </section>
   );
 };

@@ -25,6 +25,9 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { PaystackModal } from '../components/registration/PaystackModal';
 import { sendEmailNotification } from '../lib/email';
+import { isAccessWebpayEnabled, startAccessWebpayCheckout } from '../lib/payments';
+
+export type ConferencePackageOption = 'SINGLE' | 'DOUBLE' | 'CONFERENCE_ONLY';
 
 export const Register: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -200,9 +203,28 @@ export const Register: React.FC = () => {
   );
 
   // Payment & Success
-  const [occupancy, setOccupancy] = useState<'SINGLE' | 'DOUBLE'>(
-    () => savedDraft?.occupancy || 'SINGLE'
+  const [selectedPackage, setSelectedPackage] = useState<ConferencePackageOption>(
+    () => savedDraft?.selectedPackage || (savedDraft?.occupancy === 'DOUBLE' ? 'DOUBLE' : 'SINGLE')
   );
+  const occupancy: 'SINGLE' | 'DOUBLE' = selectedPackage === 'DOUBLE' ? 'DOUBLE' : 'SINGLE';
+
+  const isMember = membershipCategory !== 'Non-Member';
+
+  const getPackagePrice = (pkg: ConferencePackageOption, member: boolean): number => {
+    if (member) {
+      if (pkg === 'SINGLE') return 5600;
+      if (pkg === 'DOUBLE') return 4000;
+      if (pkg === 'CONFERENCE_ONLY') return 2000;
+    } else {
+      if (pkg === 'SINGLE') return 6000;
+      if (pkg === 'DOUBLE') return 4600;
+      if (pkg === 'CONFERENCE_ONLY') return 2500;
+    }
+    return 5600;
+  };
+
+  const finalPayable = getPackagePrice(selectedPackage, isMember);
+
   const [selectedMasterclass, setSelectedMasterclass] = useState<string>(
     () => savedDraft?.selectedMasterclass || 'Deploying AI to Combat Modern Fraud in International Trade Finance'
   );
@@ -210,6 +232,17 @@ export const Register: React.FC = () => {
   const [completedRegistration, setCompletedRegistration] = useState<Registration | null>(null);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [emailResentSuccess, setEmailResentSuccess] = useState(false);
+
+  // Access Bank Ghana WebPay gateway state
+  const [isWebpayLive, setIsWebpayLive] = useState(false);
+  const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  useEffect(() => {
+    isAccessWebpayEnabled()
+      .then((enabled) => setIsWebpayLive(enabled))
+      .catch(() => {});
+  }, []);
 
   const handleResendEmail = async () => {
     if (!completedRegistration) return;
@@ -290,6 +323,7 @@ export const Register: React.FC = () => {
           dietaryRequirements,
           specialAssistance,
           occupancy,
+          selectedPackage,
           selectedMasterclass,
         })
       );
@@ -318,6 +352,7 @@ export const Register: React.FC = () => {
     dietaryRequirements,
     specialAssistance,
     occupancy,
+    selectedPackage,
     selectedMasterclass,
     STORAGE_KEY_FORM,
   ]);
@@ -332,9 +367,6 @@ export const Register: React.FC = () => {
       </div>
     );
   }
-
-  const packagePrice = occupancy === 'SINGLE' ? 5600 : 4000;
-  const finalPayable = packagePrice;
 
   // Trigger celebration on step 5
   const triggerConfetti = () => {
@@ -366,12 +398,24 @@ export const Register: React.FC = () => {
     setCurrentStep(4);
   };
 
-  const handleFinalizeRegistration = (paymentMethod: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'COMPLIMENTARY', ref?: string) => {
+  const handleFinalizeRegistration = (
+    paymentMethod: 'ACCESS_WEBPAY' | 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'COMPLIMENTARY',
+    ref?: string
+  ) => {
+    const packageName =
+      selectedPackage === 'SINGLE'
+        ? `Single Occupancy Package (${isMember ? 'Member' : 'Non-Member'})`
+        : selectedPackage === 'DOUBLE'
+        ? `Double Occupancy Package (${isMember ? 'Member' : 'Non-Member'})`
+        : `Non Residence Pass (${isMember ? 'Member' : 'Non-Member'})`;
+
+    const regTypeId = `${isMember ? 'member' : 'non-member'}-${selectedPackage.toLowerCase().replace('_', '-')}`;
+
     const newReg = addRegistration({
       event_id: event.id,
       event_title: event.title,
-      registration_type_id: occupancy === 'SINGLE' ? 'early-bird-single' : 'early-bird-double',
-      registration_type_name: `${occupancy === 'SINGLE' ? 'Single' : 'Double'} Occupancy Package`,
+      registration_type_id: regTypeId,
+      registration_type_name: packageName,
       first_name: firstName,
       last_name: lastName,
       email,
@@ -383,7 +427,7 @@ export const Register: React.FC = () => {
       membership_category: membershipCategory,
       attendance_type: attendanceType,
       dietary_requirements: dietaryRequirements,
-      special_assistance: `Masterclass: ${selectedMasterclass}`,
+      special_assistance: `Package: ${packageName} | Masterclass: ${selectedMasterclass}`,
       total_amount: finalPayable,
       currency: 'GHS',
       payment_status: 'SUCCESSFUL',
@@ -407,8 +451,10 @@ export const Register: React.FC = () => {
         amount: finalPayable,
         reference: ref || newReg.payment_reference,
         paymentMethod:
-          paymentMethod === 'PAYSTACK_CARD'
-            ? 'Debit/Credit Card (Paystack Gateway)'
+          paymentMethod === 'ACCESS_WEBPAY'
+            ? 'Access Bank Ghana WebPay (Visa / Mastercard / MoMo)'
+            : paymentMethod === 'PAYSTACK_CARD'
+            ? 'Debit/Credit Card (Access Bank WebPay)'
             : paymentMethod === 'PAYSTACK_MOMO'
             ? 'Mobile Money (MTN / Telecel / AT)'
             : 'Complimentary VIP Pass',
@@ -421,6 +467,52 @@ export const Register: React.FC = () => {
     setRegisteredUserName(firstName);
     triggerConfetti();
     setCurrentStep(5);
+  };
+
+  const handleProceedToPayment = async () => {
+    setPaymentError(null);
+
+    // If Access Bank WebPay is live and configured on backend, launch hosted checkout
+    if (isWebpayLive) {
+      setIsInitiatingPayment(true);
+      try {
+        await startAccessWebpayCheckout(
+          {
+            event_id: event.id,
+            event_title: event.title,
+            package: selectedPackage,
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            phone,
+            organization,
+            job_title: jobTitle,
+            country,
+            cib_member_id: cibMemberId,
+            membership_category: membershipCategory,
+            attendance_type: attendanceType,
+            dietary_requirements: dietaryRequirements,
+            special_assistance: `Package: ${selectedPackage} | Masterclass: ${selectedMasterclass}`,
+          },
+          {
+            eventSlug: event.slug,
+            draftKey: STORAGE_KEY_FORM,
+          }
+        );
+      } catch (err: any) {
+        console.error('[Access WebPay Init Failed]', err);
+        setIsInitiatingPayment(false);
+        setPaymentError(
+          err?.message ||
+            'Access Bank WebPay gateway could not be reached right now. You may proceed using our test payment modal below.'
+        );
+        setIsPaystackOpen(true);
+      }
+      return;
+    }
+
+    // While API keys are awaiting activation, seamlessly open the test simulation modal
+    setIsPaystackOpen(true);
   };
 
   const stepTitles = [
@@ -918,59 +1010,110 @@ export const Register: React.FC = () => {
                   Accommodation &amp; Event Packages
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                  Accommodation for two nights, conference and Masterclass fee, dinner for 2 nights and other complimentary activities.
+                  Select your delegate package. All-inclusive packages include 2 nights accommodation at Aqua Safari Resort, lunch &amp; dinner, and conference &amp; masterclass access.
                 </p>
               </div>
 
-              {/* Early Bird Package Yellow Highlight Box */}
-              <div className="rounded-none border-0 bg-[#FFFDF0] p-4 sm:p-5 space-y-1">
-                <div className="text-xs sm:text-sm font-black text-[#A16207] uppercase tracking-wide">
-                  EARLY BIRD PACKAGE &mdash; DEADLINE 20TH OCTOBER 2026
+              {/* Applied Rate Tier Banner */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] uppercase tracking-wider text-slate-500 font-bold block">
+                    Applied Delegate Rate Tier
+                  </span>
+                  <div className="text-sm sm:text-base font-black text-slate-900 flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${isMember ? 'bg-[#1B7E3E]' : 'bg-[#C41230]'}`} />
+                    <span>{isMember ? `${membershipCategory} Member Rate` : 'Non-Member Professional Rate'}</span>
+                  </div>
                 </div>
-                <div className="text-xs sm:text-[13px] text-slate-600 font-medium">
-                  Book before the deadline to lock in the discounted rate.
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setCurrentStep(1)}
+                  className="text-xs font-bold text-[#1B7E3E] hover:underline cursor-pointer"
+                >
+                  Change Category
+                </button>
               </div>
 
-              {/* Choose your occupancy */}
+              {/* Choose your package (3 options) */}
               <div className="space-y-3">
                 <h3 className="text-sm font-black text-slate-800">
-                  Choose your occupancy
+                  Choose your package
                 </h3>
-                <div className="grid grid-cols-2 gap-3.5 sm:gap-4">
-                  {/* Single Occupancy */}
-                  <div
-                    onClick={() => setOccupancy('SINGLE')}
-                    className={`p-5 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${
-                      occupancy === 'SINGLE'
-                        ? 'bg-[#1B7E3E] text-white shadow-sm'
-                        : 'bg-[#F1F3F5] text-slate-900 hover:bg-[#E8EAED]'
-                    }`}
-                  >
-                    <div className={`text-sm sm:text-base font-black ${occupancy === 'SINGLE' ? 'text-white' : 'text-slate-900'}`}>
-                      Single Occupancy
-                    </div>
-                    <div className={`text-xs sm:text-sm font-semibold mt-1 ${occupancy === 'SINGLE' ? 'text-white/85' : 'text-slate-500'}`}>
-                      GHS 5,600
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+                  {[
+                    {
+                      id: 'SINGLE' as ConferencePackageOption,
+                      title: 'Single Occupancy',
+                      price: isMember ? 5600 : 6000,
+                      subtitle: '2 Night All-Inclusive Package',
+                      features: ['Private Luxury Chalet', 'Lunch & Dinner Included', 'Full Conference & Masterclass Access'],
+                    },
+                    {
+                      id: 'DOUBLE' as ConferencePackageOption,
+                      title: 'Double Occupancy',
+                      price: isMember ? 4000 : 4600,
+                      perPerson: true,
+                      subtitle: '2 Night All-Inclusive Package',
+                      features: ['Shared Luxury Chalet', 'Lunch & Dinner Included', 'Full Conference & Masterclass Access'],
+                    },
+                    {
+                      id: 'CONFERENCE_ONLY' as ConferencePackageOption,
+                      title: 'Non Residence',
+                      price: isMember ? 2000 : 2500,
+                      subtitle: 'Non-Residential Pass',
+                      features: ['Accommodation Not Included', 'Lunch & Networking Banquets', 'Full Conference & Masterclass Access'],
+                    },
+                  ].map((pkg) => {
+                    const isSelected = selectedPackage === pkg.id;
+                    return (
+                      <div
+                        key={pkg.id}
+                        onClick={() => setSelectedPackage(pkg.id)}
+                        className={`p-5 rounded-none cursor-pointer transition-all duration-200 text-left border-2 flex flex-col justify-between ${
+                          isSelected
+                            ? 'border-[#1B7E3E] bg-[#E5F5EB]/40 shadow-md ring-1 ring-[#1B7E3E]'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                        }`}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                              {pkg.subtitle}
+                            </span>
+                            <div
+                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                                isSelected ? 'bg-[#1B7E3E] text-white' : 'bg-slate-200'
+                              }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+                          </div>
 
-                  {/* Double Occupancy */}
-                  <div
-                    onClick={() => setOccupancy('DOUBLE')}
-                    className={`p-5 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${
-                      occupancy === 'DOUBLE'
-                        ? 'bg-[#1B7E3E] text-white shadow-sm'
-                        : 'bg-[#F1F3F5] text-slate-900 hover:bg-[#E8EAED]'
-                    }`}
-                  >
-                    <div className={`text-sm sm:text-base font-black ${occupancy === 'DOUBLE' ? 'text-white' : 'text-slate-900'}`}>
-                      Double Occupancy
-                    </div>
-                    <div className={`text-xs sm:text-sm font-semibold mt-1 ${occupancy === 'DOUBLE' ? 'text-white/85' : 'text-slate-500'}`}>
-                      GHS 4,000
-                    </div>
-                  </div>
+                          <div className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                            {pkg.title}
+                          </div>
+
+                          <div className="text-2xl font-black text-[#1B7E3E] font-display pt-1">
+                            GH₵ {pkg.price.toLocaleString()}
+                            {pkg.perPerson && (
+                              <span className="text-xs font-normal text-slate-500 font-sans ml-1">
+                                / person
+                              </span>
+                            )}
+                          </div>
+
+                          <ul className="space-y-1.5 pt-2 border-t border-slate-100 text-xs text-slate-600">
+                            {pkg.features.map((feat, i) => (
+                              <li key={i} className="flex items-center gap-1.5">
+                                <span className="text-[#1B7E3E] font-bold">•</span>
+                                <span>{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1014,21 +1157,67 @@ export const Register: React.FC = () => {
 
               {/* Total Bar */}
               <div className="flex items-center justify-between p-4 sm:p-5 rounded-none bg-[#F1F3F5] border-0">
-                <span className="text-sm font-bold text-slate-700">Total</span>
-                <span className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  GHS {finalPayable.toLocaleString()}
+                <div className="space-y-0.5">
+                  <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider">
+                    Total Payable Amount
+                  </span>
+                  <span className="text-xs text-slate-600 font-medium">
+                    {selectedPackage === 'SINGLE' ? 'Single Occupancy' : selectedPackage === 'DOUBLE' ? 'Double Occupancy' : 'Non Residence'} &bull; {isMember ? `${membershipCategory} Member` : 'Non-Member'}
+                  </span>
+                </div>
+                <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight font-display">
+                  GH₵ {finalPayable.toLocaleString()}
                 </span>
               </div>
+
+              {/* Access Bank Ghana WebPay Badge */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-[#004A97] text-white flex items-center justify-center shrink-0 font-black text-xs shadow-xs">
+                    <CreditCard className="w-5 h-5 text-amber-300" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">
+                      Access Bank Ghana WebPay Gateway
+                    </span>
+                    <span className="text-[11px] text-slate-500 block">
+                      Direct bank checkout &bull; Visa, MasterCard & Ghana Mobile Money
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 bg-blue-100 text-[#004A97] border border-blue-200">
+                    {isWebpayLive ? 'LIVE GATEWAY ACTIVE' : 'GATEWAY INTEGRATED'}
+                  </span>
+                </div>
+              </div>
+
+              {paymentError && (
+                <div className="p-3 bg-amber-50 border border-amber-200 text-xs text-amber-900 text-left flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <span>{paymentError}</span>
+                </div>
+              )}
 
               {/* Proceed to Payment CTA */}
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsPaystackOpen(true)}
-                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
+                  disabled={isInitiatingPayment}
+                  onClick={handleProceedToPayment}
+                  className="w-full py-2.5 sm:py-3.5 rounded-none bg-[#1B7E3E] hover:bg-[#166632] active:scale-[0.99] text-white font-bold text-xs sm:text-sm md:text-base flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all disabled:opacity-60 cursor-pointer"
                 >
-                  <span>Proceed to Payment</span>
-                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                  {isInitiatingPayment ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Connecting to Access Bank WebPay...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Proceed to Payment (GH₵ {finalPayable.toLocaleString()})</span>
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                    </>
+                  )}
                 </button>
 
                 <div className="flex justify-center">

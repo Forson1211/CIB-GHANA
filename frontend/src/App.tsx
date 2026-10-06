@@ -18,6 +18,7 @@ import { Contact } from './pages/Contact';
 import { PartnersSponsors } from './pages/PartnersSponsors';
 import { CorporateMembers } from './pages/CorporateMembers';
 import { MyPortal } from './pages/MyPortal';
+import { PaymentCallback } from './pages/PaymentCallback';
 import { NotFound } from './pages/NotFound';
 
 // Admin Pages
@@ -490,6 +491,7 @@ export function App() {
             <Route path="/sponsors" element={<PartnersSponsors />} />
 
             <Route path="/past-events" element={<PastEvents />} />
+            <Route path="/payment/callback" element={<PaymentCallback />} />
             <Route path="/resources" element={<Resources />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Navigate to="/my-portal" replace />} />

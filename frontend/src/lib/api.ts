@@ -194,6 +194,44 @@ export class ApiClient {
     return this.request(`/payments/verify/${encodeURIComponent(reference)}`);
   }
 
+  // Payments (Access Bank WebPay – hosted checkout)
+  static async getPaymentConfig(): Promise<{
+    success: boolean;
+    data: { provider: 'ACCESS_WEBPAY'; enabled: boolean; environment: 'sandbox' | 'live'; currency: string };
+  }> {
+    return this.request('/payments/config');
+  }
+
+  static async initializeWebpayCheckout(payload: Record<string, unknown>): Promise<{
+    success: boolean;
+    message?: string;
+    data: {
+      checkout_url: string;
+      reference: string;
+      registration_number: string;
+      amount: number;
+      currency: string;
+    };
+  }> {
+    return this.request('/payments/initialize', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  }
+
+  static async verifyWebpayPayment(reference: string): Promise<{
+    success: boolean;
+    message?: string;
+    data: {
+      status: 'SUCCESSFUL' | 'FAILED' | 'PENDING';
+      reference: string;
+      amount_mismatch?: boolean;
+      registration: Registration;
+    };
+  }> {
+    return this.request(`/payments/verify/${encodeURIComponent(reference)}`);
+  }
+
   // Admin stats
   static async getAdminStats(): Promise<{
     success: boolean;

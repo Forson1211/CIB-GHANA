@@ -184,7 +184,7 @@ export interface Registration {
   currency: string;
   payment_status: PaymentStatus;
   payment_reference?: string;
-  payment_method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
+  payment_method?: 'ACCESS_WEBPAY' | 'WEBPAY_CARD' | 'WEBPAY_MOMO' | 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
   check_in_status: CheckInStatus;
   check_in_time?: string;
   created_at: string;
@@ -256,7 +256,7 @@ export interface CreateRegistrationRequest {
   currency?: string;
   payment_status?: PaymentStatus;
   payment_reference?: string;
-  payment_method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
+  payment_method?: 'ACCESS_WEBPAY' | 'WEBPAY_CARD' | 'WEBPAY_MOMO' | 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
   check_in_status?: CheckInStatus;
 }
 

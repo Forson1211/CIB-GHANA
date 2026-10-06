@@ -40,7 +40,7 @@ interface AppContextType {
   deleteSpeaker: (id: string) => Promise<void> | void;
   addSponsor: (sponsor: Partial<Sponsor>) => void;
   updateSponsor: (id: string, updates: Partial<Sponsor>) => void;
-  deleteSponsor: (id: string, entityName?: string) => Promise<void> | void;
+  deleteSponsor: (id: string, entityName?: string, entityType?: SponsorType) => Promise<void> | void;
   addResourceToEvent: (eventId: string, resource: Omit<EventResource, 'id'>) => void;
   updateEventResource: (eventId: string, resourceId: string, updates: Partial<EventResource>) => void;
   deleteEventResource: (eventId: string, resourceId: string) => void;
@@ -57,8 +57,8 @@ const STORAGE_KEY_ADMIN_AUTH = 'cib_admin_auth_v1';
 // v13: Force re-fetch to pick up new CEO portrait
 const STORAGE_KEY_SPEAKERS = 'cib_ghana_speakers_v13';
 const STORAGE_KEY_DELETED_SPEAKERS = 'cib_ghana_deleted_spk_ids_v13';
-// v6: Authoritative Supabase syncing & global deletion support
-const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v6';
+// v7: Synchronize 20 Corporate Members and 20 Sponsors across all devices
+const STORAGE_KEY_SPONSORS = 'cib_ghana_sponsors_v7';
 const STORAGE_KEY_DELETED_SPONSORS = 'cib_ghana_deleted_sponsors_v1';
 
 export const getDeletedSponsorKeys = (): Set<string> => {
@@ -289,8 +289,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               return {
                 ...evt,
                 start_date: evt.start_date === '2026-11-08' ? '2026-11-09' : (evt.start_date || '2026-11-09'),
-                registration_fee: fee,
-                registration_types: types || evt.registration_types,
+                registration_fee: 5600,
+                registration_types: MOCK_EVENTS[0].registration_types,
                 speakers: MOCK_SPEAKERS.filter((s) => !isPurgedMockSpeaker(s)),
                 agenda: MOCK_EVENTS[0].agenda,
               };
@@ -368,12 +368,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const deletedKeys = getDeletedSponsorKeys();
     const isNotDeleted = (s: { id?: string; dbId?: string; name?: string }) => {
       if (!s) return false;
-      const cleanName = (s.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const rawName = (s.name || '').toLowerCase();
       if (s.id && deletedKeys.has(s.id.toLowerCase())) return false;
       if (s.dbId && deletedKeys.has(s.dbId.toLowerCase())) return false;
-      if (cleanName && deletedKeys.has(cleanName)) return false;
-      if (rawName && deletedKeys.has(rawName)) return false;
       return true;
     };
 
@@ -761,70 +757,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
   };
 
-  const deleteSponsor = async (id: string, entityName?: string) => {
-    const target = sponsors.find(
-      (s) => s.id === id || s.dbId === id || (entityName && s.name.toLowerCase() === entityName.toLowerCase())
-    );
+  const deleteSponsor = async (id: string, entityName?: string, entityType?: SponsorType) => {
+    // 1. Locate specific target entity matching ID and (if provided) category type
+    const target = sponsors.find((s) => {
+      const idMatches = s.id === id || s.dbId === id;
+      if (!idMatches) return false;
+      if (entityType) {
+        const sType = (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type;
+        return sType === entityType;
+      }
+      return true;
+    }) || sponsors.find((s) => s.id === id || s.dbId === id);
+
+    const targetType: SponsorType = entityType || target?.type || ((target?.tier as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : 'SPONSOR');
     const finalName = entityName || target?.name || '';
-    const cleanName = finalName.toLowerCase().replace(/[^a-z0-9]/g, '');
     const dbId = target?.dbId;
     const uuid = stringToUuid(id);
 
-    // 1. Remove from local live state immediately
+    // 2. Remove ONLY from matching category in local live state
     setSponsors((prev) =>
       prev.filter((s) => {
-        if (s.id === id || (dbId && s.dbId === dbId)) return false;
-        if (target && isSameSponsor(s, target)) return false;
-        if (finalName && s.name.toLowerCase() === finalName.toLowerCase()) return false;
+        // Direct ID match
+        if (s.id === id || (dbId && s.dbId === dbId)) {
+          // If entityType was specified, only remove if types match
+          if (targetType) {
+            const sType = (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type;
+            if (sType !== targetType) return true; // KEEP opposite category untouched!
+          }
+          return false;
+        }
+
+        // Target match within SAME category only
+        if (target && isSameSponsor(s, target)) {
+          const sType = (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type;
+          if (targetType && sType !== targetType) return true; // KEEP opposite category!
+          return false;
+        }
+
         return true;
       })
     );
 
-    // 2. Add to deleted blacklist so it NEVER reappears on refresh or mobile
-    const keysToBlacklist = [id, uuid];
-    if (finalName) keysToBlacklist.push(finalName);
-    if (cleanName) keysToBlacklist.push(cleanName);
+    // 3. Blacklist unique IDs only (NEVER blacklist name to ensure the other category stays visible)
+    const keysToBlacklist = [id];
+    if (uuid) keysToBlacklist.push(uuid);
     if (dbId) keysToBlacklist.push(dbId);
     addDeletedSponsorKey(keysToBlacklist);
 
-    // 3. Update localStorage
+    // 4. Update localStorage
     try {
       const saved = localStorage.getItem(STORAGE_KEY_SPONSORS);
       if (saved) {
         const list: Sponsor[] = JSON.parse(saved);
         const filtered = list.filter((s) => {
-          if (s.id === id || (dbId && s.dbId === dbId)) return false;
-          if (target && isSameSponsor(s, target)) return false;
-          if (finalName && s.name.toLowerCase() === finalName.toLowerCase()) return false;
+          if (s.id === id || (dbId && s.dbId === dbId)) {
+            const sType = (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type;
+            if (targetType && sType !== targetType) return true;
+            return false;
+          }
+          if (target && isSameSponsor(s, target)) {
+            const sType = (s.type as any) === 'PARTNER' ? 'CORPORATE_MEMBER' : s.type;
+            if (targetType && sType !== targetType) return true;
+            return false;
+          }
           return true;
         });
         localStorage.setItem(STORAGE_KEY_SPONSORS, JSON.stringify(filtered));
       }
     } catch {}
 
-    // 4. Delete DB row from Supabase (by dbId, id, uuid, and name)
+    // 5. Delete targeted DB row from Supabase (by dbId, id, and uuid only)
     try {
       if (dbId) {
         await supabaseAdmin.from('sponsors').delete().eq('id', dbId);
       }
       await supabaseAdmin.from('sponsors').delete().eq('id', id);
-      await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+      if (uuid && uuid !== id && uuid !== dbId) {
+        await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+      }
+
+      // If deleting by name, ALWAYS constrain by tier so the opposite category is NEVER touched
       if (finalName) {
-        await supabaseAdmin.from('sponsors').delete().ilike('name', finalName);
+        if (targetType === 'CORPORATE_MEMBER') {
+          await supabaseAdmin.from('sponsors').delete().ilike('name', finalName).eq('tier', 'PARTNER');
+        } else {
+          await supabaseAdmin.from('sponsors').delete().ilike('name', finalName).neq('tier', 'PARTNER');
+        }
       }
     } catch (e) {
       console.warn('Direct Supabase sponsor delete error:', e);
     }
 
-    // 5. Delete logo from Supabase Storage if hosted
+    // 6. Delete logo from Supabase Storage ONLY if NO other sponsor or corporate member uses it
     const logoUrl = target?.logo_url;
     if (logoUrl && logoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
-      try {
-        const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
-        if (storagePath) {
-          await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
-        }
-      } catch {}
+      const isLogoShared = sponsors.some(
+        (s) => s.id !== id && s.dbId !== id && s.logo_url === logoUrl
+      );
+      if (!isLogoShared) {
+        try {
+          const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
+          if (storagePath) {
+            await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
+          }
+        } catch {}
+      }
     }
 
     try {
@@ -1101,12 +1138,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const deletedKeys = getDeletedSponsorKeys();
     const isNotDeleted = (s: { id?: string; dbId?: string; name?: string }) => {
       if (!s) return false;
-      const cleanName = (s.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const rawName = (s.name || '').toLowerCase();
       if (s.id && deletedKeys.has(s.id.toLowerCase())) return false;
       if (s.dbId && deletedKeys.has(s.dbId.toLowerCase())) return false;
-      if (cleanName && deletedKeys.has(cleanName)) return false;
-      if (rawName && deletedKeys.has(rawName)) return false;
       return true;
     };
 

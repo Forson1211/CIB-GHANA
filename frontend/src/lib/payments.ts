@@ -1,7 +1,7 @@
 import { PaymentStatus } from '../types';
 import { ApiClient } from './api';
 
-export interface PaystackTransaction {
+export interface AccessWebpayTransaction {
   reference: string;
   registrationId: string;
   amount: number;
@@ -13,17 +13,17 @@ export interface PaystackTransaction {
   gatewayResponse?: string;
 }
 
-export const PAYSTACK_PUBLIC_KEY =
-  import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_cib_ghana_demo_mode_active';
+// Backwards-compatible alias
+export type PaystackTransaction = AccessWebpayTransaction;
 
-export async function processPaystackPayment(params: {
+export async function processAccessWebpayPayment(params: {
   amount: number;
   email: string;
   registrationId: string;
   channel: 'card' | 'mobile_money';
   phone?: string;
   mobileNetwork?: 'MTN' | 'VODAFONE' | 'AIRTELTIGO';
-}): Promise<PaystackTransaction> {
+}): Promise<AccessWebpayTransaction> {
   try {
     // Attempt real initialization with backend API
     const initRes = await ApiClient.initializePayment({
@@ -48,16 +48,16 @@ export async function processPaystackPayment(params: {
         status: 'SUCCESSFUL',
         channel: params.channel,
         paidAt: new Date().toISOString(),
-        gatewayResponse: 'Approved via CIB Ghana Backend & Paystack Engine',
+        gatewayResponse: 'Approved via Access Bank Ghana WebPay Engine',
       };
     }
   } catch (error) {
-    console.log('[Paystack Gateway] Backend proxy unreachable or demo fallback:', error);
+    console.log('[Access WebPay Gateway] Backend proxy unreachable or simulation mode:', error);
   }
 
   // Graceful simulation fallback
   await new Promise((resolve) => setTimeout(resolve, 1200));
-  const reference = `T${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+  const reference = `AWP_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
 
   return {
     reference,
@@ -68,6 +68,78 @@ export async function processPaystackPayment(params: {
     status: 'SUCCESSFUL',
     channel: params.channel,
     paidAt: new Date().toISOString(),
-    gatewayResponse: 'Approved via CIB Ghana Payment Simulator',
+    gatewayResponse: 'Approved via Access Bank Ghana WebPay Simulator',
   };
+}
+
+// Backwards-compatible alias
+export const processPaystackPayment = processAccessWebpayPayment;
+
+// ---------------------------------------------------------------------------
+// Access Bank Ghana – WebPay (hosted checkout)
+// ---------------------------------------------------------------------------
+export const WEBPAY_PENDING_KEY = 'cib_webpay_pending';
+
+export interface WebpayPendingCheckout {
+  reference: string;
+  registrationNumber: string;
+  eventSlug?: string;
+  draftKey?: string;
+  startedAt: string;
+}
+
+let cachedWebpayEnabled: boolean | null = null;
+
+/** True only when the server has Access WebPay credentials configured. */
+export async function isAccessWebpayEnabled(): Promise<boolean> {
+  if (cachedWebpayEnabled !== null) return cachedWebpayEnabled;
+  try {
+    const res = await ApiClient.getPaymentConfig();
+    cachedWebpayEnabled = Boolean(res.success && res.data?.enabled);
+  } catch {
+    cachedWebpayEnabled = false;
+  }
+  return cachedWebpayEnabled;
+}
+
+/**
+ * Creates a PENDING registration server-side, then sends the browser to the
+ * Access Bank secure checkout page. The amount is computed by the server.
+ */
+export async function startAccessWebpayCheckout(
+  payload: Record<string, unknown> & { package: 'SINGLE' | 'DOUBLE' | 'CONFERENCE_ONLY' },
+  meta: { eventSlug?: string; draftKey?: string } = {}
+): Promise<void> {
+  const res = await ApiClient.initializeWebpayCheckout(payload);
+  if (!res.success || !res.data?.checkout_url) {
+    throw new Error(res.message || 'Unable to start secure checkout.');
+  }
+
+  const pending: WebpayPendingCheckout = {
+    reference: res.data.reference,
+    registrationNumber: res.data.registration_number,
+    eventSlug: meta.eventSlug,
+    draftKey: meta.draftKey,
+    startedAt: new Date().toISOString(),
+  };
+  try {
+    localStorage.setItem(WEBPAY_PENDING_KEY, JSON.stringify(pending));
+  } catch { /* storage unavailable – callback URL still carries the reference */ }
+
+  window.location.assign(res.data.checkout_url);
+}
+
+export function readPendingWebpayCheckout(): WebpayPendingCheckout | null {
+  try {
+    const raw = localStorage.getItem(WEBPAY_PENDING_KEY);
+    return raw ? (JSON.parse(raw) as WebpayPendingCheckout) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPendingWebpayCheckout(): void {
+  try {
+    localStorage.removeItem(WEBPAY_PENDING_KEY);
+  } catch { /* ignore */ }
 }

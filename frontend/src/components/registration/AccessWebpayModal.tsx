@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
-import { CreditCard, Smartphone, ShieldCheck, Lock, CheckCircle2 } from 'lucide-react';
-import { processPaystackPayment, PaystackTransaction } from '../../lib/payments';
+import { CreditCard, Smartphone, Lock } from 'lucide-react';
+import { processAccessWebpayPayment, AccessWebpayTransaction } from '../../lib/payments';
 
-interface PaystackModalProps {
+export interface AccessWebpayModalProps {
   isOpen: boolean;
   onClose: () => void;
   amount: number;
@@ -12,10 +11,10 @@ interface PaystackModalProps {
   email: string;
   eventTitle: string;
   registrationId: string;
-  onSuccess: (transaction: PaystackTransaction) => void;
+  onSuccess: (transaction: AccessWebpayTransaction) => void;
 }
 
-export const PaystackModal: React.FC<PaystackModalProps> = ({
+export const AccessWebpayModal: React.FC<AccessWebpayModalProps> = ({
   isOpen,
   onClose,
   amount,
@@ -43,7 +42,7 @@ export const PaystackModal: React.FC<PaystackModalProps> = ({
     }
 
     try {
-      const tx = await processPaystackPayment({
+      const tx = await processAccessWebpayPayment({
         amount,
         email,
         registrationId,
@@ -231,3 +230,6 @@ export const PaystackModal: React.FC<PaystackModalProps> = ({
     </Modal>
   );
 };
+
+// Backwards-compatible alias
+export const PaystackModal = AccessWebpayModal;

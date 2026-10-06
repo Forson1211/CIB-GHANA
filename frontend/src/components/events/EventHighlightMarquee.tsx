@@ -82,7 +82,7 @@ const formatPhotoDetails = (filename: string): { caption: string; category: stri
   };
 };
 
-// 15 authentic CIB Ghana previous event, summit, and conference photos from PREVIOUS EVENTS archive
+// Authentic CIB Ghana previous event, summit, and conference photos from PREVIOUS EVENTS archive
 const BASE_ARCHIVE_PHOTOS: GalleryPhoto[] = [
   {
     id: 'pe-1',
@@ -118,13 +118,6 @@ const BASE_ARCHIVE_PHOTOS: GalleryPhoto[] = [
     thumb_url: '/previous-events/thumbs/event-5.jpg',
     caption: 'Executive Panel on Virtual Assets, Ethics & Banking Transformation',
     category: 'Policy Discourse',
-  },
-  {
-    id: 'pe-6',
-    image_url: '/previous-events/event-6.jpg',
-    thumb_url: '/previous-events/thumbs/event-6.jpg',
-    caption: 'Strategic Roundtables & Global Industry Partnerships at DC Fintech Week',
-    category: 'Global Partnerships',
   },
   {
     id: 'pe-7',
@@ -174,13 +167,6 @@ const BASE_ARCHIVE_PHOTOS: GalleryPhoto[] = [
     thumb_url: '/previous-events/thumbs/event-13.jpg',
     caption: 'Presentation of Charters & Celebrating New Chartered Bankers',
     category: 'Charter Presentation',
-  },
-  {
-    id: 'pe-14',
-    image_url: '/previous-events/event-14.jpg',
-    thumb_url: '/previous-events/thumbs/event-14.jpg',
-    caption: 'Distinguished Delegates & Financial Sector Stakeholders Gathering',
-    category: 'Delegates Assembly',
   },
   {
     id: 'pe-15',

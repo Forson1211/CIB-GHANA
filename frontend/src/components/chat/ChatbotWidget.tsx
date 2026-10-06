@@ -325,7 +325,7 @@ export const ChatbotWidget: React.FC = () => {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "🎟️ **Accommodation & Event Packages (Aqua Safari, Ada)**:\n\n• **Single Occupancy Package**: **GHS 5,600**\n  Includes 2 nights private luxury chalet accommodation, full conference access, Masterclass fee, 2 nights banquet dinners, and resort leisure activities.\n\n• **Double Occupancy Package**: **GHS 4,000**\n  Includes shared 2 nights accommodation, conference access, Masterclass fee, 2 nights dinner, and resort activities.\n\n• **Standard Conference Pass**: **GHS 1,200**\n\n*Early Bird rates expire 20th October 2026.*",
+        text: "🎟️ **Accommodation & Event Packages (Aqua Safari, Ada)**:\n\n**Members (ACIB, FCIB, Student)**:\n• **Single Occupancy**: **GHS 5,600** (2-night all-inclusive, lunch & dinner, conference & masterclass)\n• **Double Occupancy**: **GHS 4,000 per person** (2-night all-inclusive, lunch & dinner, conference & masterclass)\n• **Main Conference Only**: **GHS 2,000** (accommodation not included)\n\n**Non-Members**:\n• **Single Occupancy**: **GHS 6,000** (2-night all-inclusive, lunch & dinner, conference & masterclass)\n• **Double Occupancy**: **GHS 4,600 per person** (2-night all-inclusive, lunch & dinner, conference & masterclass)\n• **Main Conference Only**: **GHS 2,500** (accommodation not included)",
         time: getCurrentTime(),
         actionLinks: [
           { label: 'Select Your Package & Register →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
@@ -344,7 +344,7 @@ export const ChatbotWidget: React.FC = () => {
       return {
         id: `bot-${Date.now()}`,
         sender: 'bot',
-        text: "📝 **How to Register in 4 Easy Steps**:\n\n1. **Select Membership**: Choose ACIB, FCIB, Student, or Non-Member.\n2. **Enter Delegate Details**: Name, corporate email, phone, organization, and designation.\n3. **Choose Attendance Mode**: Select In-Person at Aqua Safari or Virtual Livestream.\n4. **Pick Package & Masterclass**: Select Single (GHS 5,600) or Double (GHS 4,000) occupancy and your preferred training track.\n5. **Instant Checkout**: Pay securely with MTN MoMo, Telecel Cash, AT Money, or Visa/Mastercard via Paystack.",
+        text: "📝 **How to Register in 4 Easy Steps**:\n\n1. **Select Membership**: Choose ACIB, FCIB, Student, or Non-Member.\n2. **Enter Delegate Details**: Name, corporate email, phone, organization, and designation.\n3. **Choose Attendance Mode**: Select In-Person at Aqua Safari or Virtual Livestream.\n4. **Pick Package & Masterclass**: Select Single, Double, or Main Conference Only and your preferred training track.\n5. **Instant Checkout**: Pay securely with MTN MoMo, Telecel Cash, AT Money, or Visa/Mastercard via Paystack.",
         time: getCurrentTime(),
         actionLinks: [
           { label: 'Start Registration Online Now →', url: '/events/30th-national-banking-ethics-conference-2026/register' },
@@ -641,7 +641,7 @@ export const ChatbotWidget: React.FC = () => {
     return {
       id: `bot-${Date.now()}`,
       sender: 'bot',
-      text: "Thank you for reaching out to the CIB Ghana Assistant! I can help you with:\n\n• **Conference Info**: 9–10 Nov 2026 at Aqua Safari Resort, Ada.\n• **Packages & Pricing**: Single (GHS 5,600) & Double (GHS 4,000) occupancy.\n• **Accreditation**: 16 CIB CPD Credits under Act 991.\n• **Registration & Payments**: Instant checkout with MoMo or Bank Card via Paystack.\n• **Secretariat Support**: WhatsApp at **0506339248** or phone **0302 541 308**.\n\nWhat would you like to explore next?",
+      text: "Thank you for reaching out to the CIB Ghana Assistant! I can help you with:\n\n• **Conference Info**: 9–10 Nov 2026 at Aqua Safari Resort, Ada.\n• **Packages & Pricing**:\n  - Members: Single GHS 5,600 | Double GHS 4,000 | Main Conf GHS 2,000\n  - Non-Members: Single GHS 6,000 | Double GHS 4,600 | Main Conf GHS 2,500\n• **Accreditation**: 16 CIB CPD Credits under Act 991.\n• **Registration & Payments**: Instant checkout with MoMo or Bank Card via Paystack.\n• **Secretariat Support**: WhatsApp at **0506339248** or phone **0302 541 308**.\n\nWhat would you like to explore next?",
       time: getCurrentTime(),
       actionLinks: [
         { label: 'Register for 30th Conference →', url: '/events/30th-national-banking-ethics-conference-2026/register' },

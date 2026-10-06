@@ -215,41 +215,55 @@ export const AdminSponsors: React.FC = () => {
     }, 1000);
   };
 
-  const handleDelete = async (id: string, entityName: string) => {
-    if (confirm(`Are you sure you want to remove "${entityName}"? This will remove it from the live site across all devices.`)) {
-      const sponsor = sponsors.find(
-        (s) => s.id === id || s.dbId === id || s.name.toLowerCase() === entityName.toLowerCase()
-      );
-      const logoUrl = sponsor?.logo_url ?? '';
-      const dbId = sponsor?.dbId;
-      const uuid = stringToUuid(id);
+  const handleDelete = async (sp: Sponsor) => {
+    const isMember = sp.type === 'CORPORATE_MEMBER' || (sp.type as any) === 'PARTNER';
+    const classification = isMember ? 'Corporate Member' : 'Sponsor';
+    const opposite = isMember ? 'Sponsor' : 'Corporate Member';
 
-      await deleteSponsor(id, entityName);
-      setSuccessNotice(`Removed "${entityName}" from live database and all devices.`);
+    if (
+      confirm(
+        `Are you sure you want to remove "${sp.name}" from ${classification}s? This will only remove the ${classification} entry and will NOT affect the ${opposite} entry or logo.`
+      )
+    ) {
+      const logoUrl = sp.logo_url ?? '';
+      const dbId = sp.dbId;
+      const uuid = stringToUuid(sp.id);
 
-      // Extra guarantee direct deletion from Supabase across all matching identifiers
+      await deleteSponsor(sp.id, sp.name, sp.type);
+      setSuccessNotice(`Removed "${sp.name}" from ${classification}s.`);
+
+      // Extra direct deletion from Supabase targeting only this specific entity ID
       try {
         if (dbId) {
           await supabaseAdmin.from('sponsors').delete().eq('id', dbId);
         }
-        await supabaseAdmin.from('sponsors').delete().eq('id', id);
-        await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
-        await supabaseAdmin.from('sponsors').delete().ilike('name', entityName);
-        if (sponsor?.name) {
-          await supabaseAdmin.from('sponsors').delete().ilike('name', sponsor.name);
+        await supabaseAdmin.from('sponsors').delete().eq('id', sp.id);
+        if (uuid && uuid !== sp.id && uuid !== dbId) {
+          await supabaseAdmin.from('sponsors').delete().eq('id', uuid);
+        }
+        // ONLY delete by name constrained by tier to never touch the opposite category
+        if (isMember) {
+          await supabaseAdmin.from('sponsors').delete().ilike('name', sp.name).eq('tier', 'PARTNER');
+        } else {
+          await supabaseAdmin.from('sponsors').delete().ilike('name', sp.name).neq('tier', 'PARTNER');
         }
       } catch (sbErr) {
         console.warn('Supabase sponsors delete failed:', sbErr);
       }
 
-      // Delete logo from Supabase Storage if hosted
+      // Delete logo from Supabase Storage ONLY if NO other entity is using it
       if (logoUrl && logoUrl.includes('/storage/v1/object/public/speaker-photos/')) {
-        try {
-          const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
-          if (storagePath) {
-            await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
-          }
-        } catch {}
+        const isLogoShared = sponsors.some(
+          (s) => s.id !== sp.id && s.dbId !== sp.id && s.logo_url === logoUrl
+        );
+        if (!isLogoShared) {
+          try {
+            const storagePath = logoUrl.split('/storage/v1/object/public/speaker-photos/')[1];
+            if (storagePath) {
+              await supabaseAdmin.storage.from('speaker-photos').remove([storagePath]);
+            }
+          } catch {}
+        }
       }
 
       try {
@@ -518,7 +532,7 @@ export const AdminSponsors: React.FC = () => {
 
                     <button
                       type="button"
-                      onClick={() => handleDelete(sp.id, sp.name)}
+                      onClick={() => handleDelete(sp)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-none bg-rose-100 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

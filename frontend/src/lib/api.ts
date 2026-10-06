@@ -165,7 +165,7 @@ export class ApiClient {
     });
   }
 
-  // Payments (Paystack)
+  // Payments (Access Bank Ghana WebPay)
   static async initializePayment(params: {
     registration_id: string;
     email: string;

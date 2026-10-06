@@ -66,6 +66,7 @@ export function createApp(): Express {
   app.use('/api/events', eventRoutes);
   app.use('/api/registrations', registrationRoutes);
   app.use('/api/payments', paymentRoutes);
+  app.use('/api/webpay', paymentRoutes);
   app.use('/api/tickets', ticketRoutes);
   app.use('/api/admin', adminRoutes);
   app.use('/api/chat', chatRoutes);

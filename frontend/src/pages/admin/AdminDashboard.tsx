@@ -323,7 +323,7 @@ export const AdminDashboard: React.FC = () => {
               icon: CheckCircle2, grad: 'from-[#B45309] to-[#D97706]', text: 'amber',
             },
             {
-              label: 'Revenue', value: formatGHS(totalRevenue), sub: 'Paystack & bank receipts',
+              label: 'Revenue', value: formatGHS(totalRevenue), sub: 'Access WebPay & bank receipts',
               icon: TrendingUp, grad: 'from-[#7C3AED] to-[#9333EA]', text: 'purple', small: true,
             },
           ].map((card) => (

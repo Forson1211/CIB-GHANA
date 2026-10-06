@@ -21,10 +21,11 @@ export const config = {
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqZmp1ZXpndnJveWh0d2NubHJ4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDMyMjM3NCwiZXhwIjoyMTA1ODk4Mzc0fQ.LKsElhVQb7kY4Xek5SvoTwTpZ1rsuWbjSBX7-SlMP9k',
   },
 
-  // Paystack
-  paystack: {
-    secretKey: process.env.PAYSTACK_SECRET_KEY || 'sk_test_cib_ghana_paystack_secret_key',
-    publicKey: process.env.PAYSTACK_PUBLIC_KEY || 'pk_test_cib_ghana_paystack_public_key',
+  // Access Bank Ghana WebPay Gateway
+  accessWebpay: {
+    merchantId: process.env.ACCESS_WEBPAY_MERCHANT_ID || process.env.VITE_ACCESS_WEBPAY_MERCHANT_ID || 'ACC-GH-CIB-2026',
+    apiKey: process.env.ACCESS_WEBPAY_API_KEY || process.env.ACCESS_WEBPAY_SECRET_KEY || '',
+    gatewayUrl: process.env.ACCESS_WEBPAY_GATEWAY_URL || 'https://gw.accessbankplc.com/webpay/gh',
   },
 
   // Email Service (Resend or SMTP via Nodemailer)

@@ -1,9 +1,28 @@
 import { Request, Response, NextFunction } from 'express';
-import { PaystackService } from '../services/paystackService.js';
+import { AccessWebpayService } from '../services/accessWebpayService.js';
 import { DataService } from '../services/dataService.js';
 import { EmailService } from '../services/emailService.js';
 
 export class PaymentController {
+  static async getConfig(req: Request, res: Response) {
+    const apiKey = (process.env.ACCESS_WEBPAY_API_KEY || '').trim();
+    const isLive = Boolean(
+      apiKey &&
+      !apiKey.startsWith('demo_') &&
+      !apiKey.startsWith('test_') &&
+      apiKey.length > 10
+    );
+    res.json({
+      success: true,
+      data: {
+        provider: 'ACCESS_WEBPAY',
+        enabled: isLive,
+        environment: isLive ? 'live' : 'sandbox',
+        currency: 'GHS',
+      },
+    });
+  }
+
   static async initializePayment(req: Request, res: Response, next: NextFunction) {
     try {
       const { registration_id, email, amount, callback_url, channels } = req.body;
@@ -23,9 +42,9 @@ export class PaymentController {
         });
       }
 
-      const reference = `T${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+      const reference = `AWP_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
 
-      const paystackRes = await PaystackService.initializePayment({
+      const webpayRes = await AccessWebpayService.initializePayment({
         email,
         amount,
         reference,
@@ -38,7 +57,7 @@ export class PaymentController {
 
       res.json({
         success: true,
-        data: paystackRes.data,
+        data: webpayRes.data,
       });
     } catch (error: any) {
       next(error);
@@ -56,7 +75,7 @@ export class PaymentController {
         });
       }
 
-      const verification = await PaystackService.verifyPayment(reference);
+      const verification = await AccessWebpayService.verifyPayment(reference);
 
       if (verification.data && verification.data.status === 'success') {
         // Look up ticket and registration by reference
@@ -85,13 +104,13 @@ export class PaymentController {
 
         return res.json({
           success: true,
-          message: 'Payment successfully verified and confirmation receipt issued',
+          message: 'Access Bank WebPay payment verified and confirmation receipt issued',
           data: verification.data,
         });
       } else {
         return res.status(400).json({
           success: false,
-          message: 'Payment verification failed or status not successful',
+          message: 'Access Bank WebPay verification failed or status not successful',
           data: verification.data,
         });
       }
@@ -101,12 +120,12 @@ export class PaymentController {
   }
 
   static async handleWebhook(req: Request, res: Response) {
-    // Acknowledge Paystack webhook immediately
+    // Acknowledge Access Bank WebPay webhook immediately
     const event = req.body;
-    console.log(`[Paystack Webhook] Received event: ${event?.event}`);
+    console.log(`[Access WebPay Webhook] Received event:`, event?.event || event?.status);
 
-    if (event?.event === 'charge.success') {
-      const reference = event.data?.reference;
+    if (event?.event === 'charge.success' || event?.status === 'SUCCESSFUL' || event?.status === 'success') {
+      const reference = event.data?.reference || event.reference;
       if (reference) {
         const ticket = await DataService.getTicket(reference);
         const registration = await DataService.getRegistrationByPaymentReference(reference);
@@ -116,7 +135,7 @@ export class PaymentController {
             registration,
             ticket,
             eventTitle: registration.event_title || ticket.event_title,
-          }).catch((e) => console.error('[Paystack Webhook] Email dispatch notice:', e));
+          }).catch((e) => console.error('[Access WebPay Webhook] Email dispatch notice:', e));
         } else if (ticket) {
           await DataService.updatePaymentStatus(ticket.registration_id, 'SUCCESSFUL', reference);
           EmailService.sendTicketConfirmation(ticket).catch((e) => console.error(e));

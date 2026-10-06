@@ -246,7 +246,7 @@ export const AdminRegistrations: React.FC = () => {
                 {formatGHS(totalRevenue)}
               </span>
               <span className="text-[11px] font-semibold text-emerald-600">
-                Settled via Paystack
+                Settled via Access WebPay
               </span>
             </div>
             <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold">
@@ -536,7 +536,7 @@ export const AdminRegistrations: React.FC = () => {
                             </span>
                             {reg.payment_method && (
                               <span className="text-[9px] text-slate-400 font-mono">
-                                ({reg.payment_method.replace('PAYSTACK_', '')})
+                                ({reg.payment_method.replace('ACCESS_', '').replace('WEBPAY_', '').replace('PAYSTACK_', '')})
                               </span>
                             )}
                           </div>
@@ -805,7 +805,7 @@ export const AdminRegistrations: React.FC = () => {
                   <div>
                     <label className="text-[11px] text-slate-400 block">Payment Method</label>
                     <span className="font-semibold mt-0.5 block">
-                      {selectedRegistration.payment_method || 'Paystack'}
+                      {selectedRegistration.payment_method || 'Access Bank WebPay'}
                     </span>
                   </div>
                   <div>

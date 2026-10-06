@@ -13,8 +13,13 @@ export interface AccessWebpayTransaction {
   gatewayResponse?: string;
 }
 
-// Backwards-compatible alias
-export type PaystackTransaction = AccessWebpayTransaction;
+export const ACCESS_WEBPAY_MERCHANT_ID =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ACCESS_WEBPAY_MERCHANT_ID) ||
+  'ACC-GH-CIB-2026';
+
+export const ACCESS_WEBPAY_GATEWAY_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_ACCESS_WEBPAY_GATEWAY_URL) ||
+  'https://gw.accessbankplc.com/webpay/gh';
 
 export async function processAccessWebpayPayment(params: {
   amount: number;
@@ -71,9 +76,6 @@ export async function processAccessWebpayPayment(params: {
     gatewayResponse: 'Approved via Access Bank Ghana WebPay Simulator',
   };
 }
-
-// Backwards-compatible alias
-export const processPaystackPayment = processAccessWebpayPayment;
 
 // ---------------------------------------------------------------------------
 // Access Bank Ghana – WebPay (hosted checkout)

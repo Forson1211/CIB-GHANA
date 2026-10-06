@@ -293,7 +293,7 @@ export const MyPortal: React.FC = () => {
                           <span className="text-slate-500 sm:col-span-2 text-xs font-medium">
                             {reg.registration_type_name} &bull; GHS{' '}
                             {reg.total_amount?.toLocaleString() || '1,260'} &bull;{' '}
-                            {reg.payment_method?.replace(/_/g, ' ') || 'PAYSTACK'}
+                            {reg.payment_method?.replace(/_/g, ' ') || 'ACCESS WEBPAY'}
                           </span>
                         </div>
                       </div>

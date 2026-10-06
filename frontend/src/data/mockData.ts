@@ -1292,7 +1292,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
     currency: 'GHS',
     payment_status: 'SUCCESSFUL',
     payment_reference: 'T1719203912_8492',
-    payment_method: 'PAYSTACK_CARD',
+    payment_method: 'WEBPAY_CARD',
     check_in_status: 'REGISTERED',
     created_at: '2026-09-10T14:20:00Z'
   },
@@ -1316,7 +1316,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
     currency: 'GHS',
     payment_status: 'SUCCESSFUL',
     payment_reference: 'T1719204811_3301',
-    payment_method: 'PAYSTACK_MOMO',
+    payment_method: 'WEBPAY_MOMO',
     check_in_status: 'CHECKED_IN',
     check_in_time: '2026-09-22T08:42:15Z',
     created_at: '2026-09-12T09:15:00Z'
@@ -1342,7 +1342,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
     currency: 'GHS',
     payment_status: 'SUCCESSFUL',
     payment_reference: 'T1719205129_9182',
-    payment_method: 'PAYSTACK_CARD',
+    payment_method: 'WEBPAY_CARD',
     check_in_status: 'REGISTERED',
     created_at: '2026-09-15T11:45:00Z'
   },
@@ -1367,7 +1367,7 @@ export const MOCK_REGISTRATIONS: Registration[] = [
     currency: 'GHS',
     payment_status: 'SUCCESSFUL',
     payment_reference: 'T1719205123_9011',
-    payment_method: 'PAYSTACK_MOMO',
+    payment_method: 'WEBPAY_MOMO',
     check_in_status: 'REGISTERED',
     created_at: '2026-09-15T11:00:00Z'
   }

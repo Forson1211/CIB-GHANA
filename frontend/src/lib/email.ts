@@ -16,7 +16,7 @@ export function generateEmailTemplate(type: EmailPayload['template'], data: Reco
   const ticketUrl = data.ticketUrl || `https://cibghana.org/ticket/${regNumber}`;
   const amount = data.amount !== undefined ? Number(data.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) : '5,600.00';
   const reference = data.reference || `PAY_${Date.now()}`;
-  const paymentMethod = data.paymentMethod || 'Paystack Electronic Settlement (Cards & Mobile Money)';
+  const paymentMethod = data.paymentMethod || 'Access Bank Ghana WebPay (Cards & Mobile Money)';
 
   switch (type) {
     case 'PAYMENT_CONFIRMATION':

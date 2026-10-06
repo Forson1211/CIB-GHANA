@@ -782,7 +782,7 @@ export const Home: React.FC = () => {
             className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 text-white/85 text-xs sm:text-sm"
           >
             <p className="font-medium text-center sm:text-left">
-              * Instant registration checkout supported with Ghana Mobile Money (MTN, Telecel, AT) or Visa/Mastercard via Paystack.
+              * Instant registration checkout supported with Ghana Mobile Money (MTN, Telecel, AT) or Visa/Mastercard via Access Bank Ghana WebPay.
             </p>
             <Link
               to="/events/30th-national-banking-ethics-conference-2026/register"

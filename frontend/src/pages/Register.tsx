@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
-import { PaystackModal } from '../components/registration/PaystackModal';
+import { AccessWebpayModal } from '../components/registration/AccessWebpayModal';
 import { sendEmailNotification } from '../lib/email';
 import { isAccessWebpayEnabled, startAccessWebpayCheckout } from '../lib/payments';
 
@@ -228,7 +228,7 @@ export const Register: React.FC = () => {
   const [selectedMasterclass, setSelectedMasterclass] = useState<string>(
     () => savedDraft?.selectedMasterclass || 'Deploying AI to Combat Modern Fraud in International Trade Finance'
   );
-  const [isPaystackOpen, setIsPaystackOpen] = useState(false);
+  const [isWebpayModalOpen, setIsWebpayModalOpen] = useState(false);
   const [completedRegistration, setCompletedRegistration] = useState<Registration | null>(null);
   const [isResendingEmail, setIsResendingEmail] = useState(false);
   const [emailResentSuccess, setEmailResentSuccess] = useState(false);
@@ -399,7 +399,7 @@ export const Register: React.FC = () => {
   };
 
   const handleFinalizeRegistration = (
-    paymentMethod: 'ACCESS_WEBPAY' | 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'COMPLIMENTARY',
+    paymentMethod: 'ACCESS_WEBPAY' | 'WEBPAY_CARD' | 'WEBPAY_MOMO' | 'COMPLIMENTARY',
     ref?: string
   ) => {
     const packageName =
@@ -453,10 +453,10 @@ export const Register: React.FC = () => {
         paymentMethod:
           paymentMethod === 'ACCESS_WEBPAY'
             ? 'Access Bank Ghana WebPay (Visa / Mastercard / MoMo)'
-            : paymentMethod === 'PAYSTACK_CARD'
-            ? 'Debit/Credit Card (Access Bank WebPay)'
-            : paymentMethod === 'PAYSTACK_MOMO'
-            ? 'Mobile Money (MTN / Telecel / AT)'
+            : paymentMethod === 'WEBPAY_CARD'
+            ? 'Access Bank WebPay (Debit / Credit Card)'
+            : paymentMethod === 'WEBPAY_MOMO'
+            ? 'Access Bank WebPay (Mobile Money - MTN / Telecel / AT)'
             : 'Complimentary VIP Pass',
         ticketUrl: `${window.location.origin}/events/${event.slug}/ticket/${newReg.registration_number}`,
       },
@@ -506,13 +506,13 @@ export const Register: React.FC = () => {
           err?.message ||
             'Access Bank WebPay gateway could not be reached right now. You may proceed using our test payment modal below.'
         );
-        setIsPaystackOpen(true);
+        setIsWebpayModalOpen(true);
       }
       return;
     }
 
     // While API keys are awaiting activation, seamlessly open the test simulation modal
-    setIsPaystackOpen(true);
+    setIsWebpayModalOpen(true);
   };
 
   const stepTitles = [
@@ -1341,20 +1341,20 @@ export const Register: React.FC = () => {
         </div>
       </div>
 
-      {/* Paystack Checkout Simulator Modal */}
-      {isPaystackOpen && (
-        <PaystackModal
-          isOpen={isPaystackOpen}
-          onClose={() => setIsPaystackOpen(false)}
+      {/* Access Bank WebPay Checkout Modal */}
+      {isWebpayModalOpen && (
+        <AccessWebpayModal
+          isOpen={isWebpayModalOpen}
+          onClose={() => setIsWebpayModalOpen(false)}
           amount={finalPayable}
           currency="GHS"
           email={email}
           eventTitle={event.title}
           registrationId={`reg-${Date.now()}`}
           onSuccess={(tx) => {
-            setIsPaystackOpen(false);
+            setIsWebpayModalOpen(false);
             handleFinalizeRegistration(
-              tx.channel === 'card' ? 'PAYSTACK_CARD' : 'PAYSTACK_MOMO',
+              tx.channel === 'card' ? 'WEBPAY_CARD' : 'WEBPAY_MOMO',
               tx.reference
             );
           }}

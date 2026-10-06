@@ -3,7 +3,7 @@ import { AdminLayout } from '../../components/layout/AdminLayout';
 import { Database, Key, Mail, Shield, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { checkSupabaseConnection, isSupabaseConfigured } from '../../lib/supabase';
-import { PAYSTACK_PUBLIC_KEY } from '../../lib/payments';
+import { ACCESS_WEBPAY_MERCHANT_ID, ACCESS_WEBPAY_GATEWAY_URL } from '../../lib/payments';
 
 export const AdminSettings: React.FC = () => {
   const [dbStatus, setDbStatus] = useState<{ loading: boolean; connected: boolean; message: string }>({
@@ -25,7 +25,7 @@ export const AdminSettings: React.FC = () => {
   return (
     <AdminLayout
       title="System & Integration Settings"
-      subtitle="Configure Supabase PostgreSQL, Paystack secure checkout keys, and transactional mail relays."
+      subtitle="Configure Supabase PostgreSQL, Access Bank Ghana WebPay gateway parameters, and transactional mail relays."
     >
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Supabase PostgreSQL Configuration */}
@@ -74,7 +74,7 @@ export const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* Paystack Payment Gateway */}
+        {/* Access Bank Ghana WebPay Payment Gateway */}
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-cib-gold-50 text-cib-gold-700">
@@ -82,26 +82,48 @@ export const AdminSettings: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-cib-charcoal-900 font-display">
-                Paystack Payment Gateway Configuration
+                Access Bank Ghana WebPay Gateway Configuration
               </h3>
-              <p className="text-xs text-slate-500">Public & Webhook API credentials for Ghana cedis (GHS)</p>
+              <p className="text-xs text-slate-500">Merchant settlement & callback credentials for Ghana cedis (GHS)</p>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Paystack Public Key (VITE_PAYSTACK_PUBLIC_KEY)
+                Access Bank Merchant ID (VITE_ACCESS_WEBPAY_MERCHANT_ID)
               </label>
               <input
                 type="text"
                 readOnly
-                value={PAYSTACK_PUBLIC_KEY}
+                value={ACCESS_WEBPAY_MERCHANT_ID}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono bg-slate-50 text-slate-600 focus:outline-none"
               />
             </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Access Bank WebPay Gateway URL (VITE_ACCESS_WEBPAY_GATEWAY_URL)
+              </label>
+              <input
+                type="text"
+                readOnly
+                value={ACCESS_WEBPAY_GATEWAY_URL}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-mono bg-slate-50 text-slate-600 focus:outline-none"
+              />
+            </div>
+
+            <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-800 flex items-center justify-between">
+              <div>
+                <span className="font-bold">Gateway Status:</span> Configured for Access Bank Ghana WebPay
+              </div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-600 text-white uppercase">
+                Active
+              </span>
+            </div>
+
             <p className="text-[11px] text-slate-500">
-              Supports Ghana Mobile Money (MTN MoMo, Telecel Cash, AT Money) and Visa / Mastercard debit cards.
+              Supports Ghana Mobile Money (MTN MoMo, Telecel Cash, AT Money) and Visa / Mastercard debit & credit cards through Access Bank Ghana PLC.
             </p>
           </div>
         </div>
@@ -114,7 +136,7 @@ export const AdminSettings: React.FC = () => {
             </div>
             <div>
               <h3 className="text-base font-bold text-cib-charcoal-900 font-display">
-                Transactional Email Service (Resend)
+                Transactional Email Service (Resend / SMTP)
               </h3>
               <p className="text-xs text-slate-500">Automated registration receipts, QR pass notifications, and reminders</p>
             </div>
@@ -124,7 +146,7 @@ export const AdminSettings: React.FC = () => {
             <p className="font-bold text-cib-charcoal-900">Configured Notification Triggers:</p>
             <ul className="list-disc list-inside space-y-1 text-slate-600">
               <li>Instant Registration Confirmation & Digital Badge Pass</li>
-              <li>Paystack Transaction Receipt & VAT breakdown</li>
+              <li>Access Bank Ghana WebPay Transaction Receipt & VAT breakdown</li>
               <li>7-Day & 24-Hour Event Agenda Reminders</li>
               <li>Emergency Rescheduling & Cancellation Circulars</li>
             </ul>

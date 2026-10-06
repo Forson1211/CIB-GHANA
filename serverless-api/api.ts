@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
-import { handleWebpayRoute, WEBPAY_CONFIG } from './_shared/accessWebpay';
+import { handleWebpayRoute, WEBPAY_CONFIG } from './accessWebpay';
 
 // Configuration
 const SMTP_CONFIG = {
@@ -836,7 +836,7 @@ export const handler = async (event: any, _context?: any) => {
       const eventVenue = d.eventVenue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
       const amount = d.amount || d.total_amount || 4000;
       const reference = d.reference || d.payment_reference || `PAY_${Date.now()}`;
-      const paymentMethod = d.paymentMethod || d.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)';
+      const paymentMethod = d.paymentMethod || d.payment_method || 'Access Bank Ghana WebPay (Cards & Mobile Money)';
       const ticketUrl = d.ticketUrl || `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${identifier}`;
       const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(identifier)}`;
 
@@ -988,7 +988,7 @@ View Ticket: ${ticketUrl}
         currency: body.currency || 'GHS',
         payment_status: body.payment_status || 'SUCCESSFUL',
         payment_reference: body.payment_reference || `PAY_${Date.now()}`,
-        payment_method: body.payment_method || 'PAYSTACK_CARD',
+        payment_method: body.payment_method || 'WEBPAY_CARD',
         check_in_status: body.check_in_status || 'REGISTERED',
       };
       if (dbId) insertPayload.id = dbId;
@@ -1002,7 +1002,7 @@ View Ticket: ${ticketUrl}
         .single();
 
       if (insErr) {
-        console.error('[Netlify Function] Insert error:', insErr);
+        console.error('[Serverless API] Insert error:', insErr);
       }
 
       const finalReg = savedDbReg ? mapDbRegistration(savedDbReg) : { ...insertPayload, id: `reg-${Date.now()}` };
@@ -1032,12 +1032,12 @@ View Ticket: ${ticketUrl}
           regNumber,
           amount: body.total_amount || 4000,
           reference: body.payment_reference || `PAY_${Date.now()}`,
-          paymentMethod: body.payment_method || 'Paystack Electronic Settlement (Cards & Mobile Money)',
+          paymentMethod: body.payment_method || 'Access Bank Ghana WebPay (Cards & Mobile Money)',
           ticketUrl: `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${regNumber}`,
           qrImageUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`,
         }),
         plainText: `Payment confirmed for ${body.first_name}. Registration Number: ${regNumber}`,
-      }).catch((e) => console.warn('Netlify function email dispatch notice:', e));
+      }).catch((e) => console.warn('Serverless API email dispatch notice:', e));
 
       return {
         statusCode: 201,
@@ -1091,7 +1091,7 @@ View Ticket: ${ticketUrl}
       const eventVenue = d.eventVenue || 'Aqua Safari Resort Convention Pavilion, Ada Foah';
       const amount = d.amount || 4000;
       const reference = d.reference || `PAY_${Date.now()}`;
-      const paymentMethod = d.paymentMethod || 'Paystack Electronic Settlement (Cards & Mobile Money)';
+      const paymentMethod = d.paymentMethod || 'Access Bank Ghana WebPay (Cards & Mobile Money)';
       const ticketUrl = d.ticketUrl || `https://cibghana.org/events/30th-national-banking-ethics-conference-2026/ticket/${regNumber}`;
       const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=6&data=${encodeURIComponent(regNumber)}`;
 

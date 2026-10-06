@@ -7,7 +7,7 @@
   SECRETS_SCAN_ENABLED = "false"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "../serverless-api"
 
 # API Redirect: Route /api/* requests to Netlify serverless functions
 [[redirects]]

@@ -230,6 +230,3 @@ export const AccessWebpayModal: React.FC<AccessWebpayModalProps> = ({
     </Modal>
   );
 };
-
-// Backwards-compatible alias
-export const PaystackModal = AccessWebpayModal;

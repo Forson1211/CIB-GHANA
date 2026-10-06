@@ -573,24 +573,24 @@ export const Home: React.FC = () => {
       {/* 10. OFFICIAL EVENT PACKAGES & PRICING */}
       <section id="early-bird" className="w-full bg-[#008129] py-16 sm:py-20 text-white scroll-mt-24">
         <div className="max-w-[1380px] mx-auto px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
-          {/* Header + Register Button Row (Left-aligned on desktop with Register button at top-right) */}
+          {/* Header + Register Button Row (Center-aligned on mobile, Left-aligned on desktop with Register button at top-right) */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={fadeInUp}
-            className="flex flex-col md:flex-row md:items-end justify-between gap-6"
+            className="flex flex-col md:flex-row items-center md:items-end justify-between gap-6 text-center md:text-left"
           >
-            <div className="text-left max-w-2xl space-y-3">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-left">
+            <div className="text-center md:text-left max-w-2xl space-y-3 mx-auto md:mx-0">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white font-display tracking-tight text-center md:text-left">
                 Conference &amp; Accommodation Rates
               </h2>
-              <p className="text-white/90 text-sm sm:text-base leading-relaxed text-left">
+              <p className="text-white/90 text-sm sm:text-base leading-relaxed text-center md:text-left">
                 Explore our all-inclusive and conference-only delegate options at Aqua Safari Resort. Special rates apply for accredited CIB Ghana members.
               </p>
             </div>
 
-            <div className="shrink-0 self-start md:self-end">
+            <div className="shrink-0 self-center md:self-end flex justify-center md:justify-end">
               {registeredUserEmail ? (
                 <Link
                   to="/my-portal"

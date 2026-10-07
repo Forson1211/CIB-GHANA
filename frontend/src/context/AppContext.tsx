@@ -27,6 +27,7 @@ interface AppContextType {
   lastSyncedAt: Date | null;
   addRegistration: (reg: Omit<Registration, 'id' | 'registration_number' | 'created_at'>) => Registration;
   checkInAttendee: (regNumber: string) => { success: boolean; message: string; registration?: Registration };
+  updatePaymentStatus: (identifier: string, status: 'SUCCESSFUL' | 'PENDING' | 'FAILED', reference?: string, method?: string, category?: string) => Promise<boolean>;
   addEvent: (event: Omit<EventItem, 'id' | 'created_at' | 'updated_at'>) => Promise<EventItem> | EventItem;
   updateEvent: (id: string, updates: Partial<EventItem>) => Promise<void> | void;
   deleteEvent: (id: string) => Promise<boolean> | void;
@@ -226,18 +227,27 @@ export const sortSponsors = (list: Sponsor[]): Sponsor[] => {
 
 export const normalizeRegistration = (r: Registration): Registration => {
   let cat = r.membership_category;
-  if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
-    const memId = (r.cib_member_id || '').toUpperCase();
-    const typeName = (r.registration_type_name || '').toLowerCase();
-    if (memId.startsWith('FCIB') || typeName.includes('fellow')) {
+  const memId = (r.cib_member_id || '').toUpperCase();
+  const typeName = (r.registration_type_name || '').toLowerCase();
+  const sa = (r.special_assistance || '');
+
+  // 1. Check embedded category in special_assistance e.g. "Category: Student"
+  const saMatch = sa.match(/Category:\s*(ACIB|FCIB|Student|Non-Member)/i);
+  if (saMatch) {
+    cat = saMatch[1];
+  } else if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat) || cat === 'Non-Member') {
+    // 2. Infer from member PIN or package name if currently unset or defaulted
+    if (memId.startsWith('FCIB') || typeName.includes('fellow') || typeName.includes('fcib')) {
       cat = 'FCIB';
-    } else if (memId.startsWith('ACIB') || typeName.includes('associate') || typeName.includes('chartered')) {
-      cat = 'ACIB';
     } else if (memId.startsWith('STU') || typeName.includes('student')) {
       cat = 'Student';
-    } else {
-      cat = 'Non-Member';
+    } else if (memId.startsWith('ACIB') || typeName.includes('associate') || typeName.includes('chartered') || typeName.includes('acib')) {
+      cat = 'ACIB';
     }
+  }
+
+  if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
+    cat = 'Non-Member';
   }
   return { ...r, membership_category: cat };
 };
@@ -993,7 +1003,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             job_title: r.job_title,
             country: r.country || 'Ghana',
             cib_member_id: r.cib_member_id,
-            membership_category: r.membership_category || 'Non-Member',
+            membership_category: r.membership_category,
             attendance_type: r.attendance_type || 'PHYSICAL',
             dietary_requirements: r.dietary_requirements,
             special_assistance: r.special_assistance,
@@ -1405,6 +1415,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         job_title: newReg.job_title,
         country: newReg.country || 'Ghana',
         cib_member_id: newReg.cib_member_id,
+        membership_category: newReg.membership_category,
         attendance_type: newReg.attendance_type,
         dietary_requirements: newReg.dietary_requirements,
         special_assistance: newReg.special_assistance,
@@ -1422,11 +1433,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       (async () => {
         try {
-          const { data: dbReg, error: dbErr } = await supabaseAdmin
+          let { data: dbReg, error: dbErr } = await supabaseAdmin
             .from('registrations')
             .insert(insertPayload)
             .select()
             .maybeSingle();
+
+          // If membership_category column is missing in legacy schema, retry without it
+          if (dbErr && /membership_category/i.test(dbErr.message || '')) {
+            delete insertPayload.membership_category;
+            ({ data: dbReg, error: dbErr } = await supabaseAdmin
+              .from('registrations')
+              .insert(insertPayload)
+              .select()
+              .maybeSingle());
+          }
 
           if (dbErr) {
             console.warn('[AppContext] Supabase direct registration insert notice:', dbErr);
@@ -1504,6 +1525,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       message: `Checked In Successfully! Welcome, ${reg.first_name} ${reg.last_name}.`,
       registration: updatedReg,
     };
+  };
+
+  const updatePaymentStatus = async (
+    identifier: string,
+    status: 'SUCCESSFUL' | 'PENDING' | 'FAILED',
+    reference?: string,
+    method?: string,
+    category?: string
+  ): Promise<boolean> => {
+    const cleanId = identifier.trim().toLowerCase();
+    const cleanRef = reference?.trim().toLowerCase();
+
+    // 1. Update React state immediately
+    setRegistrations((prev) =>
+      prev.map((r) => {
+        const match =
+          r.registration_number.toLowerCase() === cleanId ||
+          r.id.toLowerCase() === cleanId ||
+          (r.payment_reference && r.payment_reference.toLowerCase() === cleanId) ||
+          (cleanRef && r.payment_reference && r.payment_reference.toLowerCase() === cleanRef) ||
+          (cleanRef && r.registration_number.toLowerCase() === cleanRef);
+
+        if (match) {
+          return {
+            ...r,
+            payment_status: status,
+            ...(reference ? { payment_reference: reference } : {}),
+            ...(method ? { payment_method: method } : {}),
+            ...(category ? { membership_category: category } : {}),
+          };
+        }
+        return r;
+      })
+    );
+
+    // 2. Direct Supabase update
+    const client = supabaseAdmin || supabase;
+    if (client) {
+      try {
+        const updatePayload: any = { payment_status: status };
+        if (reference) updatePayload.payment_reference = reference;
+        if (method) updatePayload.payment_method = method;
+        if (category) updatePayload.membership_category = category;
+        await client
+          .from('registrations')
+          .update(updatePayload)
+          .or(`registration_number.ilike.${identifier.trim()},payment_reference.ilike.${reference || identifier.trim()}`);
+      } catch (err) {
+        console.warn('[AppContext] Supabase payment status sync error:', err);
+      }
+    }
+
+    return true;
   };
 
   const addEvent = async (eventData: Omit<EventItem, 'id' | 'created_at' | 'updated_at'>): Promise<EventItem> => {
@@ -1678,6 +1752,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastSyncedAt,
         addRegistration,
         checkInAttendee,
+        updatePaymentStatus,
         addEvent,
         updateEvent,
         deleteEvent,

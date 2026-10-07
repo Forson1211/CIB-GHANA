@@ -13,6 +13,16 @@ export type AttendanceType = 'PHYSICAL' | 'VIRTUAL' | 'HYBRID';
 
 export type PaymentStatus = 'PENDING' | 'PROCESSING' | 'SUCCESSFUL' | 'FAILED' | 'REFUNDED';
 
+export type PaymentMethod =
+  | 'ACCESS_WEBPAY'
+  | 'WEBPAY_CARD'
+  | 'WEBPAY_MOMO'
+  | 'PAYSTACK_CARD'
+  | 'PAYSTACK_MOMO'
+  | 'BANK_TRANSFER'
+  | 'COMPLIMENTARY'
+  | string;
+
 export type CheckInStatus = 'REGISTERED' | 'CHECKED_IN' | 'CANCELLED';
 
 export type SponsorType = 'SPONSOR' | 'CORPORATE_MEMBER' | 'PARTNER';
@@ -165,7 +175,7 @@ export interface Registration {
   currency: string;
   payment_status: PaymentStatus;
   payment_reference?: string;
-  payment_method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
+  payment_method?: PaymentMethod;
   check_in_status: CheckInStatus;
   check_in_time?: string;
   created_at: string;
@@ -214,7 +224,7 @@ export interface CreateRegistrationRequest {
   currency?: string;
   payment_status?: PaymentStatus;
   payment_reference?: string;
-  payment_method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'COMPLIMENTARY';
+  payment_method?: PaymentMethod;
   check_in_status?: CheckInStatus;
 }
 

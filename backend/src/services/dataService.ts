@@ -1131,6 +1131,11 @@ export class DataService {
           }
         }
 
+        const resolvedCategory = registration.membership_category || inferredCategory || 'Non-Member';
+        const formattedSpecialAssistance = registration.special_assistance
+          ? (registration.special_assistance.includes('Category:') ? registration.special_assistance : `${registration.special_assistance} | Category: ${resolvedCategory}`)
+          : `Category: ${resolvedCategory}`;
+
         const insertPayload: any = {
           registration_number: registration.registration_number,
           first_name: registration.first_name,
@@ -1141,9 +1146,10 @@ export class DataService {
           job_title: registration.job_title,
           country: registration.country,
           cib_member_id: registration.cib_member_id,
+          membership_category: resolvedCategory,
           attendance_type: registration.attendance_type,
           dietary_requirements: registration.dietary_requirements,
-          special_assistance: registration.special_assistance,
+          special_assistance: formattedSpecialAssistance,
           total_amount: registration.total_amount,
           currency: registration.currency,
           payment_status: registration.payment_status,
@@ -1156,10 +1162,20 @@ export class DataService {
         if (dbEventId) insertPayload.event_id = dbEventId;
         if (dbRegTypeId) insertPayload.registration_type_id = dbRegTypeId;
 
-        const { data: dbReg, error: insErr } = await supabase.from('registrations').insert(insertPayload).select().maybeSingle();
+        let { data: dbReg, error: insErr } = await supabase.from('registrations').insert(insertPayload).select().maybeSingle();
+        if (insErr && /membership_category/i.test(insErr.message || '')) {
+          delete insertPayload.membership_category;
+          ({ data: dbReg, error: insErr } = await supabase.from('registrations').insert(insertPayload).select().maybeSingle());
+        }
+
         if (insErr) {
           console.warn('Supabase registration insert notice:', insErr);
         } else if (dbReg) {
+          registration.id = dbReg.id;
+          registrationsStore.set(dbReg.id, registration);
+          if (registration.payment_reference) {
+            registrationsStore.set(registration.payment_reference, registration);
+          }
           try {
             await supabase.from('tickets').insert({
               registration_id: dbReg.id,
@@ -1189,14 +1205,24 @@ export class DataService {
   }
 
   static mapDbRegistration(r: any): Registration {
-    const typeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+    const rawTypeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+    const typeName = rawTypeName.toLowerCase();
     const eventTitle = r.events?.title || r.event_title || '30th National Banking & Ethics Conference 2026';
     const memId = (r.cib_member_id || '').toUpperCase();
-    let cat = r.membership_category || 'Non-Member';
+    const sa = (r.special_assistance || '');
+    let cat = r.membership_category;
+
+    const saMatch = sa.match(/Category:\s*(ACIB|FCIB|Student|Non-Member)/i);
+    if (saMatch) {
+      cat = saMatch[1];
+    } else if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat) || cat === 'Non-Member') {
+      if (memId.startsWith('FCIB') || typeName.includes('fellow') || typeName.includes('fcib')) cat = 'FCIB';
+      else if (memId.startsWith('STU') || typeName.includes('student')) cat = 'Student';
+      else if (memId.startsWith('ACIB') || typeName.includes('associate') || typeName.includes('chartered') || typeName.includes('acib')) cat = 'ACIB';
+    }
+
     if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
-      if (memId.startsWith('FCIB') || typeName.toLowerCase().includes('fellow')) cat = 'FCIB';
-      else if (memId.startsWith('ACIB') || typeName.toLowerCase().includes('associate') || typeName.toLowerCase().includes('chartered') || typeName.toLowerCase().includes('member')) cat = 'ACIB';
-      else if (memId.startsWith('STU') || typeName.toLowerCase().includes('student')) cat = 'Student';
+      cat = 'Non-Member';
     }
 
     return {
@@ -1281,8 +1307,16 @@ export class DataService {
   }
 
   static async getRegistrationByPaymentReference(reference: string): Promise<Registration | null> {
+    const cleanRef = (reference || '').trim();
+    if (!cleanRef) return null;
+    const lowerRef = cleanRef.toLowerCase();
+
     for (const reg of registrationsStore.values()) {
-      if (reg.payment_reference && reg.payment_reference.toLowerCase() === reference.toLowerCase()) {
+      if (
+        (reg.payment_reference && reg.payment_reference.toLowerCase() === lowerRef) ||
+        (reg.registration_number && reg.registration_number.toLowerCase() === lowerRef) ||
+        (reg.id && reg.id.toLowerCase() === lowerRef)
+      ) {
         return reg;
       }
     }
@@ -1292,12 +1326,15 @@ export class DataService {
         const { data, error } = await supabase
           .from('registrations')
           .select('*, registration_types(name), events(title)')
-          .ilike('payment_reference', reference.trim())
+          .or(`payment_reference.ilike.${cleanRef},registration_number.ilike.${cleanRef}`)
           .maybeSingle();
         if (!error && data) {
           const reg = DataService.mapDbRegistration(data);
           registrationsStore.set(reg.id, reg);
           registrationsStore.set(reg.registration_number, reg);
+          if (reg.payment_reference) {
+            registrationsStore.set(reg.payment_reference, reg);
+          }
           return reg;
         }
       } catch (err) {
@@ -1311,7 +1348,7 @@ export class DataService {
     registrationId: string,
     status: PaymentStatus,
     reference?: string,
-    method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER'
+    method?: 'PAYSTACK_CARD' | 'PAYSTACK_MOMO' | 'BANK_TRANSFER' | 'ACCESS_WEBPAY' | string
   ): Promise<Registration | null> {
     let reg: Registration | null | undefined = registrationsStore.get(registrationId);
     if (!reg) {
@@ -1324,7 +1361,14 @@ export class DataService {
 
     reg.payment_status = status;
     if (reference) reg.payment_reference = reference;
-    if (method) reg.payment_method = method;
+    if (method) reg.payment_method = method as any;
+
+    // Update in-memory cache under all keys
+    registrationsStore.set(reg.id, reg);
+    registrationsStore.set(reg.registration_number, reg);
+    if (reg.payment_reference) {
+      registrationsStore.set(reg.payment_reference, reg);
+    }
 
     const supabase = getSupabase();
     if (supabase) {
@@ -1332,10 +1376,45 @@ export class DataService {
         const updatePayload: any = { payment_status: status };
         if (reference) updatePayload.payment_reference = reference;
         if (method) updatePayload.payment_method = method;
-        await supabase
-          .from('registrations')
-          .update(updatePayload)
-          .or(`registration_number.eq.${reg.registration_number},id.eq.${reg.id}`);
+
+        const isUuid = (val?: string) =>
+          Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
+        // 1. Prioritize updating by registration_number (cleanest, guaranteed unique text column)
+        let updated = false;
+        if (reg.registration_number) {
+          const { data, error } = await supabase
+            .from('registrations')
+            .update(updatePayload)
+            .eq('registration_number', reg.registration_number)
+            .select();
+          if (!error && data && data.length > 0) {
+            updated = true;
+          }
+        }
+
+        // 2. If not updated and reg.id is a genuine UUID, update by UUID id
+        if (!updated && isUuid(reg.id)) {
+          const { data, error } = await supabase
+            .from('registrations')
+            .update(updatePayload)
+            .eq('id', reg.id)
+            .select();
+          if (!error && data && data.length > 0) {
+            updated = true;
+          }
+        }
+
+        // 3. If not updated and reference provided, update by payment_reference
+        if (!updated && reference) {
+          const { error } = await supabase
+            .from('registrations')
+            .update(updatePayload)
+            .eq('payment_reference', reference);
+          if (error) {
+            console.warn('Supabase update by payment_reference notice:', error);
+          }
+        }
       } catch (err) {
         console.warn('Supabase payment status update notice:', err);
       }

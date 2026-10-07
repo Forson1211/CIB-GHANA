@@ -395,12 +395,13 @@ export const Register: React.FC = () => {
   ) => {
     const packageName =
       selectedPackage === 'SINGLE'
-        ? `Single Occupancy Package (${isMember ? 'Member' : 'Non-Member'})`
+        ? `Single Occupancy Package (${membershipCategory})`
         : selectedPackage === 'DOUBLE'
-        ? `Double Occupancy Package (${isMember ? 'Member' : 'Non-Member'})`
-        : `Non Residence Pass (${isMember ? 'Member' : 'Non-Member'})`;
+          ? `Double Occupancy Package (${membershipCategory})`
+          : `Non Residence Pass (${membershipCategory})`;
 
-    const regTypeId = `${isMember ? 'member' : 'non-member'}-${selectedPackage.toLowerCase().replace('_', '-')}`;
+    const regTypeId = `${membershipCategory.toLowerCase()}-${selectedPackage.toLowerCase().replace('_', '-')}`;
+    const autoMemberId = cibMemberId || (membershipCategory !== 'Non-Member' ? `${membershipCategory}-${Date.now().toString(36).toUpperCase()}` : undefined);
 
     const newReg = addRegistration({
       event_id: event.id,
@@ -414,11 +415,11 @@ export const Register: React.FC = () => {
       organization,
       job_title: jobTitle || 'Delegate',
       country: country || 'Ghana',
-      cib_member_id: cibMemberId || undefined,
+      cib_member_id: autoMemberId,
       membership_category: membershipCategory,
       attendance_type: attendanceType,
       dietary_requirements: dietaryRequirements,
-      special_assistance: `Package: ${packageName} | Masterclass: ${selectedMasterclass}`,
+      special_assistance: `Package: ${packageName} | Masterclass: ${selectedMasterclass} | Category: ${membershipCategory}`,
       total_amount: finalPayable,
       currency: 'GHS',
       payment_status: 'SUCCESSFUL',
@@ -445,10 +446,10 @@ export const Register: React.FC = () => {
           paymentMethod === 'ACCESS_WEBPAY'
             ? 'Access Bank Ghana WebPay (Visa / Mastercard / MoMo)'
             : paymentMethod === 'WEBPAY_CARD'
-            ? 'Access Bank WebPay (Debit / Credit Card)'
-            : paymentMethod === 'WEBPAY_MOMO'
-            ? 'Access Bank WebPay (Mobile Money - MTN / Telecel / AT)'
-            : 'Complimentary VIP Pass',
+              ? 'Access Bank WebPay (Debit / Credit Card)'
+              : paymentMethod === 'WEBPAY_MOMO'
+                ? 'Access Bank WebPay (Mobile Money - MTN / Telecel / AT)'
+                : 'Complimentary VIP Pass',
         ticketUrl: `${window.location.origin}/events/${event.slug}/ticket/${newReg.registration_number}`,
       },
     });
@@ -464,12 +465,21 @@ export const Register: React.FC = () => {
     setPaymentError(null);
     setIsInitiatingPayment(true);
 
+    const autoMemberId = cibMemberId || (membershipCategory !== 'Non-Member' ? `${membershipCategory}-${Date.now().toString(36).toUpperCase()}` : undefined);
+    const packageName =
+      selectedPackage === 'SINGLE'
+        ? `Single Occupancy Package (${membershipCategory})`
+        : selectedPackage === 'DOUBLE'
+          ? `Double Occupancy Package (${membershipCategory})`
+          : `Non Residence Pass (${membershipCategory})`;
+
     try {
       await startAccessWebpayCheckout(
         {
           event_id: event.id,
           event_title: event.title,
           package: selectedPackage,
+          registration_type_name: packageName,
           first_name: firstName,
           last_name: lastName,
           email,
@@ -477,15 +487,17 @@ export const Register: React.FC = () => {
           organization,
           job_title: jobTitle,
           country,
-          cib_member_id: cibMemberId,
+          cib_member_id: autoMemberId,
           membership_category: membershipCategory,
+          membershipCategory: membershipCategory,
           attendance_type: attendanceType,
           dietary_requirements: dietaryRequirements,
-          special_assistance: `Package: ${selectedPackage} | Masterclass: ${selectedMasterclass}`,
+          special_assistance: `Package: ${selectedPackage} | Masterclass: ${selectedMasterclass} | Category: ${membershipCategory}`,
         },
         {
           eventSlug: event.slug,
           draftKey: STORAGE_KEY_FORM,
+          membershipCategory,
         }
       );
     } catch (err: any) {
@@ -569,24 +581,22 @@ export const Register: React.FC = () => {
                       className="flex flex-col items-center flex-1 relative z-10 group focus:outline-none"
                     >
                       <div
-                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 ${
-                          isCompleted
+                        className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-200 ${isCompleted
                             ? 'bg-[#1B7E3E] text-white hover:bg-[#166632] ring-2 ring-white shadow-sm cursor-pointer'
                             : isCurrent
-                            ? 'bg-[#1B7E3E] text-white ring-4 ring-[#1B7E3E]/20 ring-offset-1 shadow-sm'
-                            : 'bg-white border-2 border-slate-300 text-slate-400 group-hover:border-slate-400'
-                        }`}
+                              ? 'bg-[#1B7E3E] text-white ring-4 ring-[#1B7E3E]/20 ring-offset-1 shadow-sm'
+                              : 'bg-white border-2 border-slate-300 text-slate-400 group-hover:border-slate-400'
+                          }`}
                       >
                         {isCompleted ? <Check className="w-4 h-4 stroke-[2.5]" /> : step}
                       </div>
                       <span
-                        className={`hidden sm:block text-[11px] font-semibold mt-2 text-center truncate max-w-[110px] transition-colors ${
-                          isCurrent
+                        className={`hidden sm:block text-[11px] font-semibold mt-2 text-center truncate max-w-[110px] transition-colors ${isCurrent
                             ? 'text-[#1B7E3E] font-bold'
                             : isCompleted
-                            ? 'text-slate-700 group-hover:text-[#1B7E3E]'
-                            : 'text-slate-400'
-                        }`}
+                              ? 'text-slate-700 group-hover:text-[#1B7E3E]'
+                              : 'text-slate-400'
+                          }`}
                       >
                         {stepTitles[step - 1]}
                       </span>
@@ -620,11 +630,10 @@ export const Register: React.FC = () => {
                     <div
                       key={item.id}
                       onClick={() => setMembershipCategory(item.id)}
-                      className={`p-4 sm:p-6 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${
-                        isSelected
+                      className={`p-4 sm:p-6 rounded-none cursor-pointer transition-all duration-200 text-center border-0 outline-none ${isSelected
                           ? 'bg-[#1B7E3E] text-white shadow-sm'
                           : 'bg-[#F1F3F5] text-slate-900 hover:bg-[#E8EAED]'
-                      }`}
+                        }`}
                     >
                       <div className={`text-base sm:text-lg font-black ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                         {item.title}
@@ -668,11 +677,10 @@ export const Register: React.FC = () => {
                   type="button"
                   disabled={!membershipCategory || !privacyAgreed}
                   onClick={() => setCurrentStep(2)}
-                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${
-                    membershipCategory && privacyAgreed
+                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${membershipCategory && privacyAgreed
                       ? 'bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   <span className="whitespace-nowrap">Continue<span className="hidden sm:inline"> to Your Details</span></span>
                   <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
@@ -700,11 +708,10 @@ export const Register: React.FC = () => {
                     First Name *
                   </label>
                   <div
-                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${
-                      touched.firstName && !firstNameValidation.isValid
+                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${touched.firstName && !firstNameValidation.isValid
                         ? 'ring-2 ring-rose-500 bg-rose-50/40'
                         : 'focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B7E3E]'
-                    }`}
+                      }`}
                   >
                     <User className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
                     <input
@@ -734,11 +741,10 @@ export const Register: React.FC = () => {
                     Last Name *
                   </label>
                   <div
-                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${
-                      touched.lastName && !lastNameValidation.isValid
+                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${touched.lastName && !lastNameValidation.isValid
                         ? 'ring-2 ring-rose-500 bg-rose-50/40'
                         : 'focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B7E3E]'
-                    }`}
+                      }`}
                   >
                     <User className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
                     <input
@@ -768,11 +774,10 @@ export const Register: React.FC = () => {
                     Email Address *
                   </label>
                   <div
-                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${
-                      touched.email && !emailValidation.isValid
+                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${touched.email && !emailValidation.isValid
                         ? 'ring-2 ring-rose-500 bg-rose-50/40'
                         : 'focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B7E3E]'
-                    }`}
+                      }`}
                   >
                     <Mail className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
                     <input
@@ -802,11 +807,10 @@ export const Register: React.FC = () => {
                     Phone Number (Digits only) *
                   </label>
                   <div
-                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${
-                      (touched.phone || phone.length > 0) && !phoneValidation.isValid
+                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${(touched.phone || phone.length > 0) && !phoneValidation.isValid
                         ? 'ring-2 ring-rose-500 bg-rose-50/40'
                         : 'focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B7E3E]'
-                    }`}
+                      }`}
                   >
                     <Phone className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
                     <input
@@ -844,11 +848,10 @@ export const Register: React.FC = () => {
                     Bank / Organization *
                   </label>
                   <div
-                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${
-                      touched.organization && !orgValidation.isValid
+                    className={`relative flex items-center bg-[#F1F3F5] rounded-none px-3.5 py-3 transition-all ${touched.organization && !orgValidation.isValid
                         ? 'ring-2 ring-rose-500 bg-rose-50/40'
                         : 'focus-within:bg-white focus-within:ring-2 focus-within:ring-[#1B7E3E]'
-                    }`}
+                      }`}
                   >
                     <Building className="w-4 h-4 text-slate-400 shrink-0 mr-2.5" />
                     <input
@@ -903,11 +906,10 @@ export const Register: React.FC = () => {
                 <button
                   type="submit"
                   disabled={!isStep2Valid}
-                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${
-                    isStep2Valid
+                  className={`inline-flex items-center justify-center gap-1.5 sm:gap-2 px-4 py-2.5 sm:px-7 sm:py-3.5 rounded-none font-bold text-xs sm:text-sm md:text-base transition-all shadow-md ${isStep2Valid
                       ? 'bg-[#1B7E3E] hover:bg-[#166632] text-white active:scale-95 cursor-pointer'
                       : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   <span className="whitespace-nowrap">Continue<span className="hidden sm:inline"> to Preferences</span></span>
                   <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5] shrink-0" />
@@ -939,16 +941,14 @@ export const Register: React.FC = () => {
                     <div
                       key={item.id}
                       onClick={() => setAttendanceType(item.id as AttendanceType)}
-                      className={`p-4 rounded-none cursor-pointer transition-all flex items-start gap-3 border-none outline-none ${
-                        isSelected
+                      className={`p-4 rounded-none cursor-pointer transition-all flex items-start gap-3 border-none outline-none ${isSelected
                           ? 'bg-[#E5F5EB] shadow-sm'
                           : 'bg-[#F1F3F5] hover:bg-[#E8EAED]'
-                      }`}
+                        }`}
                     >
                       <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0 transition-colors ${
-                          isSelected ? 'bg-cib-green-700 text-white' : 'bg-slate-300'
-                        }`}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0 transition-colors ${isSelected ? 'bg-cib-green-700 text-white' : 'bg-slate-300'
+                          }`}
                       >
                         {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
                       </div>
@@ -1051,43 +1051,41 @@ export const Register: React.FC = () => {
                       <div
                         key={pkg.id}
                         onClick={() => setSelectedPackage(pkg.id)}
-                        className={`p-5 rounded-none cursor-pointer transition-all duration-200 text-left border-2 flex flex-col justify-between ${
-                          isSelected
-                            ? 'border-[#1B7E3E] bg-[#E5F5EB]/40 shadow-md ring-1 ring-[#1B7E3E]'
-                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                        }`}
+                        className={`p-5 rounded-none cursor-pointer transition-all duration-200 text-left border-0 outline-none flex flex-col justify-between ${isSelected
+                            ? 'bg-[#1B7E3E] text-white shadow-md'
+                            : 'bg-[#F1F3F5] text-slate-900 hover:bg-[#E8EAED]'
+                          }`}
                       >
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+                            <span className={`text-[11px] font-black uppercase tracking-wider ${isSelected ? 'text-white/85' : 'text-slate-500'}`}>
                               {pkg.subtitle}
                             </span>
                             <div
-                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                                isSelected ? 'bg-[#1B7E3E] text-white' : 'bg-slate-200'
-                              }`}
+                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-white text-[#1B7E3E]' : 'bg-slate-300'
+                                }`}
                             >
-                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#1B7E3E]" />}
                             </div>
                           </div>
 
-                          <div className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+                          <div className={`text-base sm:text-lg font-black leading-tight ${isSelected ? 'text-white' : 'text-slate-900'}`}>
                             {pkg.title}
                           </div>
 
-                          <div className="text-2xl font-black text-[#1B7E3E] font-display pt-1">
+                          <div className={`text-2xl font-black font-display pt-1 ${isSelected ? 'text-white' : 'text-[#1B7E3E]'}`}>
                             GH₵ {pkg.price.toLocaleString()}
                             {pkg.perPerson && (
-                              <span className="text-xs font-normal text-slate-500 font-sans ml-1">
+                              <span className={`text-xs font-normal font-sans ml-1 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
                                 / person
                               </span>
                             )}
                           </div>
 
-                          <ul className="space-y-1.5 pt-2 border-t border-slate-100 text-xs text-slate-600">
+                          <ul className={`space-y-1.5 pt-2 border-t text-xs ${isSelected ? 'border-white/20 text-white/90' : 'border-slate-200/80 text-slate-600'}`}>
                             {pkg.features.map((feat, i) => (
                               <li key={i} className="flex items-center gap-1.5">
-                                <span className="text-[#1B7E3E] font-bold">•</span>
+                                <span className={`font-bold ${isSelected ? 'text-white' : 'text-[#1B7E3E]'}`}>•</span>
                                 <span>{feat}</span>
                               </li>
                             ))}
@@ -1115,16 +1113,14 @@ export const Register: React.FC = () => {
                       <div
                         key={option}
                         onClick={() => setSelectedMasterclass(option)}
-                        className={`flex items-center gap-3.5 p-4 rounded-none cursor-pointer transition-all border-0 outline-none ${
-                          isSelected
+                        className={`flex items-center gap-3.5 p-4 rounded-none cursor-pointer transition-all border-0 outline-none ${isSelected
                             ? 'bg-[#E5F5EB] shadow-sm'
                             : 'bg-[#F1F3F5] hover:bg-[#E8EAED]'
-                        }`}
+                          }`}
                       >
                         <div
-                          className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${
-                            isSelected ? 'bg-[#1B7E3E] text-white' : 'bg-slate-300'
-                          }`}
+                          className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-[#1B7E3E] text-white' : 'bg-slate-300'
+                            }`}
                         >
                           {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>

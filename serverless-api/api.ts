@@ -59,14 +59,24 @@ function stringToUuid(str: string): string {
 }
 
 function mapDbRegistration(r: any) {
-  const typeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+  const rawTypeName = r.registration_types?.name || r.registration_type_name || 'Standard Delegate Pass';
+  const typeName = rawTypeName.toLowerCase();
   const eventTitle = r.events?.title || r.event_title || '30th National Banking & Ethics Conference 2026';
   const memId = (r.cib_member_id || '').toUpperCase();
-  let cat = r.membership_category || 'Non-Member';
+  const sa = (r.special_assistance || '');
+  let cat = r.membership_category;
+
+  const saMatch = sa.match(/Category:\s*(ACIB|FCIB|Student|Non-Member)/i);
+  if (saMatch) {
+    cat = saMatch[1];
+  } else if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat) || cat === 'Non-Member') {
+    if (memId.startsWith('FCIB') || typeName.includes('fellow') || typeName.includes('fcib')) cat = 'FCIB';
+    else if (memId.startsWith('STU') || typeName.includes('student')) cat = 'Student';
+    else if (memId.startsWith('ACIB') || typeName.includes('associate') || typeName.includes('chartered') || typeName.includes('acib')) cat = 'ACIB';
+  }
+
   if (!cat || !['ACIB', 'FCIB', 'Student', 'Non-Member'].includes(cat)) {
-    if (memId.startsWith('FCIB') || typeName.toLowerCase().includes('fellow')) cat = 'FCIB';
-    else if (memId.startsWith('ACIB') || typeName.toLowerCase().includes('associate') || typeName.toLowerCase().includes('chartered') || typeName.toLowerCase().includes('member')) cat = 'ACIB';
-    else if (memId.startsWith('STU') || typeName.toLowerCase().includes('student')) cat = 'Student';
+    cat = 'Non-Member';
   }
 
   return {

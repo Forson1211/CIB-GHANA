@@ -112,45 +112,115 @@ const LineChart: React.FC<{ data: number[]; labels: string[]; color?: string }> 
 /* ──────────────────────────────────────────
    SVG Donut Chart Component
 ────────────────────────────────────────── */
-const DonutChart: React.FC<{ segments: { label: string; pct: number; color: string }[] }> = ({
-  segments,
-}) => {
-  const R = 62;
+interface DonutSegment {
+  label: string;
+  pct: number;
+  color: string;
+  count: number;
+}
+
+const DonutChart: React.FC<{
+  segments: DonutSegment[];
+  activeLabel?: string | null;
+  onHoverSegment?: (label: string | null) => void;
+  onClickSegment?: (label: string) => void;
+}> = ({ segments, activeLabel, onHoverSegment, onClickSegment }) => {
+  const R = 60;
   const cx = 80;
   const cy = 80;
-  const stroke = 22;
+  const stroke = 20;
   const circ = 2 * Math.PI * R;
+
+  const topSegment = segments.reduce((a, b) => (a.count > b.count ? a : b), segments[0]);
+  const currentSegment =
+    segments.find((s) => s.label === activeLabel) ||
+    (topSegment && topSegment.count > 0 ? topSegment : segments[0]);
 
   let cumPct = 0;
   const slices = segments.map((s) => {
     const dash = (s.pct / 100) * circ;
-    const offset = circ - cumPct * circ / 100;
+    const offset = circ - (cumPct * circ) / 100;
     cumPct += s.pct;
     return { ...s, dash, offset };
   });
 
   return (
-    <svg viewBox="0 0 160 160" className="w-44 h-44">
-      {slices.map((s, i) => (
-        <circle
-          key={i}
-          cx={cx} cy={cy} r={R}
-          fill="none"
-          stroke={s.color}
-          strokeWidth={stroke}
-          strokeDasharray={`${s.dash} ${circ - s.dash}`}
-          strokeDashoffset={s.offset}
-          style={{ transform: 'rotate(-90deg)', transformOrigin: '80px 80px' }}
-        />
-      ))}
-      <circle cx={cx} cy={cy} r={R - stroke / 2 - 3} fill="white" />
-      <text x={cx} y={cy - 6} textAnchor="middle" fontSize="17" fontWeight="900" fill="#0F172A" fontFamily="Inter, sans-serif">
-        {segments[0]?.pct}%
-      </text>
-      <text x={cx} y={cy + 13} textAnchor="middle" fontSize="9" fill="#94A3B8" fontFamily="Inter, sans-serif">
-        {segments[0]?.label}
-      </text>
-    </svg>
+    <div className="relative flex items-center justify-center">
+      <svg viewBox="0 0 160 160" className="w-44 h-44 drop-shadow-sm select-none">
+        {/* Subtle background track */}
+        <circle cx={cx} cy={cy} r={R} fill="none" stroke="#F1F5F9" strokeWidth={stroke} />
+
+        {/* Dynamic interactive slices */}
+        {slices.map((s, i) => {
+          if (s.pct === 0) return null;
+          const isSelected = currentSegment?.label === s.label;
+          return (
+            <circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={R}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={isSelected ? stroke + 4 : stroke}
+              strokeDasharray={`${s.dash} ${circ - s.dash}`}
+              strokeDashoffset={s.offset}
+              style={{
+                transform: 'rotate(-90deg)',
+                transformOrigin: '80px 80px',
+                transition: 'stroke-width 0.2s ease, opacity 0.2s ease',
+                cursor: 'pointer',
+                opacity: currentSegment ? (isSelected ? 1 : 0.65) : 1,
+              }}
+              onMouseEnter={() => onHoverSegment?.(s.label)}
+              onMouseLeave={() => onHoverSegment?.(null)}
+              onClick={() => onClickSegment?.(s.label)}
+            />
+          );
+        })}
+
+        {/* Center cutout */}
+        <circle cx={cx} cy={cy} r={R - stroke / 2 - 3} fill="white" />
+
+        {/* Center Dynamic Statistics */}
+        <text
+          x={cx}
+          y={cy - 7}
+          textAnchor="middle"
+          fontSize="22"
+          fontWeight="900"
+          fill="#0F172A"
+          fontFamily="Inter, sans-serif"
+          className="transition-all duration-200"
+        >
+          {currentSegment?.pct}%
+        </text>
+        <text
+          x={cx}
+          y={cy + 10}
+          textAnchor="middle"
+          fontSize="10"
+          fontWeight="800"
+          fill={currentSegment?.color || '#0F172A'}
+          fontFamily="Inter, sans-serif"
+          className="transition-all duration-200"
+        >
+          {currentSegment?.label}
+        </text>
+        <text
+          x={cx}
+          y={cy + 22}
+          textAnchor="middle"
+          fontSize="8.5"
+          fontWeight="600"
+          fill="#94A3B8"
+          fontFamily="Inter, sans-serif"
+          className="transition-all duration-200"
+        >
+          {currentSegment?.count} {currentSegment?.count === 1 ? 'delegate' : 'delegates'}
+        </text>
+      </svg>
+    </div>
   );
 };
 
@@ -163,6 +233,8 @@ export const AdminDashboard: React.FC = () => {
   const [eventTab, setEventTab] = useState<EventTab>('All');
   const [chartRange, setChartRange] = useState<ChartRange>('Monthly');
   const [donutRange, setDonutRange] = useState<'This month' | 'This year'>('This month');
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // KPIs
   const totalEvents = events.length;
@@ -246,6 +318,7 @@ export const AdminDashboard: React.FC = () => {
     return { label: cat.label, pct: Math.round((count / totalRegs) * 100), color: cat.color, count };
   });
   const topSegment = donutSegments.reduce((a, b) => (a.count > b.count ? a : b), donutSegments[0]);
+  const activeCategory = hoveredCategory || selectedCategory || (topSegment?.count > 0 ? topSegment.label : 'Non-Member');
 
   // Greeting
   const hour = new Date().getHours();
@@ -451,21 +524,56 @@ export const AdminDashboard: React.FC = () => {
             {/* Donut + Legend side by side on desktop, stacked on mobile */}
             <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
               <div className="shrink-0 flex justify-center w-full sm:w-auto">
-                <DonutChart segments={donutSegments} />
+                <DonutChart
+                  segments={donutSegments}
+                  activeLabel={activeCategory}
+                  onHoverSegment={(label) => setHoveredCategory(label)}
+                  onClickSegment={(label) => setSelectedCategory(selectedCategory === label ? null : label)}
+                />
               </div>
-              <div className="w-full sm:flex-1 space-y-2.5 sm:space-y-3">
-                {donutSegments.map((seg) => (
-                  <div key={seg.label} className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: seg.color }} />
-                      <span className="text-base font-black text-slate-900 truncate">{seg.label}</span>
+              <div className="w-full sm:flex-1 space-y-1.5 sm:space-y-2">
+                {donutSegments.map((seg) => {
+                  const isCurrent = activeCategory === seg.label;
+                  return (
+                    <div
+                      key={seg.label}
+                      onMouseEnter={() => setHoveredCategory(seg.label)}
+                      onMouseLeave={() => setHoveredCategory(null)}
+                      onClick={() => setSelectedCategory(selectedCategory === seg.label ? null : seg.label)}
+                      className={`flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-slate-100 shadow-sm ring-1 ring-slate-200'
+                          : 'hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full flex-shrink-0 transition-transform ${
+                            isCurrent ? 'scale-125 ring-2 ring-white shadow-sm' : ''
+                          }`}
+                          style={{ backgroundColor: seg.color }}
+                        />
+                        <span
+                          className={`text-sm truncate transition-colors ${
+                            isCurrent ? 'font-black text-slate-900' : 'font-bold text-slate-700'
+                          }`}
+                        >
+                          {seg.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs font-semibold text-slate-400">({seg.count})</span>
+                        <span
+                          className={`text-sm font-black transition-colors ${
+                            isCurrent ? 'text-slate-900' : 'text-slate-700'
+                          }`}
+                        >
+                          {seg.pct}%
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs font-bold text-slate-400">({seg.count})</span>
-                      <span className="text-base font-black text-slate-900">{seg.pct}%</span>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

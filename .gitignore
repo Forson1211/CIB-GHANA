@@ -46,7 +46,11 @@ __pycache__/
 # Environment variables
 .env
 .env.*
-!.env.example
+*.env*
+.env.example
+*.env.example
+backend/.env.example
+frontend/.env.example
 
 # Large media files (>50MB) and local backups
 *.gif

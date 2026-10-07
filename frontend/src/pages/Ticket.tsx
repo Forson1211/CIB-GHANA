@@ -1,21 +1,62 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { TicketCard } from '../components/registration/TicketCard';
-import { DigitalTicket } from '../types';
-import { ArrowLeft, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { DigitalTicket, Registration } from '../types';
+import { ArrowLeft, CheckCircle2, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { ApiClient } from '../lib/api';
 
 export const Ticket: React.FC = () => {
   const { slug, id } = useParams<{ slug: string; id: string }>();
   const navigate = useNavigate();
-  const { getRegistrationByNumber, getEventBySlug, registrations } = useApp();
+  const { getRegistrationByNumber, getEventBySlug, registrations, refreshRegistrations } = useApp();
+  const [fetchedReg, setFetchedReg] = useState<Registration | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Find registration either by registration_number or id
-  const registration = (id && getRegistrationByNumber(id)) || 
-    registrations.find((r) => r.id === id || r.registration_number === id);
+  const cleanId = (id || '').trim().toLowerCase();
+
+  // Find registration either by registration_number, id, or payment_reference
+  const registration =
+    fetchedReg ||
+    (id && getRegistrationByNumber(id)) ||
+    registrations.find(
+      (r) =>
+        r.id?.toLowerCase() === cleanId ||
+        r.registration_number?.toLowerCase() === cleanId ||
+        (r.payment_reference && r.payment_reference.toLowerCase() === cleanId)
+    );
 
   const event = slug ? getEventBySlug(slug) : undefined;
+
+  useEffect(() => {
+    if (!registration && id) {
+      setLoading(true);
+      ApiClient.getRegistration(id)
+        .then((res) => {
+          if (res.success && res.data?.registration) {
+            setFetchedReg(res.data.registration);
+          }
+        })
+        .catch(() => {
+          refreshRegistrations().catch(() => {});
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [id, registration]);
+
+  if (loading && !registration) {
+    return (
+      <div className="max-w-xl mx-auto py-24 text-center space-y-4 px-4 text-slate-800">
+        <div className="w-12 h-12 rounded-full bg-emerald-50 text-[#1B7E3E] flex items-center justify-center mx-auto animate-spin">
+          <RefreshCw className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold font-display text-slate-900">Retrieving Delegate Pass...</h2>
+      </div>
+    );
+  }
 
   if (!registration) {
     return (

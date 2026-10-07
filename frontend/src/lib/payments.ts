@@ -88,6 +88,10 @@ export interface WebpayPendingCheckout {
   eventSlug?: string;
   draftKey?: string;
   startedAt: string;
+  paymentMethod?: string;
+  momoNetwork?: string;
+  momoNumber?: string;
+  membershipCategory?: string;
 }
 
 let cachedWebpayEnabled: boolean | null = null;
@@ -110,7 +114,14 @@ export async function isAccessWebpayEnabled(): Promise<boolean> {
  */
 export async function startAccessWebpayCheckout(
   payload: Record<string, unknown> & { package: 'SINGLE' | 'DOUBLE' | 'CONFERENCE_ONLY' },
-  meta: { eventSlug?: string; draftKey?: string } = {}
+  meta: {
+    eventSlug?: string;
+    draftKey?: string;
+    paymentMethod?: string;
+    momoNetwork?: string;
+    momoNumber?: string;
+    membershipCategory?: string;
+  } = {}
 ): Promise<void> {
   let checkoutUrl = 'https://apps.ghana.accessbankplc.com/webpay/Checkout/v1/Payment/ykj2pKlzvnXD';
   let reference = `AWP_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
@@ -131,12 +142,22 @@ export async function startAccessWebpayCheckout(
     console.warn('[Access WebPay] Backend initialize error, routing directly to Access Bank WebPay hosted page:', apiErr);
   }
 
+  const resolvedCategory =
+    (payload.membership_category as string) ||
+    (payload.membershipCategory as string) ||
+    meta.membershipCategory ||
+    'Non-Member';
+
   const pending: WebpayPendingCheckout = {
     reference,
     registrationNumber,
     eventSlug: meta.eventSlug,
     draftKey: meta.draftKey,
     startedAt: new Date().toISOString(),
+    paymentMethod: meta.paymentMethod || (payload.payment_method as string),
+    momoNetwork: meta.momoNetwork || (payload.momo_network as string),
+    momoNumber: meta.momoNumber || (payload.momo_number as string) || (payload.phone as string),
+    membershipCategory: resolvedCategory,
   };
   try {
     localStorage.setItem(WEBPAY_PENDING_KEY, JSON.stringify(pending));

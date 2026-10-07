@@ -233,21 +233,15 @@ export class AccessWebpayService {
       console.error('[Access WebPay] Error querying transaction status from bank:', err);
     }
 
-    // In sandbox test mode, if reference has been generated locally or tested with simulation
+    // If transaction was not confirmed as successful by Access Bank WebPay
     return {
-      status: true,
-      message: 'Verification successful (Access Bank WebPay Test Sandbox)',
+      status: false,
+      message: 'Transaction has not been completed or verified by Access Bank WebPay',
       data: {
-        status: 'success',
+        status: 'failed',
         reference,
-        amount: 5600,
+        amount: 0,
         currency: 'GHS',
-        paid_at: new Date().toISOString(),
-        channel: 'card',
-        transactionId: `TXN_${Date.now()}`,
-        customer: {
-          email: 'delegate@cibghana.org',
-        },
       },
     };
   }

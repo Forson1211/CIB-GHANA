@@ -202,14 +202,13 @@ export async function gatewayVerify(reference: string): Promise<{
     console.warn('[WebPay Serverless] Outbound status check error:', err);
   }
 
-  // Sandbox verified resolution
+  // If status check failed or not confirmed by Access Bank WebPay
   return {
-    status: 'SUCCESSFUL',
-    amount: 5600,
-    currency: 'GHS',
-    channel: 'CARD',
-    gatewayReference: `AWP_TXN_${Date.now()}`,
-    raw: { sandbox: true },
+    status: 'FAILED',
+    amount: null,
+    channel: undefined,
+    gatewayReference: undefined,
+    raw: { verified: false },
   };
 }
 
@@ -263,10 +262,11 @@ function generateReference(): string {
  */
 async function settleRegistration(reference: string, deps: WebpayRouteDeps) {
   const { supabase } = deps;
+  const cleanRef = reference.trim();
   const { data: row, error } = await supabase
     .from('registrations')
     .select('*, registration_types(name), events(title)')
-    .eq('payment_reference', reference)
+    .or(`payment_reference.ilike.${cleanRef},registration_number.ilike.${cleanRef}`)
     .maybeSingle();
 
   if (error || !row) return { found: false as const };
@@ -274,24 +274,24 @@ async function settleRegistration(reference: string, deps: WebpayRouteDeps) {
     return { found: true as const, status: 'SUCCESSFUL' as GatewayStatus, registration: deps.mapRegistration(row) };
   }
 
-  const result = await gatewayVerify(reference);
+  const result = await gatewayVerify(cleanRef);
   const expected = Number(row.total_amount) || 0;
 
   if (result.status === 'SUCCESSFUL') {
-    if (result.amount !== null && Math.abs(result.amount - expected) > 0.01) {
-      console.error(`[Access WebPay] Amount mismatch for ${reference}: paid ${result.amount}, expected ${expected}`);
+    if (result.amount !== null && !result.raw?.sandbox && expected > 0 && Math.abs(result.amount - expected) > 0.01) {
+      console.error(`[Access WebPay] Amount mismatch for ${cleanRef}: paid ${result.amount}, expected ${expected}`);
       return { found: true as const, status: 'PENDING' as GatewayStatus, amountMismatch: true, registration: deps.mapRegistration(row) };
     }
 
     // Conditional update -> only one concurrent caller (redirect vs webhook) wins.
     const { data: updated } = await supabase
       .from('registrations')
-      .update({ payment_status: 'SUCCESSFUL' })
+      .update({ payment_status: 'SUCCESSFUL', payment_reference: cleanRef })
       .eq('id', row.id)
       .neq('payment_status', 'SUCCESSFUL')
       .select('*, registration_types(name), events(title)');
 
-    const finalRow = updated && updated.length > 0 ? updated[0] : { ...row, payment_status: 'SUCCESSFUL' };
+    const finalRow = updated && updated.length > 0 ? updated[0] : { ...row, payment_status: 'SUCCESSFUL', payment_reference: cleanRef };
     const mapped = deps.mapRegistration(finalRow);
 
     if (updated && updated.length > 0) {
@@ -300,7 +300,7 @@ async function settleRegistration(reference: string, deps: WebpayRouteDeps) {
           registration_id: row.id,
           ticket_code: `TCK-${row.registration_number}`,
           qr_code_data: JSON.stringify({ reg: row.registration_number }),
-          security_hash: crypto.createHash('sha256').update(`${row.id}:${reference}`).digest('hex'),
+          security_hash: crypto.createHash('sha256').update(`${row.id}:${cleanRef}`).digest('hex'),
           status: 'REGISTERED',
         });
       } catch { /* tickets table optional */ }
@@ -386,7 +386,9 @@ export async function handleWebpayRoute(
       membership_category: membershipCategory,
       attendance_type: body.attendance_type || 'PHYSICAL',
       dietary_requirements: body.dietary_requirements || null,
-      special_assistance: body.special_assistance || null,
+      special_assistance: body.special_assistance
+        ? (String(body.special_assistance).includes('Category:') ? body.special_assistance : `${body.special_assistance} | Category: ${membershipCategory}`)
+        : `Category: ${membershipCategory}`,
       total_amount: amount,
       currency: WEBPAY_CONFIG.currency,
       payment_status: 'PENDING',

@@ -38,15 +38,16 @@ export const AdminRegistrations: React.FC = () => {
   const [resendFeedback, setResendFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
 
   const [countdown, setCountdown] = useState(5);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
 
-  // Auto-sync registrations on mount, on 5-second interval, and whenever admin tab is focused/visible
+  // Auto-sync registrations on mount, on 5-second interval, and whenever admin tab is focused/visible (silently)
   useEffect(() => {
-    refreshRegistrations().catch(() => {});
+    refreshRegistrations({ silent: true }).catch(() => {});
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          refreshRegistrations().catch(() => {});
+          refreshRegistrations({ silent: true }).catch(() => {});
           return 5;
         }
         return prev - 1;
@@ -55,7 +56,7 @@ export const AdminRegistrations: React.FC = () => {
 
     const onFocus = () => {
       setCountdown(5);
-      refreshRegistrations().catch(() => {});
+      refreshRegistrations({ silent: true }).catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
@@ -81,7 +82,15 @@ export const AdminRegistrations: React.FC = () => {
   };
 
   const handleRefresh = async () => {
-    await refreshAll();
+    setIsManualSyncing(true);
+    setCountdown(5);
+    try {
+      await refreshRegistrations({ silent: false });
+    } finally {
+      setTimeout(() => {
+        setIsManualSyncing(false);
+      }, 500);
+    }
   };
 
   const filtered = registrations.filter((r) => {
@@ -222,13 +231,12 @@ export const AdminRegistrations: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            leftIcon={<RefreshCw className={`w-4 h-4 ${isLiveSyncing ? 'animate-spin text-cib-green-700' : ''}`} />}
-            onClick={() => {
-              setCountdown(5);
-              handleRefresh();
-            }}
+            leftIcon={<RefreshCw className={`w-4 h-4 ${isManualSyncing ? 'animate-spin text-cib-green-700' : 'text-slate-600'}`} />}
+            onClick={handleRefresh}
+            disabled={isManualSyncing}
+            className="min-w-[95px] justify-center"
           >
-            {isLiveSyncing ? 'Syncing...' : 'Sync (5s)'}
+            {isManualSyncing ? 'Syncing...' : 'Sync Live'}
           </Button>
 
           <Button

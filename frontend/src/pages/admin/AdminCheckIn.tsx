@@ -49,15 +49,16 @@ export const AdminCheckIn: React.FC = () => {
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [countdown, setCountdown] = useState(5);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
 
-  // Auto-sync registrations on mount, on 5-second interval, and on window focus
+  // Auto-sync registrations on mount, on 5-second interval, and on window focus (silently)
   useEffect(() => {
-    refreshRegistrations().catch(() => {});
+    refreshRegistrations({ silent: true }).catch(() => {});
 
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          refreshRegistrations().catch(() => {});
+          refreshRegistrations({ silent: true }).catch(() => {});
           return 5;
         }
         return prev - 1;
@@ -66,7 +67,7 @@ export const AdminCheckIn: React.FC = () => {
 
     const onFocus = () => {
       setCountdown(5);
-      refreshRegistrations().catch(() => {});
+      refreshRegistrations({ silent: true }).catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
@@ -76,6 +77,18 @@ export const AdminCheckIn: React.FC = () => {
       document.removeEventListener('visibilitychange', onFocus);
     };
   }, [refreshRegistrations]);
+
+  const handleManualSync = async () => {
+    setIsManualSyncing(true);
+    setCountdown(5);
+    try {
+      await refreshRegistrations({ silent: false });
+    } finally {
+      setTimeout(() => {
+        setIsManualSyncing(false);
+      }, 500);
+    }
+  };
 
   // Global keyboard shortcut: '/' to focus omnibar, 'Escape' to clear/close
   useEffect(() => {
@@ -253,13 +266,12 @@ export const AdminCheckIn: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLiveSyncing ? 'animate-spin text-[#0A5C36]' : ''}`} />}
-            onClick={() => {
-              setCountdown(5);
-              refreshRegistrations();
-            }}
+            leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isManualSyncing ? 'animate-spin text-[#0A5C36]' : 'text-slate-600'}`} />}
+            onClick={handleManualSync}
+            disabled={isManualSyncing}
+            className="min-w-[95px] justify-center"
           >
-            {isLiveSyncing ? 'Syncing...' : 'Sync (5s)'}
+            {isManualSyncing ? 'Syncing...' : 'Sync Live'}
           </Button>
         </div>
       }

@@ -20,10 +20,10 @@ interface AppContextType {
   getEventBySlug: (slug: string) => EventItem | undefined;
   getEventById: (id: string) => EventItem | undefined;
   getRegistrationByNumber: (regNumber: string) => Registration | undefined;
-  refreshRegistrations: () => Promise<void>;
+  refreshRegistrations: (options?: { silent?: boolean }) => Promise<void>;
   refreshSpeakers: () => Promise<void>;
   refreshSponsors: () => Promise<void>;
-  refreshAll: () => Promise<void>;
+  refreshAll: (options?: { silent?: boolean }) => Promise<void>;
   isLiveSyncing: boolean;
   lastSyncedAt: Date | null;
   addRegistration: (reg: Omit<Registration, 'id' | 'registration_number' | 'created_at'>) => Registration;
@@ -967,113 +967,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const refreshRegistrations = async () => {
-    setIsLiveSyncing(true);
-    let remoteRegistrations: Registration[] = [];
-
-    // 1. Direct Supabase query (authoritative source with service role bypass)
-    const regClient = supabaseAdmin || supabase;
-    if (regClient) {
-      try {
-        const { data, error } = await regClient
-          .from('registrations')
-          .select('*, registration_types(name), events(title)')
-          .order('created_at', { ascending: false });
-        if (!error && Array.isArray(data) && data.length > 0) {
-          remoteRegistrations = data.map((r: any) => ({
-            id: r.id,
-            event_id: r.event_id,
-            event_title: r.events?.title || '30th National Banking & Ethics Conference 2026',
-            registration_number: r.registration_number,
-            registration_type_id: r.registration_type_id,
-            registration_type_name: r.registration_types?.name || 'Standard Delegate Pass',
-            first_name: r.first_name,
-            last_name: r.last_name,
-            email: r.email,
-            phone: r.phone,
-            organization: r.organization,
-            job_title: r.job_title,
-            country: r.country || 'Ghana',
-            cib_member_id: r.cib_member_id,
-            membership_category: r.membership_category,
-            attendance_type: r.attendance_type || 'PHYSICAL',
-            dietary_requirements: r.dietary_requirements,
-            special_assistance: r.special_assistance,
-            total_amount: Number(r.total_amount) || 0,
-            currency: r.currency || 'GHS',
-            payment_status: r.payment_status || 'PENDING',
-            payment_reference: r.payment_reference,
-            payment_method: r.payment_method,
-            check_in_status: r.check_in_status || 'REGISTERED',
-            check_in_time: r.check_in_time,
-            created_at: r.created_at,
-          }));
-        }
-      } catch (err) {
-        console.warn('Direct Supabase fetch registrations notice:', err);
-      }
+  const refreshRegistrations = async (options?: { silent?: boolean }) => {
+    const isSilent = Boolean(options?.silent);
+    if (!isSilent) {
+      setIsLiveSyncing(true);
     }
-
-    // 2. Fetch from backend API as well and merge
     try {
-      const res = await ApiClient.getRegistrations();
-      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-        if (remoteRegistrations.length === 0) {
-          remoteRegistrations = res.data;
-        } else {
-          const regMap = new Map<string, Registration>();
-          for (const r of remoteRegistrations) {
-            regMap.set(r.registration_number.toUpperCase(), r);
+      let remoteRegistrations: Registration[] = [];
+
+      // 1. Direct Supabase query (authoritative source with service role bypass)
+      const regClient = supabaseAdmin || supabase;
+      if (regClient) {
+        try {
+          const { data, error } = await regClient
+            .from('registrations')
+            .select('*, registration_types(name), events(title)')
+            .order('created_at', { ascending: false });
+          if (!error && Array.isArray(data) && data.length > 0) {
+            remoteRegistrations = data.map((r: any) => ({
+              id: r.id,
+              event_id: r.event_id,
+              event_title: r.events?.title || '30th National Banking & Ethics Conference 2026',
+              registration_number: r.registration_number,
+              registration_type_id: r.registration_type_id,
+              registration_type_name: r.registration_types?.name || 'Standard Delegate Pass',
+              first_name: r.first_name,
+              last_name: r.last_name,
+              email: r.email,
+              phone: r.phone,
+              organization: r.organization,
+              job_title: r.job_title,
+              country: r.country || 'Ghana',
+              cib_member_id: r.cib_member_id,
+              membership_category: r.membership_category,
+              attendance_type: r.attendance_type || 'PHYSICAL',
+              dietary_requirements: r.dietary_requirements,
+              special_assistance: r.special_assistance,
+              total_amount: Number(r.total_amount) || 0,
+              currency: r.currency || 'GHS',
+              payment_status: r.payment_status || 'PENDING',
+              payment_reference: r.payment_reference,
+              payment_method: r.payment_method,
+              check_in_status: r.check_in_status || 'REGISTERED',
+              check_in_time: r.check_in_time,
+              created_at: r.created_at,
+            }));
           }
-          for (const apiReg of res.data) {
-            const key = apiReg.registration_number.toUpperCase();
-            const existing = regMap.get(key);
-            if (!existing) {
-              regMap.set(key, apiReg);
-            } else if (apiReg.payment_status === 'SUCCESSFUL' && existing.payment_status !== 'SUCCESSFUL') {
-              regMap.set(key, { ...existing, ...apiReg, payment_status: 'SUCCESSFUL' });
-            }
-          }
-          remoteRegistrations = Array.from(regMap.values());
+        } catch (err) {
+          console.warn('Direct Supabase fetch registrations notice:', err);
         }
       }
-    } catch {
-      // Backend temporarily offline
-    }
 
-    if (remoteRegistrations.length > 0) {
-      setRegistrations((prev) => {
-        // Protect any registration currently in local state marked SUCCESSFUL from being downgraded to PENDING
-        const remoteMap = new Map<string, Registration>();
-        for (const r of remoteRegistrations) {
-          remoteMap.set(r.registration_number.toUpperCase(), normalizeRegistration(r));
-        }
-
-        for (const localReg of prev) {
-          const key = localReg.registration_number.toUpperCase();
-          const remote = remoteMap.get(key);
-          if (remote) {
-            if (localReg.payment_status === 'SUCCESSFUL' && remote.payment_status !== 'SUCCESSFUL') {
-              remoteMap.set(key, { ...remote, payment_status: 'SUCCESSFUL' });
-            }
+      // 2. Fetch from backend API as well and merge
+      try {
+        const res = await ApiClient.getRegistrations();
+        if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+          if (remoteRegistrations.length === 0) {
+            remoteRegistrations = res.data;
           } else {
-            // Keep local-only draft registrations
-            remoteMap.set(key, localReg);
+            const regMap = new Map<string, Registration>();
+            for (const r of remoteRegistrations) {
+              regMap.set(r.registration_number.toUpperCase(), r);
+            }
+            for (const apiReg of res.data) {
+              const key = apiReg.registration_number.toUpperCase();
+              const existing = regMap.get(key);
+              if (!existing) {
+                regMap.set(key, apiReg);
+              } else if (apiReg.payment_status === 'SUCCESSFUL' && existing.payment_status !== 'SUCCESSFUL') {
+                regMap.set(key, { ...existing, ...apiReg, payment_status: 'SUCCESSFUL' });
+              }
+            }
+            remoteRegistrations = Array.from(regMap.values());
           }
         }
+      } catch {
+        // Backend temporarily offline
+      }
 
-        const merged = Array.from(remoteMap.values()).sort(
-          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
-        try {
-          localStorage.setItem(STORAGE_KEY_REGS, JSON.stringify(merged));
-        } catch {}
-        return merged;
-      });
-      setLastSyncedAt(new Date());
+      if (remoteRegistrations.length > 0) {
+        setRegistrations((prev) => {
+          // Protect any registration currently in local state marked SUCCESSFUL from being downgraded to PENDING
+          const remoteMap = new Map<string, Registration>();
+          for (const r of remoteRegistrations) {
+            remoteMap.set(r.registration_number.toUpperCase(), normalizeRegistration(r));
+          }
+
+          for (const localReg of prev) {
+            const key = localReg.registration_number.toUpperCase();
+            const remote = remoteMap.get(key);
+            if (remote) {
+              if (localReg.payment_status === 'SUCCESSFUL' && remote.payment_status !== 'SUCCESSFUL') {
+                remoteMap.set(key, { ...remote, payment_status: 'SUCCESSFUL' });
+              }
+            } else {
+              // Keep local-only draft registrations
+              remoteMap.set(key, localReg);
+            }
+          }
+
+          const merged = Array.from(remoteMap.values()).sort(
+            (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          try {
+            localStorage.setItem(STORAGE_KEY_REGS, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
+        setLastSyncedAt(new Date());
+      }
+    } finally {
+      if (!isSilent) {
+        setIsLiveSyncing(false);
+      }
     }
-
-    setIsLiveSyncing(false);
   };
 
   // Fetch speakers from backend API / Supabase and merge into local state
@@ -1309,18 +1316,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only
 
-  const refreshAll = async () => {
-    setIsLiveSyncing(true);
+  const refreshAll = async (options?: { silent?: boolean }) => {
+    const isSilent = Boolean(options?.silent);
+    if (!isSilent) {
+      setIsLiveSyncing(true);
+    }
     try {
       await Promise.allSettled([
-        refreshRegistrations(),
+        refreshRegistrations({ silent: true }),
         refreshEvents(),
         refreshSpeakers(),
         refreshSponsors(),
       ]);
       setLastSyncedAt(new Date());
     } finally {
-      setIsLiveSyncing(false);
+      if (!isSilent) {
+        setIsLiveSyncing(false);
+      }
     }
   };
 
@@ -1393,12 +1405,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Ultra-responsive 5-second interval for delegate registrations and payments
     const regInterval = setInterval(() => {
-      refreshRegistrations().catch(() => {});
+      refreshRegistrations({ silent: true }).catch(() => {});
     }, 5000);
 
     // Full catalog refresh every 60s for events, speakers, and sponsors
     const fullInterval = setInterval(() => {
-      refreshAll().catch(() => {});
+      refreshAll({ silent: true }).catch(() => {});
     }, 60000);
 
     return () => {

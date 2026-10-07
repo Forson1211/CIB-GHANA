@@ -12,14 +12,14 @@ export const AdminPayments: React.FC = () => {
   const [channelFilter, setChannelFilter] = useState<'ALL' | 'MTN' | 'TELECEL' | 'AT' | 'CARD'>('ALL');
 
   useEffect(() => {
-    refreshRegistrations().catch(() => {});
+    refreshRegistrations({ silent: true }).catch(() => {});
 
     const timer = setInterval(() => {
-      refreshRegistrations().catch(() => {});
+      refreshRegistrations({ silent: true }).catch(() => {});
     }, 5000);
 
     const onFocus = () => {
-      refreshRegistrations().catch(() => {});
+      refreshRegistrations({ silent: true }).catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);

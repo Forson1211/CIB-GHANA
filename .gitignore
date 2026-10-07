@@ -59,3 +59,9 @@ scratch_photos/
 process_speakers_bg.py
 sync_speakers_to_supabase*
 
+# Deployment Archives
+*.zip
+cib-ghana-hostinger.zip
+hostinger-deploy/
+
+

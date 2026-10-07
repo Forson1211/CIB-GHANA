@@ -2,6 +2,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import eventRoutes from './routes/eventRoutes.js';
 import registrationRoutes from './routes/registrationRoutes.js';
@@ -13,6 +14,9 @@ import speakerRoutes from './routes/speakerRoutes.js';
 import sponsorRoutes from './routes/sponsorRoutes.js';
 import { RegistrationController } from './controllers/registrationController.js';
 import { errorHandler } from './middlewares/errorHandler.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export function createApp(): Express {
   const app = express();
@@ -39,14 +43,6 @@ export function createApp(): Express {
   );
   app.use(express.json({ limit: '20mb' }));
   app.use(express.urlencoded({ extended: true, limit: '20mb' }));
-
-  // Ensure req.url starts with /api so routes match regardless of how Vercel proxies the service
-  app.use((req, res, next) => {
-    if (req.url && !req.url.startsWith('/api')) {
-      req.url = `/api${req.url.startsWith('/') ? req.url : `/${req.url}`}`;
-    }
-    next();
-  });
 
   // Health and System Diagnostics
   const healthHandler = (req: Request, res: Response) => {
@@ -91,11 +87,65 @@ export function createApp(): Express {
     `);
   });
 
-  // 404 Handler
-  app.use((req: Request, res: Response) => {
+  // 404 Handler for API endpoints specifically
+  app.all('/api/*', (req: Request, res: Response) => {
     res.status(404).json({
       success: false,
       message: `API Route not found: ${req.method} ${req.originalUrl}`,
+    });
+  });
+
+  // Frontend Static Hosting & SPA Routing (for Hostinger, VPS, and standalone deployments)
+  const possibleClientPaths = [
+    path.resolve(process.cwd(), 'frontend', 'dist'),
+    path.resolve(process.cwd(), 'dist'),
+    path.resolve(__dirname, '../../frontend/dist'),
+    path.resolve(__dirname, '../../../frontend/dist'),
+    path.resolve(__dirname, '../../dist'),
+  ];
+  const clientDistPath = possibleClientPaths.find(
+    (p) => fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))
+  );
+
+  if (clientDistPath) {
+    app.use(express.static(clientDistPath));
+
+    app.get('*', (req: Request, res: Response) => {
+      res.sendFile(path.join(clientDistPath, 'index.html'));
+    });
+  } else {
+    app.get('/', (req: Request, res: Response) => {
+      res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>CIB Ghana Events Platform</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 40px; text-align: center; color: #1e293b; background: #f8fafc; }
+              .card { max-width: 520px; margin: 40px auto; padding: 32px; border: 1px solid #e2e8f0; border-radius: 16px; background: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+              .badge { display: inline-block; padding: 4px 12px; background: #ecfdf5; color: #047857; font-weight: 600; border-radius: 999px; font-size: 13px; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <span class="badge">API Engine Active</span>
+              <h2 style="margin: 16px 0 8px;">CIB Ghana Events Platform</h2>
+              <p style="color: #64748b; font-size: 14px; line-height: 1.5;">The backend service is running successfully. To view the web interface, compile the frontend with <code>npm run build</code>.</p>
+              <div style="margin-top: 24px;">
+                <a href="/api/health" style="color: #047857; text-decoration: none; font-weight: 600;">Check API Health &rarr;</a>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+    });
+  }
+
+  // Generic 404 Handler for unmatched non-GET routes
+  app.use((req: Request, res: Response) => {
+    res.status(404).json({
+      success: false,
+      message: `Resource not found: ${req.method} ${req.originalUrl}`,
     });
   });
 

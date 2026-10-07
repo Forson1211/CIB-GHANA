@@ -15,7 +15,9 @@
     "build:all": "npm run build:backend && npm run build:frontend",
     "build:frontend": "npm run build --workspace=cib-ghana-frontend",
     "build:backend": "npm run build --workspace=cib-ghana-backend",
-    "start": "npm run start --workspace=cib-ghana-backend",
+    "start": "node server.js",
+    "start:backend": "npm run start --workspace=cib-ghana-backend",
+    "package:hostinger": "node scripts/package-hostinger.js",
     "lint": "npm run lint --workspace=cib-ghana-frontend"
   },
   "dependencies": {

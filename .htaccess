@@ -1,0 +1,22 @@
+# CIB Ghana Events Platform - Hostinger Configuration
+# Compatible with Hostinger hPanel Node.js Application Manager, OpenLiteSpeed & Apache
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Ensure HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Allow existing static assets in public_html / dist to be served directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
+</IfModule>

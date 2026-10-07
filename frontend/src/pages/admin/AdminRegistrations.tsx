@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { Link } from 'react-router-dom';
@@ -27,7 +27,7 @@ import { ApiClient } from '../../lib/api';
 import { PaymentChannelBadge } from '../../components/payment/PaymentChannelBadge';
 
 export const AdminRegistrations: React.FC = () => {
-  const { registrations, events, refreshAll, isLiveSyncing, lastSyncedAt, checkInAttendee, updatePaymentStatus } = useApp();
+  const { registrations, events, refreshAll, refreshRegistrations, isLiveSyncing, lastSyncedAt, checkInAttendee, updatePaymentStatus } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEventId, setSelectedEventId] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
@@ -36,6 +36,20 @@ export const AdminRegistrations: React.FC = () => {
   const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendFeedback, setResendFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
+
+  // Auto-sync registrations on mount and whenever admin tab is focused/visible
+  useEffect(() => {
+    refreshRegistrations().catch(() => {});
+    const onFocus = () => {
+      refreshRegistrations().catch(() => {});
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [refreshRegistrations]);
 
   const handleAdminResendEmail = async (regNumber: string) => {
     setResendingId(regNumber);

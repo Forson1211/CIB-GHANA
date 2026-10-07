@@ -7,11 +7,14 @@ export class ApiClient {
     const url = `${API_BASE_URL}${endpoint}`;
     const headers = {
       'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
       ...(options?.headers || {}),
     };
 
     try {
       const response = await fetch(url, {
+        cache: 'no-store',
         ...options,
         headers,
         signal: options?.signal || AbortSignal.timeout(6000),
@@ -84,13 +87,14 @@ export class ApiClient {
     data: Registration[];
   }> {
     const query = new URLSearchParams();
+    query.append('_t', Date.now().toString());
     if (params?.event_id) query.append('event_id', params.event_id);
     if (params?.search) query.append('search', params.search);
     if (params?.status) query.append('status', params.status);
     if (params?.payment_status) query.append('payment_status', params.payment_status);
     if (params?.membership_category) query.append('membership_category', params.membership_category);
 
-    const qs = query.toString() ? `?${query.toString()}` : '';
+    const qs = `?${query.toString()}`;
     return this.request(`/registrations${qs}`);
   }
 

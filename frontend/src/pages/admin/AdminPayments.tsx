@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AdminLayout } from '../../components/layout/AdminLayout';
 import { CreditCard, Search, Download, ShieldCheck, Smartphone, CheckCircle2, Clock, XCircle } from 'lucide-react';
@@ -7,9 +7,22 @@ import { formatGHS } from '../../lib/utils';
 import { PaymentChannelBadge, getPaymentChannelInfo } from '../../components/payment/PaymentChannelBadge';
 
 export const AdminPayments: React.FC = () => {
-  const { registrations } = useApp();
+  const { registrations, refreshRegistrations } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [channelFilter, setChannelFilter] = useState<'ALL' | 'MTN' | 'TELECEL' | 'AT' | 'CARD'>('ALL');
+
+  useEffect(() => {
+    refreshRegistrations().catch(() => {});
+    const onFocus = () => {
+      refreshRegistrations().catch(() => {});
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [refreshRegistrations]);
 
   const successfulRegistrations = registrations.filter((r) => r.payment_status === 'SUCCESSFUL');
   const totalRevenue = successfulRegistrations.reduce((acc, r) => acc + (r.total_amount || 0), 0);

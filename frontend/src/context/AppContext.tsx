@@ -969,30 +969,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const refreshRegistrations = async () => {
     setIsLiveSyncing(true);
-    let synced = false;
-    try {
-      const res = await ApiClient.getRegistrations();
-      if (res.success && Array.isArray(res.data)) {
-        setRegistrations(res.data.map(normalizeRegistration));
-        setLastSyncedAt(new Date());
-        synced = true;
-      }
-    } catch {
-      // Backend temporarily offline; check direct Supabase fallback below
-    }
+    let remoteRegistrations: Registration[] = [];
 
+    // 1. Direct Supabase query (authoritative source with service role bypass)
     const regClient = supabaseAdmin || supabase;
-    if (!synced && regClient) {
+    if (regClient) {
       try {
         const { data, error } = await regClient
           .from('registrations')
           .select('*, registration_types(name), events(title)')
           .order('created_at', { ascending: false });
         if (!error && Array.isArray(data) && data.length > 0) {
-          const mapped: Registration[] = data.map((r: any) => ({
+          remoteRegistrations = data.map((r: any) => ({
             id: r.id,
             event_id: r.event_id,
-            event_title: r.events?.title || 'CIB Ghana Event',
+            event_title: r.events?.title || '30th National Banking & Ethics Conference 2026',
             registration_number: r.registration_number,
             registration_type_id: r.registration_type_id,
             registration_type_name: r.registration_types?.name || 'Standard Delegate Pass',
@@ -1017,12 +1008,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             check_in_time: r.check_in_time,
             created_at: r.created_at,
           }));
-          setRegistrations(mapped.map(normalizeRegistration));
-          setLastSyncedAt(new Date());
         }
-      } catch {
-        // RLS prevents unauthenticated anon reading registrations; handled by backend
+      } catch (err) {
+        console.warn('Direct Supabase fetch registrations notice:', err);
       }
+    }
+
+    // 2. Fetch from backend API as well and merge
+    try {
+      const res = await ApiClient.getRegistrations();
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (remoteRegistrations.length === 0) {
+          remoteRegistrations = res.data;
+        } else {
+          const regMap = new Map<string, Registration>();
+          for (const r of remoteRegistrations) {
+            regMap.set(r.registration_number.toUpperCase(), r);
+          }
+          for (const apiReg of res.data) {
+            const key = apiReg.registration_number.toUpperCase();
+            const existing = regMap.get(key);
+            if (!existing) {
+              regMap.set(key, apiReg);
+            } else if (apiReg.payment_status === 'SUCCESSFUL' && existing.payment_status !== 'SUCCESSFUL') {
+              regMap.set(key, { ...existing, ...apiReg, payment_status: 'SUCCESSFUL' });
+            }
+          }
+          remoteRegistrations = Array.from(regMap.values());
+        }
+      }
+    } catch {
+      // Backend temporarily offline
+    }
+
+    if (remoteRegistrations.length > 0) {
+      setRegistrations((prev) => {
+        // Protect any registration currently in local state marked SUCCESSFUL from being downgraded to PENDING
+        const remoteMap = new Map<string, Registration>();
+        for (const r of remoteRegistrations) {
+          remoteMap.set(r.registration_number.toUpperCase(), normalizeRegistration(r));
+        }
+
+        for (const localReg of prev) {
+          const key = localReg.registration_number.toUpperCase();
+          const remote = remoteMap.get(key);
+          if (remote) {
+            if (localReg.payment_status === 'SUCCESSFUL' && remote.payment_status !== 'SUCCESSFUL') {
+              remoteMap.set(key, { ...remote, payment_status: 'SUCCESSFUL' });
+            }
+          } else {
+            // Keep local-only draft registrations
+            remoteMap.set(key, localReg);
+          }
+        }
+
+        const merged = Array.from(remoteMap.values()).sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        try {
+          localStorage.setItem(STORAGE_KEY_REGS, JSON.stringify(merged));
+        } catch {}
+        return merged;
+      });
+      setLastSyncedAt(new Date());
     }
 
     setIsLiveSyncing(false);
@@ -1310,6 +1358,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     window.addEventListener('storage', handleStorage);
     window.addEventListener('cib_registration_created', handleCustom);
 
+    // Realtime Supabase channel for registrations so payments and check-ins appear instantly on all admin dashboards
+    const regChannel = (supabaseAdmin || supabase)
+      ?.channel('realtime-registrations')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'registrations' },
+        () => {
+          refreshRegistrations();
+        }
+      )
+      .subscribe();
+
+    // Cross-tab broadcast listener
+    let broadcast: BroadcastChannel | null = null;
+    try {
+      broadcast = new BroadcastChannel('cib_registrations_channel');
+      broadcast.onmessage = () => {
+        refreshRegistrations();
+      };
+    } catch {}
+
     // Realtime Supabase channel for sponsors so updates appear instantly on all browsers
     const spChannel = supabase
       ?.channel('realtime-sponsors')
@@ -1322,13 +1391,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       )
       .subscribe();
 
-    const interval = setInterval(refreshAll, 6000);
+    const interval = setInterval(refreshAll, 5000);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('cib_registration_created', handleCustom);
       clearInterval(interval);
       spChannel?.unsubscribe();
+      regChannel?.unsubscribe();
+      broadcast?.close();
     };
   }, []);
 
@@ -1538,9 +1609,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const cleanId = identifier.trim().toLowerCase();
     const cleanRef = reference?.trim().toLowerCase();
 
-    // 1. Update React state immediately
-    setRegistrations((prev) =>
-      prev.map((r) => {
+    // 1. Update React state immediately and write to localStorage
+    setRegistrations((prev) => {
+      const updated = prev.map((r) => {
         const match =
           r.registration_number.toLowerCase() === cleanId ||
           r.id.toLowerCase() === cleanId ||
@@ -1558,10 +1629,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           };
         }
         return r;
-      })
-    );
+      });
+      try {
+        localStorage.setItem(STORAGE_KEY_REGS, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
 
-    // 2. Persist to Supabase (checks errors & drops unsupported columns)
+    // 2. Broadcast to other tabs & windows
+    try {
+      const bc = new BroadcastChannel('cib_registrations_channel');
+      bc.postMessage({ type: 'PAYMENT_STATUS_UPDATED', identifier, status });
+      bc.close();
+    } catch {}
+
+    // 3. Persist to Supabase (checks errors & drops unsupported columns)
     try {
       await syncRegistrationPayment({
         status,

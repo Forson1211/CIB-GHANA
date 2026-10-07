@@ -16,6 +16,8 @@ export class RegistrationController {
         membershipCategory: membership_category as string,
       });
 
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      res.set('Pragma', 'no-cache');
       res.json({
         success: true,
         count: registrations.length,

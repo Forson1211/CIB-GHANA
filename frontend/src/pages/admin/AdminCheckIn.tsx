@@ -48,16 +48,30 @@ export const AdminCheckIn: React.FC = () => {
   } | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const [countdown, setCountdown] = useState(5);
 
-  // Auto-sync registrations on mount and on window focus
+  // Auto-sync registrations on mount, on 5-second interval, and on window focus
   useEffect(() => {
     refreshRegistrations().catch(() => {});
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          refreshRegistrations().catch(() => {});
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     const onFocus = () => {
+      setCountdown(5);
       refreshRegistrations().catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
     return () => {
+      clearInterval(timer);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };
@@ -231,19 +245,21 @@ export const AdminCheckIn: React.FC = () => {
       title="Accreditation & Check-In Desk"
       subtitle="Official on-site delegate credentials verification, badge check-in, and gate clearance."
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-[#0A5C36] border border-emerald-200/80">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Terminal Live
+            Auto-Sync ({countdown}s)
           </span>
           <Button
             variant="outline"
             size="sm"
             leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLiveSyncing ? 'animate-spin text-[#0A5C36]' : ''}`} />}
-            onClick={() => refreshRegistrations()}
-            disabled={isLiveSyncing}
+            onClick={() => {
+              setCountdown(5);
+              refreshRegistrations();
+            }}
           >
-            {isLiveSyncing ? 'Syncing...' : 'Sync Roster'}
+            {isLiveSyncing ? 'Syncing...' : 'Sync (5s)'}
           </Button>
         </div>
       }

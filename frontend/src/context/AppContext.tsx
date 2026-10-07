@@ -1391,12 +1391,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       )
       .subscribe();
 
-    const interval = setInterval(refreshAll, 5000);
+    // Ultra-responsive 5-second interval for delegate registrations and payments
+    const regInterval = setInterval(() => {
+      refreshRegistrations().catch(() => {});
+    }, 5000);
+
+    // Full catalog refresh every 60s for events, speakers, and sponsors
+    const fullInterval = setInterval(() => {
+      refreshAll().catch(() => {});
+    }, 60000);
 
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('cib_registration_created', handleCustom);
-      clearInterval(interval);
+      clearInterval(regInterval);
+      clearInterval(fullInterval);
       spChannel?.unsubscribe();
       regChannel?.unsubscribe();
       broadcast?.close();

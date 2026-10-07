@@ -13,12 +13,18 @@ export const AdminPayments: React.FC = () => {
 
   useEffect(() => {
     refreshRegistrations().catch(() => {});
+
+    const timer = setInterval(() => {
+      refreshRegistrations().catch(() => {});
+    }, 5000);
+
     const onFocus = () => {
       refreshRegistrations().catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
     return () => {
+      clearInterval(timer);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };

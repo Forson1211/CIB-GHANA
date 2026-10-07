@@ -37,15 +37,30 @@ export const AdminRegistrations: React.FC = () => {
   const [resendingId, setResendingId] = useState<string | null>(null);
   const [resendFeedback, setResendFeedback] = useState<{ id: string; success: boolean; message: string } | null>(null);
 
-  // Auto-sync registrations on mount and whenever admin tab is focused/visible
+  const [countdown, setCountdown] = useState(5);
+
+  // Auto-sync registrations on mount, on 5-second interval, and whenever admin tab is focused/visible
   useEffect(() => {
     refreshRegistrations().catch(() => {});
+
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          refreshRegistrations().catch(() => {});
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
     const onFocus = () => {
+      setCountdown(5);
       refreshRegistrations().catch(() => {});
     };
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onFocus);
     return () => {
+      clearInterval(timer);
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onFocus);
     };
@@ -200,14 +215,20 @@ export const AdminRegistrations: React.FC = () => {
       subtitle="Complete real-time roster of registered conference attendees, payment receipts, and check-in audits."
       actions={
         <div className="flex items-center gap-2.5">
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-cib-green-800 border border-emerald-200/80">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            Auto-Sync ({countdown}s)
+          </span>
           <Button
             variant="outline"
             size="sm"
             leftIcon={<RefreshCw className={`w-4 h-4 ${isLiveSyncing ? 'animate-spin text-cib-green-700' : ''}`} />}
-            onClick={handleRefresh}
-            disabled={isLiveSyncing}
+            onClick={() => {
+              setCountdown(5);
+              handleRefresh();
+            }}
           >
-            {isLiveSyncing ? 'Syncing...' : 'Sync Live'}
+            {isLiveSyncing ? 'Syncing...' : 'Sync (5s)'}
           </Button>
 
           <Button

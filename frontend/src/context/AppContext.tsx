@@ -27,7 +27,7 @@ interface AppContextType {
   isLiveSyncing: boolean;
   lastSyncedAt: Date | null;
   addRegistration: (reg: Omit<Registration, 'id' | 'registration_number' | 'created_at'>) => Registration;
-  checkInAttendee: (regNumber: string) => { success: boolean; message: string; registration?: Registration };
+  checkInAttendee: (regNumber: string, targetStatus?: 'CHECKED_IN' | 'REGISTERED') => { success: boolean; message: string; registration?: Registration };
   updatePaymentStatus: (identifier: string, status: 'SUCCESSFUL' | 'PENDING' | 'FAILED', reference?: string, method?: string, category?: string) => Promise<boolean>;
   addEvent: (event: Omit<EventItem, 'id' | 'created_at' | 'updated_at'>) => Promise<EventItem> | EventItem;
   updateEvent: (id: string, updates: Partial<EventItem>) => Promise<void> | void;
@@ -1560,7 +1560,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newReg;
   };
 
-  const checkInAttendee = (regNumber: string) => {
+  const checkInAttendee = (regNumber: string, targetStatus: 'CHECKED_IN' | 'REGISTERED' = 'CHECKED_IN') => {
     const cleanNumber = regNumber.trim().toUpperCase();
     const regIndex = registrations.findIndex((r) => r.registration_number.toUpperCase() === cleanNumber);
 
@@ -1569,32 +1569,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const reg = registrations[regIndex];
-    if (reg.check_in_status === 'CHECKED_IN') {
+    if (targetStatus === 'CHECKED_IN' && reg.check_in_status === 'CHECKED_IN') {
       return {
         success: false,
-        message: `Already Checked In! Attendee ${reg.first_name} ${reg.last_name} checked in at ${reg.check_in_time ? new Date(reg.check_in_time).toLocaleTimeString() : 'earlier'}.`,
+        message: `Already Checked In! Attendee ${reg.first_name} ${reg.last_name} checked in at ${reg.check_in_time ? new Date(reg.check_in_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'earlier'}.`,
         registration: reg,
       };
     }
 
     const updatedReg: Registration = {
       ...reg,
-      check_in_status: 'CHECKED_IN',
-      check_in_time: new Date().toISOString(),
+      check_in_status: targetStatus,
+      check_in_time: targetStatus === 'CHECKED_IN' ? new Date().toISOString() : undefined,
     };
 
     const updatedList = [...registrations];
     updatedList[regIndex] = updatedReg;
     setRegistrations(updatedList);
 
+    // Save to localStorage immediately so page refresh keeps check-in status
+    try {
+      localStorage.setItem(STORAGE_KEY_REGS, JSON.stringify(updatedList));
+      const bc = new BroadcastChannel('cib_registrations_channel');
+      bc.postMessage({ type: 'CHECK_IN_UPDATED', registrationNumber: cleanNumber, status: targetStatus });
+      bc.close();
+    } catch {}
+
+    // Direct Supabase persistence
+    const client = supabaseAdmin || supabase;
+    if (client) {
+      (async () => {
+        try {
+          await client
+            .from('registrations')
+            .update({ check_in_status: targetStatus, check_in_time: updatedReg.check_in_time || null })
+            .eq('registration_number', cleanNumber);
+        } catch {}
+      })();
+    }
+
     // Sync check-in status with backend engine
-    ApiClient.checkInAttendee(cleanNumber).catch((err) => {
-      console.log('[AppContext] Backend check-in sync:', err);
-    });
+    if (targetStatus === 'CHECKED_IN') {
+      ApiClient.checkInAttendee(cleanNumber).catch((err) => {
+        console.log('[AppContext] Backend check-in sync:', err);
+      });
+    }
 
     return {
       success: true,
-      message: `Checked In Successfully! Welcome, ${reg.first_name} ${reg.last_name}.`,
+      message: targetStatus === 'CHECKED_IN'
+        ? `Checked In Successfully! Welcome, ${reg.first_name} ${reg.last_name}.`
+        : `Check-in reversed for ${reg.first_name} ${reg.last_name}.`,
       registration: updatedReg,
     };
   };

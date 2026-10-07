@@ -10,6 +10,7 @@ import {
   readPendingWebpayCheckout,
   clearPendingWebpayCheckout,
 } from '../lib/payments';
+import { syncRegistrationPayment } from '../lib/registrationSync';
 
 export const PaymentCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -237,21 +238,14 @@ export const PaymentCallback: React.FC = () => {
             ? regResult.payment_method
             : pending?.paymentMethod || undefined;
 
-        if (dbClient) {
-          try {
-            await dbClient
-              .from('registrations')
-              .update({
-                payment_status: 'SUCCESSFUL',
-                payment_reference: ref,
-                ...(methodToSave ? { payment_method: methodToSave } : {}),
-                ...(regResult.membership_category ? { membership_category: regResult.membership_category } : {}),
-              })
-              .or(`registration_number.eq.${passNumber},payment_reference.eq.${ref}`);
-          } catch (supUpErr) {
-            console.warn('[WebPay Callback] Supabase direct update notice:', supUpErr);
-          }
-        }
+        await syncRegistrationPayment({
+          status: 'SUCCESSFUL',
+          registrationNumber: passNumber,
+          id: regResult.id,
+          reference: ref,
+          method: methodToSave,
+          category: regResult.membership_category,
+        });
 
         // Synchronize in AppContext
         await updatePaymentStatus(passNumber, 'SUCCESSFUL', ref, methodToSave, regResult.membership_category);

@@ -4,6 +4,7 @@ import { MOCK_EVENTS, MOCK_REGISTRATIONS, DEMO_USERS, MOCK_SPEAKERS, MOCK_SPONSO
 import { generateRegistrationNumber } from '../lib/utils';
 import { ApiClient } from '../lib/api';
 import { supabase, supabaseAdmin, stringToUuid, uploadSpeakerPhotoToCloud, uploadSponsorLogoToCloud } from '../lib/supabase';
+import { syncRegistrationPayment } from '../lib/registrationSync';
 
 interface AppContextType {
   events: EventItem[];
@@ -1560,21 +1561,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
-    // 2. Direct Supabase update
-    const client = supabaseAdmin || supabase;
-    if (client) {
-      try {
-        const updatePayload: any = { payment_status: status };
-        if (reference) updatePayload.payment_reference = reference;
-        if (method) updatePayload.payment_method = method;
-        if (category) updatePayload.membership_category = category;
-        await client
-          .from('registrations')
-          .update(updatePayload)
-          .or(`registration_number.ilike.${identifier.trim()},payment_reference.ilike.${reference || identifier.trim()}`);
-      } catch (err) {
-        console.warn('[AppContext] Supabase payment status sync error:', err);
-      }
+    // 2. Persist to Supabase (checks errors & drops unsupported columns)
+    try {
+      await syncRegistrationPayment({
+        status,
+        registrationNumber: identifier.trim(),
+        id: identifier.trim(),
+        reference,
+        method,
+        category,
+      });
+    } catch (err) {
+      console.warn('[AppContext] Supabase payment status sync error:', err);
     }
 
     return true;

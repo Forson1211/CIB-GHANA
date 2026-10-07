@@ -93,7 +93,7 @@ export const PaymentCallback: React.FC = () => {
           if (res.data.status === 'SUCCESSFUL') {
             verifiedSuccess = true;
             regResult = res.data.registration || null;
-            verifiedAmount = res.data.amount;
+            verifiedAmount = res.data.amount || res.data.registration?.total_amount;
             if (res.data.gateway?.transactionId) {
               bankTxnId = res.data.gateway.transactionId;
             }

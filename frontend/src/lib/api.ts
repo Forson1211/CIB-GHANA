@@ -226,6 +226,10 @@ export class ApiClient {
     data: {
       status: 'SUCCESSFUL' | 'FAILED' | 'PENDING';
       reference: string;
+      amount?: number;
+      currency?: string;
+      channel?: string;
+      payment_method?: string;
       amount_mismatch?: boolean;
       registration: Registration;
       ticket?: any;
